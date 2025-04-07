@@ -1,0 +1,41 @@
+{
+  "name": "test-cylink",
+  "version": "1.0.0",
+  "description": "Cylink URL Shortener and QR Generator",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "dev": "ts-node -r tsconfig-paths/register src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haikalrafifas/test-cylink.git"
+  },
+  "keywords": [],
+  "author": "ksm-cyber",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/haikalrafifas/test-cylink/issues"
+  },
+  "homepage": "https://github.com/haikalrafifas/test-cylink#readme",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "express": "^5.1.0",
+    "express-validator": "^7.2.1",
+    "jsonwebtoken": "^9.0.2",
+    "mailtrap": "^4.0.0",
+    "nodemailer": "^6.10.0",
+    "pg": "^8.14.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.14.0",
+    "@types/pg": "^8.11.11",
+    "dotenv": "^16.4.7",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.8.3"
+  }
+}
