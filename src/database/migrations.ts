@@ -1,9 +1,10 @@
-const tables = require('@/database/tables');
 const pool = require('@/config/database');
+const schema = require('@/database/schema');
 const { generateQuery } = require('@/utils/query');
 
-console.log('Executing database migration...');
 (async () => {
-  await pool.query(generateQuery.table.create(tables));
-  await pool.query(generateQuery.table.drop(tables));
+  console.log('Executing database migration...');
+  await pool.query(generateQuery.tables.drop(schema));
+  await pool.query(generateQuery.tables.create(schema));
+  console.info('Migration finished! Closing database connection...');
 })();

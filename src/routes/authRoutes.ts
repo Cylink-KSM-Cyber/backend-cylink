@@ -1,22 +1,50 @@
 const router = require('express').Router();
-const { authentication } = require('@/middlewares/authMiddleware');
+const {
+  accessToken,
+  refreshToken,
+  verificationToken,
+} = require('@/middlewares/authMiddleware');
 const validate = require('@/utils/validator');
 const fields = require('@/validators/authValidator');
 
 const authController = require('@/controllers/authController');
 
 /**
- * User registration via OTP.
+ * User registration via email.
  */
 router.post(
   '/register',
   validate({ fields: fields.register }),
   authController.register,
 );
-router.get(
+router.post(
   '/register/verify',
-  authentication,
+  verificationToken,
   authController.verifyRegister,
+);
+
+/**
+ * User password reset via OTP.
+ */
+router.post(
+  '/reset-password/send',
+  validate({ fields: fields.sendPasswordResetVerification }),
+  authController.sendPasswordResetVerification,
+);
+router.post(
+  '/reset-password',
+  verificationToken,
+  validate({ fields: fields.resetPassword }),
+  authController.resetPassword,
+);
+
+/**
+ * Resend verification.
+ */
+router.post(
+  '/resend',
+  validate({ fields: fields.resendVerification }),
+  authController.resendVerification,
 );
 
 /**
@@ -33,21 +61,9 @@ router.post(
  */
 router.post(
   '/refresh',
+  accessToken,
+  refreshToken,
   authController.refresh,
-);
-
-/**
- * User password reset via OTP.
- */
-router.get(
-  '/reset-password/verify',
-  authController.resetPassword,
-);
-router.post(
-  '/reset-password',
-  authentication,
-  validate({ fields: fields.resetPassword }),
-  authController.verifyResetPassword,
 );
 
 module.exports = router;

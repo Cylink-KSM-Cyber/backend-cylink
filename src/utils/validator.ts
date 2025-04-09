@@ -28,7 +28,7 @@ const fieldValidationRules = (args: any) => {
   const { fields, areRequired = true } = args;
 
   return [
-    // Validation rules for fields
+    // Validation rules for request body
     ...fields.map((field: any) => {
       let validationChain = check(field.name);
 
@@ -108,6 +108,18 @@ const fieldValidationRules = (args: any) => {
         validationChain = validationChain.optional();
       }
 
+      // Handle minimum length
+      if (field.min) {
+        validationChain = validationChain
+          .isLength({ min: field.min })
+          .withMessage(`${field.name} must be no less than ${field.min} characters.`);
+      }
+
+      // Handle email type
+      if (field.isEmail) {
+        validationChain = validationChain.isEmail().normalizeEmail();
+      }
+
       return validationChain;
     }),
 
@@ -115,7 +127,20 @@ const fieldValidationRules = (args: any) => {
     (req: Request, res: Response, next: any) => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({ status: 400, errors: errors.array() });
+        const formattedErrors = errors.array().reduce((acc: any, error: any) => {
+          if (acc[error.param]) {
+            acc[error.param].push(error.msg);
+          } else {
+            acc[error.param] = [error.msg];
+          }
+          return acc;
+        }, {});
+
+        return res.status(400).json({
+          status: 400,
+          message: 'Validation failed',
+          errors: formattedErrors,
+        });
       }
 
       req.body = matchedData(req, { onlyValidData: true });

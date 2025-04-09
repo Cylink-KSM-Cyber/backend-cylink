@@ -4,10 +4,10 @@ export default (verificationToken: string): string => {
   const redirect = WEB_VERIFICATOR_URL + verificationToken;
 
   return `
-    <h1>Cylink Password Reset Verification</h1>
-    Please click the button below to reset your Cylink password:
+    <h1>Cylink Resend Verification</h1>
+    Please click the button below to continue your verification:
     <button onClick="() => window.open('${redirect}', '_blank')">
-      Reset Password
+      Continue
     </button>
 
     Or you can click the link below:

@@ -1,7 +1,5 @@
 const jwt = require('jsonwebtoken');
-
-const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET || 'access';
-const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET || 'refresh';
+const jwtConfig = require('@/config/jwt');
 
 const signToken = (payload: object, secret: string, expiresIn: string): string => {
   return jwt.sign(payload, secret, { expiresIn });
@@ -15,12 +13,41 @@ const verifyToken = (token: string, secret: string): object | string => {
   }
 };
 
-exports.sign = {
-  accessToken: (payload: object) => signToken(payload, accessTokenSecret, '1h'),
-  refreshToken: (payload: object) => signToken(payload, refreshTokenSecret, '7d'),
+/**
+ * Access token.
+ */
+exports.access = {
+  sign: (payload: object) => signToken(
+    payload, jwtConfig.access.secret, jwtConfig.access.ttl,
+  ),
+  verify: (token: string) => verifyToken(
+    token, jwtConfig.access.secret,
+  ),
+  getExpiration: (): number => {
+    return Date.now() - jwtConfig.access.ttl;
+  },
 };
 
-exports.verify = {
-  accessToken: (token: string) => verifyToken(token, accessTokenSecret),
-  refreshToken: (token: string) => verifyToken(token, refreshTokenSecret),
+/**
+ * Refresh token.
+ */
+exports.refresh = {
+  sign: (payload: object) => signToken(
+    payload, jwtConfig.refresh.secret, jwtConfig.refresh.ttl,
+  ),
+  verify: (token: string) => verifyToken(
+    token, jwtConfig.refresh.secret,
+  ),
+};
+
+/**
+ * Verification token.
+ */
+exports.verification = {
+  sign: (payload: object) => signToken(
+    payload, jwtConfig.verification.secret, jwtConfig.verification.ttl,
+  ),
+  verify: (token: string) => verifyToken(
+    token, jwtConfig.verification.secret,
+  ),
 };
