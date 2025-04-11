@@ -35,4 +35,18 @@ module.exports = {
     { name: "title", type: "string", required: false },
     { name: "expiry_date", type: "string", required: false },
   ],
+
+  /**
+   * Validation rules for GET /urls/:id/analytics endpoint
+   */
+  getUrlAnalytics: [
+    { name: "start_date", type: "string", required: false },
+    { name: "end_date", type: "string", required: false },
+    {
+      name: "group_by",
+      type: "string",
+      required: false,
+      enum: ["day", "week", "month"],
+    },
+  ],
 };

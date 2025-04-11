@@ -217,3 +217,289 @@ exports.getRecentClicksByUrlId = async (urlId: number, limit: number = 10) => {
 
   return result.rows;
 };
+
+/**
+ * Get count of unique visitors for a URL
+ *
+ * @param {number} urlId - The URL ID
+ * @param {Date} [startDate] - Optional start date for filtering
+ * @param {Date} [endDate] - Optional end date for filtering
+ * @returns {Promise<number>} Number of unique visitors
+ */
+exports.getUniqueVisitorsByUrlId = async (
+  urlId: number,
+  startDate?: Date,
+  endDate?: Date
+) => {
+  let query = `
+    SELECT COUNT(DISTINCT ip_address) as count
+    FROM clicks
+    WHERE url_id = $1
+  `;
+
+  const queryParams: any[] = [urlId];
+  let paramIndex = 2;
+
+  // Add date filtering if provided
+  if (startDate) {
+    query += ` AND clicked_at >= $${paramIndex}`;
+    queryParams.push(startDate);
+    paramIndex++;
+  }
+
+  if (endDate) {
+    query += ` AND clicked_at <= $${paramIndex}`;
+    queryParams.push(endDate);
+  }
+
+  const result = await pool.query(query, queryParams);
+
+  return parseInt(result.rows[0].count, 10);
+};
+
+/**
+ * Get click count for a specific URL with date filtering
+ *
+ * @param {number} urlId - The URL ID
+ * @param {Date} [startDate] - Optional start date for filtering
+ * @param {Date} [endDate] - Optional end date for filtering
+ * @returns {Promise<number>} Number of clicks
+ */
+exports.getClickCountByUrlIdWithDateRange = async (
+  urlId: number,
+  startDate?: Date,
+  endDate?: Date
+) => {
+  let query = `
+    SELECT COUNT(*) as count
+    FROM clicks
+    WHERE url_id = $1
+  `;
+
+  const queryParams: any[] = [urlId];
+  let paramIndex = 2;
+
+  // Add date filtering if provided
+  if (startDate) {
+    query += ` AND clicked_at >= $${paramIndex}`;
+    queryParams.push(startDate);
+    paramIndex++;
+  }
+
+  if (endDate) {
+    query += ` AND clicked_at <= $${paramIndex}`;
+    queryParams.push(endDate);
+  }
+
+  const result = await pool.query(query, queryParams);
+
+  return parseInt(result.rows[0].count, 10);
+};
+
+/**
+ * Get time series data for a URL with grouping options
+ *
+ * @param {number} urlId - The URL ID
+ * @param {string} groupBy - How to group the data ('day', 'week', 'month')
+ * @param {Date} [startDate] - Optional start date for filtering
+ * @param {Date} [endDate] - Optional end date for filtering
+ * @returns {Promise<any[]>} Time series data
+ */
+exports.getTimeSeriesData = async (
+  urlId: number,
+  groupBy: string = "day",
+  startDate?: Date,
+  endDate?: Date
+) => {
+  // Determine the date format for grouping
+  let dateFormat = "";
+
+  switch (groupBy.toLowerCase()) {
+    case "week":
+      dateFormat = "YYYY-WW"; // ISO week format
+      break;
+    case "month":
+      dateFormat = "YYYY-MM";
+      break;
+    case "day":
+    default:
+      dateFormat = "YYYY-MM-DD";
+      break;
+  }
+
+  // Build the query
+  let query = `
+    SELECT 
+      TO_CHAR(clicked_at, $2) as date,
+      COUNT(*) as clicks
+    FROM clicks
+    WHERE url_id = $1
+  `;
+
+  const queryParams: any[] = [urlId, dateFormat];
+  let paramIndex = 3;
+
+  // Add date filtering if provided
+  if (startDate) {
+    query += ` AND clicked_at >= $${paramIndex}`;
+    queryParams.push(startDate);
+    paramIndex++;
+  }
+
+  if (endDate) {
+    query += ` AND clicked_at <= $${paramIndex}`;
+    queryParams.push(endDate);
+    paramIndex++;
+  }
+
+  // Group by the formatted date and order by date
+  query += `
+    GROUP BY TO_CHAR(clicked_at, $2)
+    ORDER BY date ASC
+  `;
+
+  const result = await pool.query(query, queryParams);
+
+  return result.rows.map((row: any) => ({
+    date: row.date,
+    clicks: parseInt(row.clicks, 10),
+  }));
+};
+
+/**
+ * Get browser statistics for a URL with date filtering
+ *
+ * @param {number} urlId - The URL ID
+ * @param {Date} [startDate] - Optional start date for filtering
+ * @param {Date} [endDate] - Optional end date for filtering
+ * @returns {Promise<any[]>} Browser usage statistics
+ */
+exports.getBrowserStatsWithDateRange = async (
+  urlId: number,
+  startDate?: Date,
+  endDate?: Date
+) => {
+  let query = `
+    SELECT 
+      browser,
+      COUNT(*) as count
+    FROM clicks
+    WHERE url_id = $1
+  `;
+
+  const queryParams: any[] = [urlId];
+  let paramIndex = 2;
+
+  // Add date filtering if provided
+  if (startDate) {
+    query += ` AND clicked_at >= $${paramIndex}`;
+    queryParams.push(startDate);
+    paramIndex++;
+  }
+
+  if (endDate) {
+    query += ` AND clicked_at <= $${paramIndex}`;
+    queryParams.push(endDate);
+  }
+
+  query += `
+    GROUP BY browser
+    ORDER BY count DESC
+  `;
+
+  const result = await pool.query(query, queryParams);
+
+  return result.rows;
+};
+
+/**
+ * Get device type statistics for a URL with date filtering
+ *
+ * @param {number} urlId - The URL ID
+ * @param {Date} [startDate] - Optional start date for filtering
+ * @param {Date} [endDate] - Optional end date for filtering
+ * @returns {Promise<any[]>} Device type statistics
+ */
+exports.getDeviceStatsWithDateRange = async (
+  urlId: number,
+  startDate?: Date,
+  endDate?: Date
+) => {
+  let query = `
+    SELECT 
+      device_type,
+      COUNT(*) as count
+    FROM clicks
+    WHERE url_id = $1
+  `;
+
+  const queryParams: any[] = [urlId];
+  let paramIndex = 2;
+
+  // Add date filtering if provided
+  if (startDate) {
+    query += ` AND clicked_at >= $${paramIndex}`;
+    queryParams.push(startDate);
+    paramIndex++;
+  }
+
+  if (endDate) {
+    query += ` AND clicked_at <= $${paramIndex}`;
+    queryParams.push(endDate);
+  }
+
+  query += `
+    GROUP BY device_type
+    ORDER BY count DESC
+  `;
+
+  const result = await pool.query(query, queryParams);
+
+  return result.rows;
+};
+
+/**
+ * Get country statistics for a URL with date filtering
+ *
+ * @param {number} urlId - The URL ID
+ * @param {Date} [startDate] - Optional start date for filtering
+ * @param {Date} [endDate] - Optional end date for filtering
+ * @returns {Promise<any[]>} Country statistics
+ */
+exports.getCountryStatsWithDateRange = async (
+  urlId: number,
+  startDate?: Date,
+  endDate?: Date
+) => {
+  let query = `
+    SELECT 
+      country,
+      COUNT(*) as count
+    FROM clicks
+    WHERE url_id = $1 AND country IS NOT NULL
+  `;
+
+  const queryParams: any[] = [urlId];
+  let paramIndex = 2;
+
+  // Add date filtering if provided
+  if (startDate) {
+    query += ` AND clicked_at >= $${paramIndex}`;
+    queryParams.push(startDate);
+    paramIndex++;
+  }
+
+  if (endDate) {
+    query += ` AND clicked_at <= $${paramIndex}`;
+    queryParams.push(endDate);
+  }
+
+  query += `
+    GROUP BY country
+    ORDER BY count DESC
+  `;
+
+  const result = await pool.query(query, queryParams);
+
+  return result.rows;
+};

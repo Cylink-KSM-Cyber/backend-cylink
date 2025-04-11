@@ -237,3 +237,101 @@ exports.getUrlWithAnalytics = async (shortCode: string) => {
     analytics,
   };
 };
+
+/**
+ * Gets comprehensive URL analytics with filtering options
+ *
+ * @param {number} urlId - The URL ID
+ * @param {object} options - Analytics options
+ * @param {Date} [options.startDate] - Start date for filtering
+ * @param {Date} [options.endDate] - End date for filtering
+ * @param {string} [options.groupBy] - Group time series by ('day', 'week', 'month')
+ * @returns {Promise<object>} Comprehensive analytics data
+ */
+exports.getUrlAnalyticsWithFilters = async (
+  urlId: number,
+  options: any = {}
+) => {
+  const { startDate, endDate, groupBy = "day" } = options;
+
+  // Get the URL details
+  const url = await urlModel.getUrlById(urlId);
+  if (!url) {
+    throw new Error("URL not found");
+  }
+
+  // Parse dates if they are provided as strings
+  const parsedStartDate = startDate ? new Date(startDate) : undefined;
+  const parsedEndDate = endDate ? new Date(endDate) : undefined;
+
+  // Gather all analytics data in parallel
+  const [
+    totalClicks,
+    uniqueVisitors,
+    timeSeriesData,
+    browserStats,
+    deviceStats,
+    countryStats,
+  ] = await Promise.all([
+    clickModel.getClickCountByUrlIdWithDateRange(
+      urlId,
+      parsedStartDate,
+      parsedEndDate
+    ),
+    clickModel.getUniqueVisitorsByUrlId(urlId, parsedStartDate, parsedEndDate),
+    clickModel.getTimeSeriesData(
+      urlId,
+      groupBy,
+      parsedStartDate,
+      parsedEndDate
+    ),
+    clickModel.getBrowserStatsWithDateRange(
+      urlId,
+      parsedStartDate,
+      parsedEndDate
+    ),
+    clickModel.getDeviceStatsWithDateRange(
+      urlId,
+      parsedStartDate,
+      parsedEndDate
+    ),
+    clickModel.getCountryStatsWithDateRange(
+      urlId,
+      parsedStartDate,
+      parsedEndDate
+    ),
+  ]);
+
+  // Format browser stats into an object
+  const formattedBrowserStats: Record<string, number> = {};
+  browserStats.forEach((stat: any) => {
+    formattedBrowserStats[stat.browser || "unknown"] = parseInt(stat.count, 10);
+  });
+
+  // Format device stats into an object
+  const formattedDeviceStats: Record<string, number> = {};
+  deviceStats.forEach((stat: any) => {
+    formattedDeviceStats[stat.device_type || "unknown"] = parseInt(
+      stat.count,
+      10
+    );
+  });
+
+  // Format country stats into an object
+  const formattedCountryStats: Record<string, number> = {};
+  countryStats.forEach((stat: any) => {
+    formattedCountryStats[stat.country || "unknown"] = parseInt(stat.count, 10);
+  });
+
+  // Construct comprehensive analytics data
+  return {
+    url_id: url.id,
+    short_code: url.short_code,
+    total_clicks: totalClicks,
+    unique_visitors: uniqueVisitors,
+    time_series_data: timeSeriesData,
+    browser_stats: formattedBrowserStats,
+    device_stats: formattedDeviceStats,
+    country_stats: formattedCountryStats,
+  };
+};
