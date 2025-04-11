@@ -25,4 +25,14 @@ module.exports = {
       enum: ["asc", "desc"],
     },
   ],
+
+  /**
+   * Validation rules for creating a shortened URL
+   */
+  createUrl: [
+    { name: "original_url", type: "string", required: true },
+    { name: "custom_code", type: "string", required: false },
+    { name: "title", type: "string", required: false },
+    { name: "expiry_date", type: "string", required: false },
+  ],
 };
