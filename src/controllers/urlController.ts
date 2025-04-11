@@ -302,3 +302,60 @@ exports.getUrlDetails = async (req: Request, res: Response) => {
     return sendResponse(res, 500, "Internal Server Error");
   }
 };
+
+/**
+ * Delete a URL by ID (soft delete)
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Response with deletion result or error
+ */
+exports.deleteUrl = async (req: Request, res: Response) => {
+  try {
+    // Get user ID from authentication token
+    const userId = req.body.id;
+
+    // Get URL ID from request parameters
+    const urlId = parseInt(req.params.id);
+
+    if (isNaN(urlId)) {
+      return sendResponse(res, 400, "Invalid URL ID");
+    }
+
+    // Check if URL exists
+    const url = await urlModel.getUrlById(urlId);
+
+    if (!url) {
+      return sendResponse(res, 404, "URL not found");
+    }
+
+    // Check if the URL belongs to the authenticated user
+    if (url.user_id && url.user_id !== userId) {
+      return sendResponse(res, 401, "Unauthorized");
+    }
+
+    // Perform soft delete
+    const isDeleted = await urlModel.deleteUrl(urlId);
+
+    if (!isDeleted) {
+      return sendResponse(res, 500, "Failed to delete URL");
+    }
+
+    // Get the updated URL to return the deleted_at timestamp (including soft deleted URLs)
+    const deletedUrl = await urlModel.getUrlById(urlId, true);
+
+    // Format response
+    const response = {
+      id: deletedUrl.id,
+      short_code: deletedUrl.short_code,
+      deleted_at: new Date(deletedUrl.deleted_at).toISOString(),
+    };
+
+    logger.info(`Successfully deleted URL with ID ${urlId}`);
+
+    return sendResponse(res, 200, "Successfully deleted URL", response);
+  } catch (error: any) {
+    logger.error("URL error: Failed to delete URL:", error);
+    return sendResponse(res, 500, "Internal Server Error");
+  }
+};

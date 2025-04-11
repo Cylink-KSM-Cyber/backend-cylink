@@ -100,4 +100,30 @@ router.get(
  */
 router.get("/:identifier", accessToken, urlController.getUrlDetails);
 
+/**
+ * Delete a URL by ID
+ *
+ * @route DELETE /api/v1/urls/:id
+ * @param {string} authorization - Bearer token for user authentication
+ * @param {number} id - URL ID to delete
+ * @returns {object} Confirmation of deletion with timestamp
+ *
+ * @example
+ * // Request
+ * DELETE /api/v1/urls/123
+ * Authorization: Bearer {token}
+ *
+ * // Response
+ * {
+ *   "status": 200,
+ *   "message": "Successfully deleted URL",
+ *   "data": {
+ *     "id": 123,
+ *     "short_code": "abc123",
+ *     "deleted_at": "2025-04-12T11:30:00Z"
+ *   }
+ * }
+ */
+router.delete("/:id", accessToken, urlController.deleteUrl);
+
 module.exports = router;

@@ -183,16 +183,20 @@ exports.shortCodeExists = async (shortCode: string) => {
 };
 
 /**
- * Get a URL by its ID
+ * Get a URL by its ID (including soft deleted URLs)
  *
  * @param {number} id - The URL ID to look up
+ * @param {boolean} includeDeleted - Whether to include soft deleted URLs
  * @returns {Promise<any|null>} The URL object or null if not found
  */
-exports.getUrlById = async (id: number) => {
-  const result = await pool.query(
-    "SELECT * FROM urls WHERE id = $1 AND deleted_at IS NULL",
-    [id]
-  );
+exports.getUrlById = async (id: number, includeDeleted = false) => {
+  let query = "SELECT * FROM urls WHERE id = $1";
+
+  if (!includeDeleted) {
+    query += " AND deleted_at IS NULL";
+  }
+
+  const result = await pool.query(query, [id]);
 
   return result.rows[0] || null;
 };
