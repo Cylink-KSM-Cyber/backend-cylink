@@ -9,6 +9,7 @@ const urlModel = require("@/models/urlModel");
 const clickModel = require("@/models/clickModel");
 const shortCodeUtil = require("@/utils/shortCode");
 const bcrypt = require("bcrypt");
+const logger = require("@/utils/logger");
 
 /**
  * URL creation options interface
@@ -136,36 +137,52 @@ exports.verifyUrlPassword = async (
  *
  * @param {string} shortCode - The short code that was clicked
  * @param {object} clickInfo - Information about the click
- * @returns {Promise<string|null>} The original URL or null if not found/expired
+ * @returns {Promise<string|null>} The original URL or null if not found/expired/inactive
  */
 exports.recordClickAndGetOriginalUrl = async (
   shortCode: string,
   clickInfo: any
 ) => {
-  // Get the URL
-  const url = await urlModel.getUrlByShortCode(shortCode);
-  if (!url || !url.is_active) {
+  try {
+    // Get the URL
+    const url = await urlModel.getUrlByShortCode(shortCode);
+
+    // Check if URL exists and is active
+    if (!url || !url.is_active) {
+      logger.info(`URL not found or inactive for short code: ${shortCode}`);
+      return null;
+    }
+
+    // Check if the URL has expired
+    if (url.expiry_date && new Date(url.expiry_date) < new Date()) {
+      logger.info(`URL expired for short code: ${shortCode}`);
+
+      // Mark URL as inactive since it's expired
+      await urlModel.updateUrl(url.id, { is_active: false });
+      return null;
+    }
+
+    // Record the click with error handling
+    try {
+      await clickModel.recordClick({
+        url_id: url.id,
+        ip_address: clickInfo.ipAddress,
+        user_agent: clickInfo.userAgent,
+        referrer: clickInfo.referrer,
+        country: clickInfo.country,
+        device_type: clickInfo.deviceType,
+        browser: clickInfo.browser,
+      });
+    } catch (error) {
+      // If click recording fails, log the error but still allow the redirect
+      logger.error(`Failed to record click for ${shortCode}:`, error);
+    }
+
+    return url.original_url;
+  } catch (error) {
+    logger.error(`Error processing redirect for ${shortCode}:`, error);
     return null;
   }
-
-  // Check if the URL has expired
-  if (url.expiry_date && new Date(url.expiry_date) < new Date()) {
-    await urlModel.updateUrl(url.id, { is_active: false });
-    return null;
-  }
-
-  // Record the click
-  await clickModel.recordClick({
-    url_id: url.id,
-    ip_address: clickInfo.ipAddress,
-    user_agent: clickInfo.userAgent,
-    referrer: clickInfo.referrer,
-    country: clickInfo.country,
-    device_type: clickInfo.deviceType,
-    browser: clickInfo.browser,
-  });
-
-  return url.original_url;
 };
 
 /**

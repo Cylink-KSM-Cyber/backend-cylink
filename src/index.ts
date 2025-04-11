@@ -28,7 +28,15 @@ app.use("/api/v1", routes);
 // This should be after the API routes to avoid conflicting with them
 app.use(redirectMiddleware);
 
-// 404 handler for non-existent routes
+/**
+ * Global 404 handler for routes that don't match any endpoint
+ *
+ * This catches any request that wasn't handled by API routes or URL redirects
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Response} 404 JSON response
+ */
 app.use((req: Request, res: Response) => {
   res.status(404).json({
     status: 404,

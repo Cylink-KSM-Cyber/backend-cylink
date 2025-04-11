@@ -74,10 +74,19 @@ module.exports = async (
       return res.redirect(redirectType, originalUrl);
     }
 
-    // If no URL is found, continue to the next middleware (likely 404 handler)
-    next();
+    // Return a proper JSON 404 response when URL is not found or expired
+    logger.info(`URL not found for short code: ${shortCode}`);
+    return res.status(404).json({
+      status: 404,
+      message: "Short URL not found or has expired",
+    });
   } catch (error) {
     logger.error("Redirect error:", error);
-    next();
+
+    // Return a proper JSON 500 response for errors
+    return res.status(500).json({
+      status: 500,
+      message: "Internal Server Error",
+    });
   }
 };
