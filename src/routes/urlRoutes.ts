@@ -51,6 +51,51 @@ router.get(
 );
 
 /**
+ * Create a shortened URL for authenticated users
+ *
+ * @route POST /api/v1/urls
+ * @param {string} authorization - Bearer token for user authentication
+ * @param {string} original_url - The original URL to shorten
+ * @param {string} [custom_code] - Optional custom short code
+ * @param {string} [title] - Optional title for the URL
+ * @param {string} [expiry_date] - Optional expiration date in ISO format
+ * @returns {object} The created shortened URL object
+ *
+ * @example
+ * // Request
+ * POST /api/v1/urls
+ * Authorization: Bearer {token}
+ * {
+ *   "original_url": "https://example.com/very-long-url-path",
+ *   "custom_code": "mylink",
+ *   "title": "Example Title",
+ *   "expiry_date": "2025-05-10T00:00:00Z"
+ * }
+ *
+ * // Response
+ * {
+ *   "status": 201,
+ *   "message": "Successfully created shortened URL",
+ *   "data": {
+ *     "id": 123,
+ *     "original_url": "https://example.com/very-long-url-path",
+ *     "short_code": "mylink",
+ *     "short_url": "https://cylink.id/mylink",
+ *     "title": "Example Title",
+ *     "created_at": "2025-04-10T12:00:00Z",
+ *     "expiry_date": "2025-05-10T00:00:00Z",
+ *     "is_active": true
+ *   }
+ * }
+ */
+router.post(
+  "/",
+  accessToken,
+  validate({ fields: fields.createUrl }),
+  urlController.createAuthenticatedUrl
+);
+
+/**
  * Get URL details by ID
  *
  * @route GET /api/v1/urls/:identifier

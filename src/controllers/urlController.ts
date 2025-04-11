@@ -193,6 +193,81 @@ exports.createAnonymousUrl = async (req: Request, res: Response) => {
 };
 
 /**
+ * Create a shortened URL for authenticated users
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Response with created URL or error
+ */
+exports.createAuthenticatedUrl = async (req: Request, res: Response) => {
+  try {
+    // Get user ID from authentication token
+    const userId = req.body.id;
+
+    // Extract request data
+    const { original_url, custom_code, title, expiry_date } = req.body;
+
+    // Validate the URL
+    if (!isValidUrl(original_url)) {
+      return sendResponse(res, 400, "Invalid URL provided");
+    }
+
+    // Create options object for URL creation
+    const urlOptions = {
+      userId,
+      originalUrl: original_url,
+      customShortCode: custom_code,
+      title,
+      expiryDate: expiry_date ? new Date(expiry_date) : undefined,
+    };
+
+    try {
+      // Create the shortened URL
+      const newUrl = await urlService.createShortenedUrl(urlOptions);
+
+      // Generate the full short URL
+      const baseUrl = process.env.SHORT_URL_BASE || "https://cylink.id/";
+      const shortUrl = baseUrl + newUrl.short_code;
+
+      // Format the response
+      const response = {
+        id: newUrl.id,
+        original_url: newUrl.original_url,
+        short_code: newUrl.short_code,
+        short_url: shortUrl,
+        title: newUrl.title || null,
+        created_at: new Date(newUrl.created_at).toISOString(),
+        expiry_date: newUrl.expiry_date
+          ? new Date(newUrl.expiry_date).toISOString()
+          : null,
+        is_active: newUrl.is_active,
+      };
+
+      logger.info(
+        `Successfully created authenticated shortened URL: ${shortUrl} for user ${userId}`
+      );
+
+      return sendResponse(
+        res,
+        201,
+        "Successfully created shortened URL",
+        response
+      );
+    } catch (error: any) {
+      // Handle custom code already taken error
+      if (error.message === "This custom short code is already taken") {
+        return sendResponse(res, 409, "Custom code already in use");
+      }
+
+      throw error; // Re-throw for generic error handling
+    }
+  } catch (error: any) {
+    logger.error("URL error: Failed to create shortened URL:", error);
+    return sendResponse(res, 500, "Internal Server Error");
+  }
+};
+
+/**
  * Validate if a string is a valid URL
  *
  * @param {string} url - URL to validate
