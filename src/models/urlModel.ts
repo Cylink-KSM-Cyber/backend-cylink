@@ -181,3 +181,18 @@ exports.shortCodeExists = async (shortCode: string) => {
 
   return result.rowCount > 0;
 };
+
+/**
+ * Get a URL by its ID
+ *
+ * @param {number} id - The URL ID to look up
+ * @returns {Promise<any|null>} The URL object or null if not found
+ */
+exports.getUrlById = async (id: number) => {
+  const result = await pool.query(
+    "SELECT * FROM urls WHERE id = $1 AND deleted_at IS NULL",
+    [id]
+  );
+
+  return result.rows[0] || null;
+};

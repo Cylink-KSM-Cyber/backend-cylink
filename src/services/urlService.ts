@@ -169,26 +169,35 @@ exports.recordClickAndGetOriginalUrl = async (
 };
 
 /**
- * Gets analytics data for a URL
+ * Gets formatted analytics data for a URL
  *
  * @param {number} urlId - The URL ID
- * @returns {Promise<object>} Analytics data
+ * @returns {Promise<object>} Formatted analytics data
  */
 exports.getUrlAnalytics = async (urlId: number) => {
   const totalClicks = await clickModel.getClickCountByUrlId(urlId);
-  const dailyStats = await clickModel.getDailyClickStats(urlId);
   const browserStats = await clickModel.getBrowserStats(urlId);
   const deviceStats = await clickModel.getDeviceStats(urlId);
-  const countryStats = await clickModel.getCountryStats(urlId);
-  const referrerStats = await clickModel.getReferrerStats(urlId);
+
+  // Format browser stats into an object
+  const formattedBrowserStats: Record<string, number> = {};
+  browserStats.forEach((stat: any) => {
+    formattedBrowserStats[stat.browser || "unknown"] = parseInt(stat.count, 10);
+  });
+
+  // Format device stats into an object
+  const formattedDeviceStats: Record<string, number> = {};
+  deviceStats.forEach((stat: any) => {
+    formattedDeviceStats[stat.device_type || "unknown"] = parseInt(
+      stat.count,
+      10
+    );
+  });
 
   return {
     totalClicks,
-    dailyStats,
-    browserStats,
-    deviceStats,
-    countryStats,
-    referrerStats,
+    browserStats: formattedBrowserStats,
+    deviceStats: formattedDeviceStats,
   };
 };
 

@@ -201,3 +201,19 @@ exports.getReferrerStats = async (urlId: number) => {
 
   return result.rows;
 };
+
+/**
+ * Get recent clicks for a specific URL
+ *
+ * @param {number} urlId - The URL ID
+ * @param {number} limit - Maximum number of clicks to return
+ * @returns {Promise<any[]>} Array of recent click records
+ */
+exports.getRecentClicksByUrlId = async (urlId: number, limit: number = 10) => {
+  const result = await pool.query(
+    "SELECT * FROM clicks WHERE url_id = $1 ORDER BY clicked_at DESC LIMIT $2",
+    [urlId, limit]
+  );
+
+  return result.rows;
+};

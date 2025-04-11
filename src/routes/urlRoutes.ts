@@ -50,4 +50,54 @@ router.get(
   urlController.getAllUrls
 );
 
+/**
+ * Get URL details by ID
+ *
+ * @route GET /api/v1/urls/:identifier
+ * @param {string} authorization - Bearer token for user authentication
+ * @param {number|string} identifier - URL ID or short code to look up
+ * @returns {object} URL details with analytics
+ *
+ * @example
+ * // Request
+ * GET /api/v1/urls/123
+ * Authorization: Bearer {token}
+ *
+ * // Response
+ * {
+ *   "status": 200,
+ *   "message": "Successfully retrieved URL",
+ *   "data": {
+ *     "id": 123,
+ *     "original_url": "https://example.com/very-long-url-path",
+ *     "short_code": "abc123",
+ *     "short_url": "https://cylink.id/abc123",
+ *     "title": "Example Title",
+ *     "clicks": 42,
+ *     "created_at": "2025-04-10T12:00:00Z",
+ *     "updated_at": "2025-04-11T09:30:00Z",
+ *     "expiry_date": "2025-05-10T00:00:00Z",
+ *     "is_active": true,
+ *     "analytics": {
+ *       "browser_stats": {
+ *         "Chrome": 25,
+ *         "Firefox": 10,
+ *         "Safari": 7
+ *       },
+ *       "device_stats": {
+ *         "mobile": 18,
+ *         "desktop": 24
+ *       },
+ *       "recent_clicks": [
+ *         {
+ *           "timestamp": "2025-04-10T15:23:11Z",
+ *           "device_type": "mobile"
+ *         }
+ *       ]
+ *     }
+ *   }
+ * }
+ */
+router.get("/:identifier", accessToken, urlController.getUrlDetails);
+
 module.exports = router;
