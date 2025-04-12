@@ -9,14 +9,14 @@
  */
 module.exports = {
   users: {
-    id: "SERIAL PRIMARY KEY",
-    email: "VARCHAR(255) NOT NULL",
-    password: "VARCHAR(255) NOT NULL",
-    username: "VARCHAR(255)",
+    id: 'SERIAL PRIMARY KEY',
+    email: 'VARCHAR(255) NOT NULL',
+    password: 'VARCHAR(255) NOT NULL',
+    username: 'VARCHAR(255)',
     role: `ENUM('user', 'admin')`,
-    verification_token: "VARCHAR(255)",
-    email_verified_at: "TIMESTAMP",
-    last_email_verify_requested_at: "TIMESTAMP",
+    verification_token: 'VARCHAR(255)',
+    email_verified_at: 'TIMESTAMP',
+    last_email_verify_requested_at: 'TIMESTAMP',
     timestamps: true,
   },
 
@@ -27,15 +27,15 @@ module.exports = {
    * such as title, expiry date, and password protection
    */
   urls: {
-    id: "SERIAL PRIMARY KEY",
-    user_id: "INTEGER REFERENCES users(id) ON DELETE SET NULL",
-    original_url: "TEXT NOT NULL",
-    short_code: "VARCHAR(10) UNIQUE NOT NULL",
-    title: "VARCHAR(255)",
-    expiry_date: "TIMESTAMP WITH TIME ZONE",
-    is_active: "BOOLEAN DEFAULT TRUE",
-    has_password: "BOOLEAN DEFAULT FALSE",
-    password_hash: "VARCHAR(255)",
+    id: 'SERIAL PRIMARY KEY',
+    user_id: 'INTEGER REFERENCES users(id) ON DELETE SET NULL',
+    original_url: 'TEXT NOT NULL',
+    short_code: 'VARCHAR(10) UNIQUE NOT NULL',
+    title: 'VARCHAR(255)',
+    expiry_date: 'TIMESTAMP WITH TIME ZONE',
+    is_active: 'BOOLEAN DEFAULT TRUE',
+    has_password: 'BOOLEAN DEFAULT FALSE',
+    password_hash: 'VARCHAR(255)',
     redirect_type: `VARCHAR(3) DEFAULT '302'`,
     timestamps: true,
   },
@@ -47,14 +47,32 @@ module.exports = {
    * including IP address, user agent, referrer, and geo information
    */
   clicks: {
-    id: "SERIAL PRIMARY KEY",
-    url_id: "INTEGER NOT NULL REFERENCES urls(id) ON DELETE CASCADE",
-    clicked_at: "TIMESTAMP WITH TIME ZONE DEFAULT NOW()",
-    ip_address: "VARCHAR(45)",
-    user_agent: "TEXT",
-    referrer: "TEXT",
-    country: "VARCHAR(2)",
-    device_type: "VARCHAR(20)",
-    browser: "VARCHAR(50)",
+    id: 'SERIAL PRIMARY KEY',
+    url_id: 'INTEGER NOT NULL REFERENCES urls(id) ON DELETE CASCADE',
+    clicked_at: 'TIMESTAMP WITH TIME ZONE DEFAULT NOW()',
+    ip_address: 'VARCHAR(45)',
+    user_agent: 'TEXT',
+    referrer: 'TEXT',
+    country: 'VARCHAR(2)',
+    device_type: 'VARCHAR(20)',
+    browser: 'VARCHAR(50)',
+  },
+
+  /**
+   * QR Codes table for storing QR code configurations
+   *
+   * Contains customization options for QR codes linked to URLs
+   * such as colors, logo options, and size
+   */
+  qr_codes: {
+    id: 'SERIAL PRIMARY KEY',
+    url_id: 'INTEGER NOT NULL REFERENCES urls(id) ON DELETE CASCADE',
+    color: "VARCHAR(7) NOT NULL DEFAULT '#000000'",
+    background_color: "VARCHAR(7) NOT NULL DEFAULT '#FFFFFF'",
+    include_logo: 'BOOLEAN NOT NULL DEFAULT TRUE',
+    logo_size: 'DECIMAL(3,2) NOT NULL DEFAULT 0.2 CHECK (logo_size >= 0.1 AND logo_size <= 0.3)',
+    size: 'INTEGER NOT NULL DEFAULT 300',
+    created_at: 'TIMESTAMP WITH TIME ZONE DEFAULT NOW()',
+    updated_at: 'TIMESTAMP WITH TIME ZONE',
   },
 };
