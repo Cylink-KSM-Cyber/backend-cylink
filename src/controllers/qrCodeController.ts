@@ -9,6 +9,7 @@ import {
   downloadQrCodeById,
   downloadQrCodeByShortCode,
   QrCodeFormat,
+  getQrCodeColors,
 } from '@/services/qrCodeService';
 
 const logger = require('@/utils/logger');
@@ -20,6 +21,26 @@ const { sendResponse } = require('@/utils/response');
  * Handles QR code generation and management operations
  * @module controllers/qrCodeController
  */
+
+/**
+ * Get predefined QR code color options
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Response with color options or error
+ */
+export const getQrCodeColorOptions = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    // Get the predefined color options
+    const colorOptions = getQrCodeColors();
+
+    logger.info('Successfully retrieved QR code color options');
+    return sendResponse(res, 200, 'Successfully retrieved QR code color options', colorOptions);
+  } catch (error) {
+    logger.error('Error retrieving QR code color options:', error);
+    return sendResponse(res, 500, 'Internal Server Error');
+  }
+};
 
 /**
  * Create a new QR code for a URL

@@ -7,6 +7,7 @@ const {
   updateQrCode,
   downloadQrCodeByIdController,
   downloadQrCodeByShortCodeController,
+  getQrCodeColorOptions,
 } = require('@/controllers/qrCodeController');
 const { validate } = require('@/middlewares/validator');
 const qrCodeValidator = require('@/validators/qrCodeValidator');
@@ -17,6 +18,52 @@ const qrCodeValidator = require('@/validators/qrCodeValidator');
  * Defines API endpoints for QR code generation and management
  * @module routes/qrCodeRoutes
  */
+
+/**
+ * @swagger
+ * /api/v1/qr-codes/colors:
+ *   get:
+ *     summary: Get predefined QR code color options
+ *     tags: [QR Codes]
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved color options
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: number
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Successfully retrieved QR code color options
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     foreground_colors:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           name:
+ *                             type: string
+ *                           hex:
+ *                             type: string
+ *                     background_colors:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           name:
+ *                             type: string
+ *                           hex:
+ *                             type: string
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/colors', getQrCodeColorOptions);
 
 /**
  * @swagger

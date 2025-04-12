@@ -1,5 +1,6 @@
 import { QrCode, QrCodeCreateData, QrCodeUpdateData } from '@/interfaces/QrCode';
 import { generateQrCodePng, generateQrCodeSvg, mapQrCodeToOptions } from '@/utils/qrCodeGenerator';
+import { getQrCodeColorOptions, QrCodeColorOptions } from '@/config/qrCodeColors';
 
 const urlModel = require('@/models/urlModel');
 const qrCodeModel = require('@/models/qrCodeModel');
@@ -49,6 +50,15 @@ interface QrCodeOptions {
   logoSize?: number;
   size?: number;
 }
+
+/**
+ * Get predefined QR code color options
+ *
+ * @returns {QrCodeColorOptions} Foreground and background color options
+ */
+export const getQrCodeColors = (): QrCodeColorOptions => {
+  return getQrCodeColorOptions();
+};
 
 /**
  * Formats QR code data for API response
