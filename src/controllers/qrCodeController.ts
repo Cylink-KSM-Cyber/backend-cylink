@@ -5,6 +5,7 @@ import {
   getQrCodeResponseById,
   getQrCodeResponseByUrlId,
   getQrCodeResponseByShortCode,
+  updateQrCodeWithResponse,
 } from '@/services/qrCodeService';
 
 const logger = require('@/utils/logger');
@@ -57,6 +58,66 @@ export const createQrCode = async (req: Request, res: Response): Promise<Respons
       logger.error('QR code generation error:', error.message);
     } else {
       logger.error('QR code generation error:', error);
+    }
+
+    return sendResponse(res, 500, 'Internal Server Error');
+  }
+};
+
+/**
+ * Update an existing QR code
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Response with updated QR code or error
+ */
+export const updateQrCode = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const id = parseInt(req.params.id);
+
+    if (isNaN(id)) {
+      return sendResponse(res, 400, 'Invalid QR code ID');
+    }
+
+    const { color, background_color, include_logo, logo_size, size } = req.body;
+
+    // Prepare update data
+    const updateData = {
+      ...(color !== undefined && { color }),
+      ...(background_color !== undefined && { background_color }),
+      ...(include_logo !== undefined && { include_logo }),
+      ...(logo_size !== undefined && { logo_size }),
+      ...(size !== undefined && { size }),
+    };
+
+    // Update QR code
+    const updatedQrCode = await updateQrCodeWithResponse(id, updateData);
+
+    logger.info(`Successfully updated QR code with ID: ${id}`);
+    return sendResponse(res, 200, 'Successfully updated QR code', updatedQrCode);
+  } catch (error) {
+    // Handle specific error conditions
+    if (error instanceof Error) {
+      if (error.message.includes('QR code not found')) {
+        return sendResponse(res, 404, 'QR code not found');
+      }
+
+      if (error.message.includes('Associated URL not found')) {
+        return sendResponse(res, 404, 'Associated URL not found');
+      }
+
+      if (
+        error.message.includes('invalid parameters') ||
+        error.message.includes('Failed to update QR code')
+      ) {
+        return sendResponse(res, 400, 'Invalid QR code parameters', {
+          errors: [error.message],
+        });
+      }
+
+      logger.error('QR code update error:', error.message);
+    } else {
+      logger.error('QR code update error:', error);
     }
 
     return sendResponse(res, 500, 'Internal Server Error');

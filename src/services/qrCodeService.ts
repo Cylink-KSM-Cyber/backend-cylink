@@ -1,4 +1,4 @@
-import { QrCode, QrCodeCreateData } from '@/interfaces/QrCode';
+import { QrCode, QrCodeCreateData, QrCodeUpdateData } from '@/interfaces/QrCode';
 
 const urlModel = require('@/models/urlModel');
 const qrCodeModel = require('@/models/qrCodeModel');
@@ -117,6 +117,46 @@ export const generateQrCode = async (options: QrCodeOptions): Promise<QrCodeResp
   } catch (error) {
     logger.error('Failed to create QR code:', error);
     throw new Error('Failed to generate QR code');
+  }
+};
+
+/**
+ * Updates a QR code and returns formatted response data
+ *
+ * @param {number} id - The QR code ID to update
+ * @param {QrCodeUpdateData} updateData - The update data
+ * @returns {Promise<QrCodeResponseData|null>} The updated QR code or null if not found
+ * @throws {Error} If the QR code is not found or update fails
+ */
+export const updateQrCodeWithResponse = async (
+  id: number,
+  updateData: QrCodeUpdateData,
+): Promise<QrCodeResponseData | null> => {
+  // Verify QR code exists
+  const existingQrCode = await qrCodeModel.getQrCodeById(id);
+  if (!existingQrCode) {
+    throw new Error('QR code not found');
+  }
+
+  // Get the URL to retrieve the short_code
+  const url = await urlModel.getUrlById(existingQrCode.url_id);
+  if (!url) {
+    logger.error(`URL not found for QR code ID ${id} with URL ID ${existingQrCode.url_id}`);
+    throw new Error('Associated URL not found');
+  }
+
+  try {
+    // Update the QR code
+    const updatedQrCode = await qrCodeModel.updateQrCode(id, updateData);
+    if (!updatedQrCode) {
+      throw new Error('Failed to update QR code');
+    }
+
+    // Format the response
+    return formatQrCodeResponse(updatedQrCode, url.short_code);
+  } catch (error) {
+    logger.error(`Failed to update QR code ${id}:`, error);
+    throw new Error('Failed to update QR code');
   }
 };
 
