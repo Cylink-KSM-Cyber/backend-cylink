@@ -5,6 +5,8 @@ const {
   getQrCodeById,
   getQrCodeByShortCode,
   updateQrCode,
+  downloadQrCodeByIdController,
+  downloadQrCodeByShortCodeController,
 } = require('@/controllers/qrCodeController');
 const { validate } = require('@/middlewares/validator');
 const qrCodeValidator = require('@/validators/qrCodeValidator');
@@ -113,6 +115,102 @@ router.post('/', validate(qrCodeValidator.createQrCode), createQrCode);
  *         description: Internal server error
  */
 router.put('/:id', validate(qrCodeValidator.updateQrCode), updateQrCode);
+
+/**
+ * @swagger
+ * /api/v1/qr-codes/{id}/download:
+ *   get:
+ *     summary: Download QR code by ID
+ *     tags: [QR Codes]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: QR code ID
+ *       - in: query
+ *         name: format
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [png, svg]
+ *           default: png
+ *         description: Output format
+ *       - in: query
+ *         name: size
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Custom size in pixels
+ *     responses:
+ *       200:
+ *         description: QR code file
+ *         content:
+ *           image/png:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *           image/svg+xml:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: Invalid parameters
+ *       404:
+ *         description: QR code not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/:id/download', downloadQrCodeByIdController);
+
+/**
+ * @swagger
+ * /api/v1/qr-codes/code/{shortCode}/download:
+ *   get:
+ *     summary: Download QR code by short code
+ *     tags: [QR Codes]
+ *     parameters:
+ *       - in: path
+ *         name: shortCode
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Short code of the URL
+ *       - in: query
+ *         name: format
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [png, svg]
+ *           default: png
+ *         description: Output format
+ *       - in: query
+ *         name: size
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Custom size in pixels
+ *     responses:
+ *       200:
+ *         description: QR code file
+ *         content:
+ *           image/png:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *           image/svg+xml:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: Invalid parameters
+ *       404:
+ *         description: QR code not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/code/:shortCode/download', downloadQrCodeByShortCodeController);
 
 /**
  * @swagger

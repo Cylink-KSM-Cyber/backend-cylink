@@ -1,4 +1,5 @@
 import { QrCode, QrCodeCreateData, QrCodeUpdateData } from '@/interfaces/QrCode';
+import { generateQrCodePng, generateQrCodeSvg, mapQrCodeToOptions } from '@/utils/qrCodeGenerator';
 
 const urlModel = require('@/models/urlModel');
 const qrCodeModel = require('@/models/qrCodeModel');
@@ -20,6 +21,20 @@ export interface QrCodeResponseData extends QrCode {
   qr_code_url: string;
   png_url: string;
   svg_url: string;
+}
+
+/**
+ * QR code download formats
+ */
+export type QrCodeFormat = 'png' | 'svg';
+
+/**
+ * QR code download result
+ */
+export interface QrCodeDownloadResult {
+  data: Buffer | string;
+  contentType: string;
+  filename: string;
 }
 
 /**
@@ -119,6 +134,129 @@ export const generateQrCode = async (options: QrCodeOptions): Promise<QrCodeResp
     throw new Error('Failed to generate QR code');
   }
 };
+
+/**
+ * Downloads a QR code by its ID in the specified format
+ *
+ * @param {number} id - QR code ID
+ * @param {QrCodeFormat} format - Format to download (png or svg)
+ * @param {number} [customSize] - Optional custom size in pixels
+ * @returns {Promise<QrCodeDownloadResult>} QR code download result with data and metadata
+ * @throws {Error} If QR code is not found or format is invalid
+ */
+export const downloadQrCodeById = async (
+  id: number,
+  format: QrCodeFormat = 'png',
+  customSize?: number,
+): Promise<QrCodeDownloadResult> => {
+  // Get QR code from database
+  const qrCode = await qrCodeModel.getQrCodeById(id);
+  if (!qrCode) {
+    throw new Error('QR code not found');
+  }
+
+  // Get URL to retrieve the short_code and original URL
+  const url = await urlModel.getUrlById(qrCode.url_id);
+  if (!url) {
+    logger.error(`URL not found for QR code ID ${id} with URL ID ${qrCode.url_id}`);
+    throw new Error('Associated URL not found');
+  }
+
+  // Generate the QR code file
+  return await generateQrCodeForDownload(
+    url.short_code,
+    url.original_url,
+    qrCode,
+    format,
+    customSize,
+  );
+};
+
+/**
+ * Downloads a QR code by short code in the specified format
+ *
+ * @param {string} shortCode - URL short code
+ * @param {QrCodeFormat} format - Format to download (png or svg)
+ * @param {number} [customSize] - Optional custom size in pixels
+ * @returns {Promise<QrCodeDownloadResult>} QR code download result with data and metadata
+ * @throws {Error} If QR code is not found or format is invalid
+ */
+export const downloadQrCodeByShortCode = async (
+  shortCode: string,
+  format: QrCodeFormat = 'png',
+  customSize?: number,
+): Promise<QrCodeDownloadResult> => {
+  // Get URL by short code
+  const url = await urlModel.getUrlByShortCode(shortCode);
+  if (!url) {
+    throw new Error('URL not found for the provided short code');
+  }
+
+  // Get QR codes for this URL
+  const qrCodes = await qrCodeModel.getQrCodesByUrlId(url.id);
+  if (!qrCodes || qrCodes.length === 0) {
+    throw new Error('No QR code found for this URL');
+  }
+
+  // Get the most recent QR code
+  const latestQrCode = qrCodes.sort(
+    (a: QrCode, b: QrCode) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  )[0];
+
+  // Generate the QR code file
+  return await generateQrCodeForDownload(
+    shortCode,
+    url.original_url,
+    latestQrCode,
+    format,
+    customSize,
+  );
+};
+
+/**
+ * Generate QR code for download in specified format
+ *
+ * @param {string} shortCode - URL short code
+ * @param {string} originalUrl - Original URL to encode
+ * @param {QrCode} qrCode - QR code database entity
+ * @param {QrCodeFormat} format - Format to download (png or svg)
+ * @param {number} [customSize] - Optional custom size in pixels
+ * @returns {Promise<QrCodeDownloadResult>} QR code download result
+ * @throws {Error} If format is invalid
+ */
+async function generateQrCodeForDownload(
+  shortCode: string,
+  originalUrl: string,
+  qrCode: QrCode,
+  format: QrCodeFormat,
+  customSize?: number,
+): Promise<QrCodeDownloadResult> {
+  // Map QR code entity to generation options
+  const options = mapQrCodeToOptions(qrCode, customSize);
+
+  // Generate the base filename without extension
+  const baseFilename = `qrcode-${shortCode}`;
+
+  if (format === 'png') {
+    // Generate PNG QR code
+    const pngBuffer = await generateQrCodePng(originalUrl, options);
+    return {
+      data: pngBuffer,
+      contentType: 'image/png',
+      filename: `${baseFilename}.png`,
+    };
+  } else if (format === 'svg') {
+    // Generate SVG QR code
+    const svgString = await generateQrCodeSvg(originalUrl, options);
+    return {
+      data: Buffer.from(svgString),
+      contentType: 'image/svg+xml',
+      filename: `${baseFilename}.svg`,
+    };
+  } else {
+    throw new Error('Invalid format specified. Supported formats: png, svg');
+  }
+}
 
 /**
  * Updates a QR code and returns formatted response data

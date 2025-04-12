@@ -6,6 +6,9 @@ import {
   getQrCodeResponseByUrlId,
   getQrCodeResponseByShortCode,
   updateQrCodeWithResponse,
+  downloadQrCodeById,
+  downloadQrCodeByShortCode,
+  QrCodeFormat,
 } from '@/services/qrCodeService';
 
 const logger = require('@/utils/logger');
@@ -123,6 +126,156 @@ export const updateQrCode = async (req: Request, res: Response): Promise<Respons
     return sendResponse(res, 500, 'Internal Server Error');
   }
 };
+
+/**
+ * Download QR code by ID in the specified format
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends binary file response
+ */
+export const downloadQrCodeByIdController = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = parseInt(req.params.id);
+
+    if (isNaN(id)) {
+      res.status(400).json({
+        status: 400,
+        message: 'Invalid QR code ID',
+      });
+      return;
+    }
+
+    // Get format and size from query parameters
+    const format = validateFormat(req.query.format?.toString());
+    const size = req.query.size ? parseInt(req.query.size.toString()) : undefined;
+
+    if (size !== undefined && isNaN(size)) {
+      res.status(400).json({
+        status: 400,
+        message: 'Invalid size parameter',
+      });
+      return;
+    }
+
+    // Generate QR code for download
+    const qrCode = await downloadQrCodeById(id, format, size);
+
+    // Set appropriate headers for file download
+    res.setHeader('Content-Type', qrCode.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${qrCode.filename}"`);
+
+    // Send the file data
+    res.send(qrCode.data);
+
+    logger.info(`Successfully downloaded QR code ID ${id} in ${format} format`);
+  } catch (error) {
+    handleDownloadError(res, error);
+  }
+};
+
+/**
+ * Download QR code by short code in the specified format
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} Sends binary file response
+ */
+export const downloadQrCodeByShortCodeController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const shortCode = req.params.shortCode;
+
+    if (!shortCode) {
+      res.status(400).json({
+        status: 400,
+        message: 'Invalid short code',
+      });
+      return;
+    }
+
+    // Get format and size from query parameters
+    const format = validateFormat(req.query.format?.toString());
+    const size = req.query.size ? parseInt(req.query.size.toString()) : undefined;
+
+    if (size !== undefined && isNaN(size)) {
+      res.status(400).json({
+        status: 400,
+        message: 'Invalid size parameter',
+      });
+      return;
+    }
+
+    // Generate QR code for download
+    const qrCode = await downloadQrCodeByShortCode(shortCode, format, size);
+
+    // Set appropriate headers for file download
+    res.setHeader('Content-Type', qrCode.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${qrCode.filename}"`);
+
+    // Send the file data
+    res.send(qrCode.data);
+
+    logger.info(`Successfully downloaded QR code for short code ${shortCode} in ${format} format`);
+  } catch (error) {
+    handleDownloadError(res, error);
+  }
+};
+
+/**
+ * Validate and normalize the format parameter
+ *
+ * @param {string|undefined} formatParam - Format parameter from request
+ * @returns {QrCodeFormat} Validated format (default: png)
+ */
+function validateFormat(formatParam?: string): QrCodeFormat {
+  if (!formatParam) return 'png';
+
+  const format = formatParam.toLowerCase();
+  if (format === 'svg') return 'svg';
+  return 'png'; // Default to PNG for any other value
+}
+
+/**
+ * Handle errors in download controllers
+ *
+ * @param {Response} res - Express response object
+ * @param {unknown} error - The error that occurred
+ */
+function handleDownloadError(res: Response, error: unknown): void {
+  if (error instanceof Error) {
+    logger.error('QR code download error:', error.message);
+
+    if (
+      error.message.includes('QR code not found') ||
+      error.message.includes('URL not found') ||
+      error.message.includes('No QR code found')
+    ) {
+      res.status(404).json({
+        status: 404,
+        message: 'QR code not found',
+      });
+    } else if (error.message.includes('Invalid format')) {
+      res.status(400).json({
+        status: 400,
+        message: 'Invalid format specified',
+      });
+    } else {
+      res.status(500).json({
+        status: 500,
+        message: 'Internal Server Error',
+      });
+    }
+  } else {
+    logger.error('QR code download error:', error);
+    res.status(500).json({
+      status: 500,
+      message: 'Internal Server Error',
+    });
+  }
+}
 
 /**
  * Get a QR code by its ID
