@@ -30,9 +30,9 @@ export const generateQrCodePng = async (
   data: string,
   options: QrCodeGenerationOptions,
 ): Promise<Buffer> => {
-  const qrOptions = {
+  const qrOptions: QRCode.QRCodeToBufferOptions = {
     errorCorrectionLevel: 'H', // Higher error correction for logo overlay
-    type: 'png',
+    type: 'png' as const, // Use a literal type to match expected 'png' type
     color: {
       dark: options.color,
       light: options.backgroundColor,
@@ -44,7 +44,7 @@ export const generateQrCodePng = async (
   // For now, basic QR code generation without logo
   // Logo overlay would require canvas manipulation which could be added later
   // if needed as a feature enhancement
-  return await QRCode.toBuffer(data, qrOptions);
+  return QRCode.toBuffer(data, qrOptions);
 };
 
 /**
@@ -58,9 +58,9 @@ export const generateQrCodeSvg = async (
   data: string,
   options: QrCodeGenerationOptions,
 ): Promise<string> => {
-  const qrOptions = {
+  const qrOptions: QRCode.QRCodeToStringOptions = {
     errorCorrectionLevel: 'H', // Higher error correction for logo overlay
-    type: 'svg',
+    type: 'svg' as const, // Use a literal type to match expected 'svg' type
     color: {
       dark: options.color,
       light: options.backgroundColor,
@@ -71,7 +71,7 @@ export const generateQrCodeSvg = async (
 
   // For now, basic QR code generation without logo
   // Logo overlay would require SVG manipulation which could be added later
-  return await QRCode.toString(data, qrOptions);
+  return QRCode.toString(data, qrOptions);
 };
 
 /**
