@@ -1,4 +1,6 @@
 const router = require('express').Router();
+
+const authController = require('@/controllers/authController');
 const {
   accessToken,
   refreshToken,
@@ -7,7 +9,6 @@ const {
 const validate = require('@/utils/validator');
 const fields = require('@/validators/authValidator');
 
-const authController = require('@/controllers/authController');
 
 /**
  * User registration via email.

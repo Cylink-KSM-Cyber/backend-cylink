@@ -1,8 +1,9 @@
 const router = require("express").Router();
+
+const urlController = require("@/controllers/urlController");
 const validate = require("@/utils/validator");
 const fields = require("@/validators/urlValidator");
 
-const urlController = require("@/controllers/urlController");
 
 /**
  * Public URL Routes

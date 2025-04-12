@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+
 const logger = require('@/utils/logger');
 require('dotenv').config({
   // Traces back to root directory (absolute path)

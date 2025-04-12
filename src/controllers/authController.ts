@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
+
 const authService = require('@/services/authService');
-const { sendResponse } = require('@/utils/response');
 const logger = require('@/utils/logger');
+const { sendResponse } = require('@/utils/response');
 
 const emailVerificationEnabled = process.env.ENABLE_EMAIL_VERIFICATION === 'true';
 

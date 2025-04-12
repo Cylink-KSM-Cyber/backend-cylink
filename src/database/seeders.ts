@@ -5,9 +5,7 @@ const { hash } = require('@/utils/crypto');
 const seeders: any = {
   users: {
     columns: ['email', 'password', 'role'],
-    values: [
-      ['admin@localhost', 'securepassword123', 'admin'],
-    ],
+    values: [['admin@localhost', 'securepassword123', 'admin']],
   },
 };
 
@@ -22,15 +20,16 @@ const hashPasswords = async (seeders: any) => {
   }
 };
 
-const generateInsertQuery = (columns: Array<string>, values: Array<Array<string>>) => {
-  let query = `INSERT INTO ${name} (${columns.join(', ')})\nVALUES\n`;
-
-  values.forEach((values: any) => {
-    query += `(${values.join(', ')}),\n`;
-  });
-
-  query += ';';
-};
+// Unused function for future reference
+// const _generateInsertQuery = (columns: Array<string>, values: Array<Array<string>>) => {
+//   let query = `INSERT INTO ${name} (${columns.join(', ')})\nVALUES\n`;
+//
+//   values.forEach((values: any) => {
+//     query += `(${values.join(', ')}),\n`;
+//   });
+//
+//   query += ';';
+// };
 
 const generateSeederQuery = (seeders: any): string => {
   let query = '';

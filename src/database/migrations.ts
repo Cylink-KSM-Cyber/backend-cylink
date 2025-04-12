@@ -1,6 +1,6 @@
 const pool = require("@/config/database");
-const schema = require("@/database/schema");
 const { createIndexes, dropIndexes } = require("@/database/indexes");
+const schema = require("@/database/schema");
 const { generateQuery } = require("@/utils/query");
 
 /**

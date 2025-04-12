@@ -1,11 +1,12 @@
 require("dotenv").config();
 
 import express, { Request, Response } from "express";
+
 const app = express();
 const port = process.env.PORT || 3000;
-const routes = require("@/routes");
 const clickTrackerMiddleware = require("@/middlewares/clickTracker");
 const redirectMiddleware = require("@/middlewares/redirectMiddleware");
+const routes = require("@/routes");
 
 /**
  * Main application entry point

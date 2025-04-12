@@ -1,8 +1,8 @@
 const router = require("express").Router();
 
 const authRoutes = require("@/routes/authRoutes");
-const urlRoutes = require("@/routes/urlRoutes");
 const publicUrlRoutes = require("@/routes/publicUrlRoutes");
+const urlRoutes = require("@/routes/urlRoutes");
 
 /**
  * Main router

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
-const { sendResponse } = require('@/utils/response');
+
 const { verify } = require('@/utils/jwt');
+const { sendResponse } = require('@/utils/response');
 
 exports.accessToken = (req: Request, res: Response, next: any) => {
   const headers: any = req.headers

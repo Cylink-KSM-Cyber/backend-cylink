@@ -79,6 +79,49 @@ npm run build
 npm start
 ```
 
+### Linting and Code Formatting
+
+This project uses ESLint and Prettier to maintain code quality and consistency.
+
+```bash
+# Check for linting errors
+npm run lint
+
+# Fix linting errors automatically (when possible)
+npm run lint:fix
+
+# Check for linting errors but allow all warnings
+npm run lint -- --max-warnings=9999
+```
+
+The linting rules are configured to be helpful without being overly restrictive:
+
+- Warnings for the use of `any` type to encourage better type safety
+- Import ordering to maintain consistent code organization
+- Code style consistency with Prettier integration
+- CommonJS support for backend Node.js compatibility
+
+#### VS Code Integration
+
+For the best development experience with VS Code, install the following extensions:
+
+1. ESLint (dbaeumer.vscode-eslint)
+2. Prettier (esbenp.prettier-vscode)
+
+Then add these settings to your VS Code settings.json:
+
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  }
+}
+```
+
+This will automatically format your code and fix ESLint errors on save.
+
 ### Environment Variables
 
 Copy `.env.example` to `.env` and configure your environment variables:
