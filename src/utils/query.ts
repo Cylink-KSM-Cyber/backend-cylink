@@ -1,11 +1,37 @@
+/**
+ * Query Utility
+ *
+ * Provides functions for generating SQL queries
+ * @module utils/query
+ */
+
+/**
+ * Table schema interface
+ */
+interface TableSchema {
+  [columnName: string]: string | boolean;
+}
+
+/**
+ * Database schema interface
+ */
+interface DatabaseSchema {
+  [tableName: string]: TableSchema;
+}
+
 exports.generateQuery = {
   /**
-   * DDL
+   * DDL (Data Definition Language) queries
    */
   tables: {
-    create: (tables: any): string => {
+    /**
+     * Generate a CREATE TABLE query from schema definition
+     * @param {DatabaseSchema} tables - Tables schema definition
+     * @returns {string} SQL query for creating tables
+     */
+    create: (tables: DatabaseSchema): string => {
       let query = '';
-    
+
       // create types
       for (const name in tables) {
         for (const column in tables[name]) {
@@ -37,16 +63,21 @@ exports.generateQuery = {
             query += `\t${columnDefinition}${index === columns.length - 1 ? '' : ','}\n`;
           }
         });
-    
+
         query += ');\n';
       }
-    
+
       return query;
     },
 
-    drop: (tables: any): string => {
+    /**
+     * Generate a DROP TABLE query from schema definition
+     * @param {DatabaseSchema} tables - Tables schema definition
+     * @returns {string} SQL query for dropping tables
+     */
+    drop: (tables: DatabaseSchema): string => {
       let query = '';
-    
+
       // drop types
       for (const name in tables) {
         for (const column in tables[name]) {
@@ -62,13 +93,13 @@ exports.generateQuery = {
       for (const name in tables) {
         query += `DROP TABLE IF EXISTS ${name};\n`;
       }
-    
+
       return query;
-    }
+    },
   },
 
   /**
-   * DML
+   * DML (Data Manipulation Language) queries
    */
   select: () => {},
 

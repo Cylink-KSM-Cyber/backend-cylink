@@ -1,7 +1,14 @@
-const pool = require("@/config/database");
-const { createIndexes, dropIndexes } = require("@/database/indexes");
-const schema = require("@/database/schema");
-const { generateQuery } = require("@/utils/query");
+/**
+ * Database Migration Module
+ *
+ * Handles the creation and dropping of tables and indexes
+ * @module database/migrations
+ */
+
+const pool = require('@/config/database');
+const { createIndexes, dropIndexes } = require('@/database/indexes');
+const schema = require('@/database/schema');
+const { generateQuery } = require('@/utils/query');
 
 /**
  * Database migration script
@@ -10,7 +17,8 @@ const { generateQuery } = require("@/utils/query");
  * Run with: npm run db:migrate
  */
 (async () => {
-  console.log("Executing database migration...");
+  /* eslint-disable no-console */
+  console.log('Executing database migration...');
 
   // Drop existing tables and types
   await pool.query(generateQuery.tables.drop(schema));
@@ -24,6 +32,7 @@ const { generateQuery } = require("@/utils/query");
   // Create indexes
   await pool.query(createIndexes());
 
-  console.info("Migration finished! Closing database connection...");
+  console.info('Migration finished! Closing database connection...');
+  /* eslint-enable no-console */
   process.exit(0);
 })();

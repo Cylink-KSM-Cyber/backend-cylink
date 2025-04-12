@@ -6,6 +6,7 @@
  */
 
 import { User } from '@/collections/userCollection';
+
 const pool = require('@/config/database');
 
 /**

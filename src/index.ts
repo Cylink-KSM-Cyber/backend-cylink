@@ -1,13 +1,3 @@
-require("dotenv").config();
-
-import express, { Request, Response } from "express";
-
-const app = express();
-const port = process.env.PORT || 3000;
-const clickTrackerMiddleware = require("@/middlewares/clickTracker");
-const redirectMiddleware = require("@/middlewares/redirectMiddleware");
-const routes = require("@/routes");
-
 /**
  * Main application entry point
  *
@@ -15,15 +5,25 @@ const routes = require("@/routes");
  * @module index
  */
 
+require('dotenv').config();
+
+import express, { json, urlencoded, Request, Response } from 'express';
+
+const app = express();
+const port = process.env.PORT || 3000;
+const clickTrackerMiddleware = require('@/middlewares/clickTracker');
+const redirectMiddleware = require('@/middlewares/redirectMiddleware');
+const routes = require('@/routes');
+
 // Basic middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(json());
+app.use(urlencoded({ extended: true }));
 
 // Track information about clicks for analytics
 app.use(clickTrackerMiddleware);
 
 // API routes
-app.use("/api/v1", routes);
+app.use('/api/v1', routes);
 
 // Handle URL redirects for shortened URLs
 // This should be after the API routes to avoid conflicting with them
@@ -41,11 +41,13 @@ app.use(redirectMiddleware);
 app.use((req: Request, res: Response) => {
   res.status(404).json({
     status: 404,
-    message: "Not Found",
+    message: 'Not Found',
   });
 });
 
 // Start the server
 app.listen(port, () => {
+  /* eslint-disable no-console */
   console.log(`App listening on port ${port}`);
+  /* eslint-enable no-console */
 });
