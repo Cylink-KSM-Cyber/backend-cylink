@@ -36,6 +36,31 @@ interface QrCodeOptions {
 }
 
 /**
+ * Formats QR code data for API response
+ *
+ * @param {QrCode} qrCode - The QR code data from database
+ * @param {string} shortCode - The short code associated with the URL
+ * @returns {QrCodeResponseData} Formatted QR code data with URLs
+ */
+export const formatQrCodeResponse = (qrCode: QrCode, shortCode: string): QrCodeResponseData => {
+  const baseUrl = process.env.SHORT_URL_BASE || 'https://cylink.id/';
+  const shortUrl = baseUrl + shortCode;
+  const qrCodeBaseUrl = baseUrl + 'qr/';
+  const qrCodeUrl = qrCodeBaseUrl + shortCode;
+  const pngUrl = qrCodeUrl + '.png';
+  const svgUrl = qrCodeUrl + '.svg';
+
+  return {
+    ...qrCode,
+    short_code: shortCode,
+    short_url: shortUrl,
+    qr_code_url: qrCodeUrl,
+    png_url: pngUrl,
+    svg_url: svgUrl,
+  };
+};
+
+/**
  * Generates a QR code for a URL
  *
  * @param {QrCodeOptions} options - QR code generation options
@@ -88,27 +113,92 @@ export const generateQrCode = async (options: QrCodeOptions): Promise<QrCodeResp
 
   try {
     const qrCode = await qrCodeModel.createQrCode(qrCodeData);
-
-    // Generate URLs
-    const baseUrl = process.env.SHORT_URL_BASE || 'https://cylink.id/';
-    const shortUrl = baseUrl + url.short_code;
-    const qrCodeBaseUrl = baseUrl + 'qr/';
-    const qrCodeUrl = qrCodeBaseUrl + url.short_code;
-    const pngUrl = qrCodeUrl + '.png';
-    const svgUrl = qrCodeUrl + '.svg';
-
-    return {
-      ...qrCode,
-      short_code: url.short_code,
-      short_url: shortUrl,
-      qr_code_url: qrCodeUrl,
-      png_url: pngUrl,
-      svg_url: svgUrl,
-    };
+    return formatQrCodeResponse(qrCode, url.short_code);
   } catch (error) {
     logger.error('Failed to create QR code:', error);
     throw new Error('Failed to generate QR code');
   }
+};
+
+/**
+ * Gets a QR code by its ID with formatted response data
+ *
+ * @param {number} id - QR code ID
+ * @returns {Promise<QrCodeResponseData|null>} The formatted QR code data or null if not found
+ */
+export const getQrCodeResponseById = async (id: number): Promise<QrCodeResponseData | null> => {
+  const qrCode = await qrCodeModel.getQrCodeById(id);
+
+  if (!qrCode) {
+    return null;
+  }
+
+  // Get the URL to retrieve the short_code
+  const url = await urlModel.getUrlById(qrCode.url_id);
+  if (!url) {
+    logger.error(`URL not found for QR code ID ${id} with URL ID ${qrCode.url_id}`);
+    return null;
+  }
+
+  return formatQrCodeResponse(qrCode, url.short_code);
+};
+
+/**
+ * Gets a QR code by URL ID with formatted response data
+ *
+ * @param {number} urlId - URL ID
+ * @returns {Promise<QrCodeResponseData|null>} The formatted QR code data or null if not found
+ */
+export const getQrCodeResponseByUrlId = async (
+  urlId: number,
+): Promise<QrCodeResponseData | null> => {
+  // First, check if URL exists
+  const url = await urlModel.getUrlById(urlId);
+  if (!url) {
+    return null;
+  }
+
+  // Find the latest QR code for this URL
+  const qrCodes = await qrCodeModel.getQrCodesByUrlId(urlId);
+  if (!qrCodes || qrCodes.length === 0) {
+    return null;
+  }
+
+  // Sort by created_at in descending order to get the most recent one
+  const latestQrCode = qrCodes.sort(
+    (a: QrCode, b: QrCode) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  )[0];
+
+  return formatQrCodeResponse(latestQrCode, url.short_code);
+};
+
+/**
+ * Gets a QR code by short code with formatted response data
+ *
+ * @param {string} shortCode - URL short code
+ * @returns {Promise<QrCodeResponseData|null>} The formatted QR code data or null if not found
+ */
+export const getQrCodeResponseByShortCode = async (
+  shortCode: string,
+): Promise<QrCodeResponseData | null> => {
+  // Find the URL by short code
+  const url = await urlModel.getUrlByShortCode(shortCode);
+  if (!url) {
+    return null;
+  }
+
+  // Find the latest QR code for this URL
+  const qrCodes = await qrCodeModel.getQrCodesByUrlId(url.id);
+  if (!qrCodes || qrCodes.length === 0) {
+    return null;
+  }
+
+  // Sort by created_at in descending order to get the most recent one
+  const latestQrCode = qrCodes.sort(
+    (a: QrCode, b: QrCode) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  )[0];
+
+  return formatQrCodeResponse(latestQrCode, shortCode);
 };
 
 /**

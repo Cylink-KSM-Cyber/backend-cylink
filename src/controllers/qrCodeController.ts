@@ -1,5 +1,11 @@
 import { Request, Response } from 'express';
-import { QrCodeResponseData, generateQrCode } from '@/services/qrCodeService';
+import {
+  QrCodeResponseData,
+  generateQrCode,
+  getQrCodeResponseById,
+  getQrCodeResponseByUrlId,
+  getQrCodeResponseByShortCode,
+} from '@/services/qrCodeService';
 
 const logger = require('@/utils/logger');
 const { sendResponse } = require('@/utils/response');
@@ -53,6 +59,93 @@ export const createQrCode = async (req: Request, res: Response): Promise<Respons
       logger.error('QR code generation error:', error);
     }
 
+    return sendResponse(res, 500, 'Internal Server Error');
+  }
+};
+
+/**
+ * Get a QR code by its ID
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Response with QR code or error
+ */
+export const getQrCodeById = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const id = parseInt(req.params.id);
+
+    if (isNaN(id)) {
+      return sendResponse(res, 400, 'Invalid QR code ID');
+    }
+
+    const qrCode = await getQrCodeResponseById(id);
+
+    if (!qrCode) {
+      return sendResponse(res, 404, 'QR code not found');
+    }
+
+    logger.info(`Successfully retrieved QR code with ID: ${id}`);
+    return sendResponse(res, 200, 'Successfully retrieved QR code', qrCode);
+  } catch (error) {
+    logger.error('Error retrieving QR code:', error);
+    return sendResponse(res, 500, 'Internal Server Error');
+  }
+};
+
+/**
+ * Get a QR code by URL ID
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Response with QR code or error
+ */
+export const getQrCodeByUrlId = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const urlId = parseInt(req.params.url_id);
+
+    if (isNaN(urlId)) {
+      return sendResponse(res, 400, 'Invalid URL ID');
+    }
+
+    const qrCode = await getQrCodeResponseByUrlId(urlId);
+
+    if (!qrCode) {
+      return sendResponse(res, 404, 'QR code not found');
+    }
+
+    logger.info(`Successfully retrieved QR code for URL ID: ${urlId}`);
+    return sendResponse(res, 200, 'Successfully retrieved QR code', qrCode);
+  } catch (error) {
+    logger.error('Error retrieving QR code:', error);
+    return sendResponse(res, 500, 'Internal Server Error');
+  }
+};
+
+/**
+ * Get a QR code by Short Code
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Response with QR code or error
+ */
+export const getQrCodeByShortCode = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const shortCode = req.params.shortCode;
+
+    if (!shortCode) {
+      return sendResponse(res, 400, 'Invalid short code');
+    }
+
+    const qrCode = await getQrCodeResponseByShortCode(shortCode);
+
+    if (!qrCode) {
+      return sendResponse(res, 404, 'QR code not found');
+    }
+
+    logger.info(`Successfully retrieved QR code for short code: ${shortCode}`);
+    return sendResponse(res, 200, 'Successfully retrieved QR code', qrCode);
+  } catch (error) {
+    logger.error('Error retrieving QR code:', error);
     return sendResponse(res, 500, 'Internal Server Error');
   }
 };

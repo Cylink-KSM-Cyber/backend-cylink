@@ -1,10 +1,10 @@
-const router = require("express").Router();
+const router = require('express').Router();
 
-const urlController = require("@/controllers/urlController");
-const { accessToken } = require("@/middlewares/authMiddleware");
-const validate = require("@/utils/validator");
-const fields = require("@/validators/urlValidator");
-
+const urlController = require('@/controllers/urlController');
+const { getQrCodeByUrlId } = require('@/controllers/qrCodeController');
+const { accessToken } = require('@/middlewares/authMiddleware');
+const validate = require('@/utils/validator');
+const fields = require('@/validators/urlValidator');
 
 /**
  * URL Routes
@@ -44,12 +44,7 @@ const fields = require("@/validators/urlValidator");
  *   }
  * }
  */
-router.get(
-  "/",
-  accessToken,
-  validate({ query: fields.getUrls }),
-  urlController.getAllUrls
-);
+router.get('/', accessToken, validate({ query: fields.getUrls }), urlController.getAllUrls);
 
 /**
  * Create a shortened URL for authenticated users
@@ -90,10 +85,10 @@ router.get(
  * }
  */
 router.post(
-  "/",
+  '/',
   accessToken,
   validate({ fields: fields.createUrl }),
-  urlController.createAuthenticatedUrl
+  urlController.createAuthenticatedUrl,
 );
 
 /**
@@ -144,7 +139,7 @@ router.post(
  *   }
  * }
  */
-router.get("/:identifier", accessToken, urlController.getUrlDetails);
+router.get('/:identifier', accessToken, urlController.getUrlDetails);
 
 /**
  * Delete a URL by ID
@@ -170,7 +165,7 @@ router.get("/:identifier", accessToken, urlController.getUrlDetails);
  *   }
  * }
  */
-router.delete("/:id", accessToken, urlController.deleteUrl);
+router.delete('/:id', accessToken, urlController.deleteUrl);
 
 /**
  * Get analytics for a specific URL
@@ -233,10 +228,46 @@ router.delete("/:id", accessToken, urlController.deleteUrl);
  * }
  */
 router.get(
-  "/:id/analytics",
+  '/:id/analytics',
   accessToken,
   validate({ query: fields.getUrlAnalytics }),
-  urlController.getUrlAnalytics
+  urlController.getUrlAnalytics,
 );
+
+/**
+ * Get QR code for a specific URL by URL ID
+ *
+ * @route GET /api/v1/urls/:url_id/qr-code
+ * @param {string} authorization - Bearer token for user authentication
+ * @param {number} url_id - URL ID to get QR code for
+ * @returns {object} QR code data
+ *
+ * @example
+ * // Request
+ * GET /api/v1/urls/123/qr-code
+ * Authorization: Bearer {token}
+ *
+ * // Response
+ * {
+ *   "status": 200,
+ *   "message": "Successfully retrieved QR code",
+ *   "data": {
+ *     "id": 45,
+ *     "url_id": 123,
+ *     "short_code": "abc123",
+ *     "short_url": "https://cylink.id/abc123",
+ *     "qr_code_url": "https://cylink.id/qr/abc123",
+ *     "png_url": "https://cylink.id/qr/abc123.png",
+ *     "svg_url": "https://cylink.id/qr/abc123.svg",
+ *     "color": "#000000",
+ *     "background_color": "#FFFFFF",
+ *     "include_logo": true,
+ *     "logo_size": 0.25,
+ *     "size": 300,
+ *     "created_at": "2025-04-15T10:30:00Z"
+ *   }
+ * }
+ */
+router.get('/:url_id/qr-code', accessToken, getQrCodeByUrlId);
 
 module.exports = router;

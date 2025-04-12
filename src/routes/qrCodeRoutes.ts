@@ -1,6 +1,10 @@
 const router = require('express').Router();
 
-const { createQrCode } = require('@/controllers/qrCodeController');
+const {
+  createQrCode,
+  getQrCodeById,
+  getQrCodeByShortCode,
+} = require('@/controllers/qrCodeController');
 const { validate } = require('@/middlewares/validator');
 const qrCodeValidator = require('@/validators/qrCodeValidator');
 
@@ -61,5 +65,51 @@ const qrCodeValidator = require('@/validators/qrCodeValidator');
  *         description: Internal server error
  */
 router.post('/', validate(qrCodeValidator.createQrCode), createQrCode);
+
+/**
+ * @swagger
+ * /api/v1/qr-codes/code/{shortCode}:
+ *   get:
+ *     summary: Get a QR code by short code
+ *     tags: [QR Codes]
+ *     parameters:
+ *       - in: path
+ *         name: shortCode
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Short code of the URL
+ *     responses:
+ *       200:
+ *         description: QR code retrieved successfully
+ *       404:
+ *         description: QR code not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/code/:shortCode', getQrCodeByShortCode);
+
+/**
+ * @swagger
+ * /api/v1/qr-codes/{id}:
+ *   get:
+ *     summary: Get a QR code by its ID
+ *     tags: [QR Codes]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: QR code ID
+ *     responses:
+ *       200:
+ *         description: QR code retrieved successfully
+ *       404:
+ *         description: QR code not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/:id', getQrCodeById);
 
 module.exports = router;
