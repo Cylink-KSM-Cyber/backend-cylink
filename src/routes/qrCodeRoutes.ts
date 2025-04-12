@@ -9,7 +9,7 @@ const {
   downloadQrCodeByShortCodeController,
   getQrCodeColorOptions,
 } = require('@/controllers/qrCodeController');
-const { validate } = require('@/middlewares/validator');
+const validate = require('@/utils/validator');
 const qrCodeValidator = require('@/validators/qrCodeValidator');
 
 /**
@@ -114,7 +114,7 @@ router.get('/colors', getQrCodeColorOptions);
  *       500:
  *         description: Internal server error
  */
-router.post('/', validate(qrCodeValidator.createQrCode), createQrCode);
+router.post('/', validate({ fields: qrCodeValidator.createQrCode }), createQrCode);
 
 /**
  * @swagger
@@ -161,7 +161,7 @@ router.post('/', validate(qrCodeValidator.createQrCode), createQrCode);
  *       500:
  *         description: Internal server error
  */
-router.put('/:id', validate(qrCodeValidator.updateQrCode), updateQrCode);
+router.put('/:id', validate({ fields: qrCodeValidator.updateQrCode }), updateQrCode);
 
 /**
  * @swagger

@@ -5,9 +5,13 @@
  * @module index
  */
 
+// Set up module aliases before anything else
+import './moduleAlias';
+
 require('dotenv').config();
 
 import express, { json, urlencoded, Request, Response } from 'express';
+import { setupSwagger } from '@/middlewares/swagger';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -21,6 +25,9 @@ app.use(urlencoded({ extended: true }));
 
 // Track information about clicks for analytics
 app.use(clickTrackerMiddleware);
+
+// Setup Swagger documentation
+setupSwagger(app);
 
 // API routes
 app.use('/api/v1', routes);
