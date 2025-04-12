@@ -1,3 +1,12 @@
+/**
+ * Authentication Service
+ *
+ * Provides business logic for user authentication and account management
+ * @module services/authService
+ */
+
+import { User } from '@/collections/userCollection';
+
 const userCollection = require('@/collections/userCollection');
 const registerMail = require('@/mails/register');
 const resendVerificationMail = require('@/mails/resend-verification');
@@ -8,19 +17,47 @@ const jwt = require('@/utils/jwt');
 const { sendMail } = require('@/utils/mailer');
 
 /**
- * Finds user by email.
+ * User registration data interface
  */
-exports.findUser = async (email: string) => {
+interface RegistrationData {
+  username: string;
+  email: string;
+  password: string;
+  verification_token?: string;
+  last_email_verify_requested_at?: number | Date;
+}
+
+/**
+ * Login response interface
+ */
+interface LoginResponse {
+  user: object | null;
+  token: {
+    type: string;
+    access: string;
+    refresh: string;
+    expiresAt: number;
+  };
+}
+
+/**
+ * Finds user by email
+ * @param {string} email - Email to search for
+ * @returns {Promise<User|undefined>} User object if found
+ */
+exports.findUser = async (email: string): Promise<User | undefined> => {
   return await userModel.getUserByEmail(email);
 };
 
 /**
- * Create new user.
+ * Create new user
+ * @param {RegistrationData} user - User registration data
+ * @returns {Promise<User>} Created user data
  */
-exports.createUser = async (user: any) => {
+exports.createUser = async (user: RegistrationData): Promise<User> => {
   const hashedPassword = await hash(user.password);
 
-  const userData: any = {
+  const userData: RegistrationData = {
     username: user.username,
     email: user.email,
     password: hashedPassword,
@@ -30,10 +67,15 @@ exports.createUser = async (user: any) => {
 
   await userModel.createUser(userData);
 
-  return userData;
+  return userData as User;
 };
 
-exports.sendRegistration = async (user: any): Promise<void> => {
+/**
+ * Sends registration verification email
+ * @param {User} user - User data
+ * @returns {Promise<void>}
+ */
+exports.sendRegistration = async (user: User): Promise<void> => {
   await sendMail(
     user.email,
     'User Registration Verification',
@@ -42,7 +84,12 @@ exports.sendRegistration = async (user: any): Promise<void> => {
   );
 };
 
-exports.resendVerification = async (user: any): Promise<void> => {
+/**
+ * Resends verification email
+ * @param {User} user - User data
+ * @returns {Promise<void>}
+ */
+exports.resendVerification = async (user: User): Promise<void> => {
   await sendMail(
     user.email,
     'Verification Resend',
@@ -52,16 +99,19 @@ exports.resendVerification = async (user: any): Promise<void> => {
 };
 
 /**
- * Verifies user registration from email.
+ * Verifies user registration from email
+ * @param {User} user - User data
+ * @returns {Promise<object|boolean>} User data or false if already verified
  */
-exports.verifyRegister = async (user: any) => {
+exports.verifyRegister = async (user: User): Promise<object | boolean> => {
   const data = await userModel.getUserByEmail(user.email);
 
   if (data.email_verified_at) {
     return false;
   }
 
-  const userData = await userModel.updateUser(user.email, {
+  const userData = await userModel.updateUser({
+    email: user.email,
     email_verified_at: Date.now(),
     verification_token: null,
   });
@@ -70,25 +120,32 @@ exports.verifyRegister = async (user: any) => {
 };
 
 /**
- * Authenticates user by its credentials.
+ * Authenticates user by credentials
+ * @param {Pick<User, 'email' | 'password'>} credentials - User login credentials
+ * @returns {Promise<User|boolean>} User data or false if authentication fails
  */
-exports.authenticate = async (user: any) => {
-  const data = await userModel.getUserByEmail(user.email);
-  if (!user.length) {
+exports.authenticate = async (
+  credentials: Pick<User, 'email' | 'password'>,
+): Promise<User | boolean> => {
+  const data = await userModel.getUserByEmail(credentials.email);
+
+  if (!data) {
     return false;
   }
 
-  if (!(await compare(user.password, data.password))) {
+  if (!(await compare(credentials.password, data.password))) {
     return false;
   }
 
-  return user;
+  return data;
 };
 
 /**
- * Creates user session.
+ * Creates user session
+ * @param {User} userData - User data
+ * @returns {LoginResponse} Session data with tokens
  */
-exports.login = (userData: any): object => {
+exports.login = (userData: User): LoginResponse => {
   return {
     user: userCollection.single(userData),
     token: {
@@ -101,11 +158,12 @@ exports.login = (userData: any): object => {
 };
 
 /**
- * Sends password reset verification to email.
+ * Sends password reset verification to email
+ * @param {Pick<User, 'email'>} user - User email
+ * @returns {Promise<string>} Verification token
  */
-exports.sendPasswordResetVerification = async (user: any) => {
+exports.sendPasswordResetVerification = async (user: Pick<User, 'email'>): Promise<string> => {
   const email = user.email;
-
   const verificationToken = jwt.verification.sign({ email });
 
   try {
@@ -117,35 +175,45 @@ exports.sendPasswordResetVerification = async (user: any) => {
     );
 
     return verificationToken;
-  } catch (error: any) {
-    throw new Error(`Failed to send user registration mail: ${error.message}`);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to send password reset email: ${errorMessage}`);
   }
 };
 
 /**
- * Updates user password.
+ * Updates user password
+ * @param {Pick<User, 'email' | 'password'>} user - User data with new password
+ * @returns {Promise<User>} Updated user data
  */
-exports.resetPassword = async (user: any) => {
+exports.resetPassword = async (user: Pick<User, 'email' | 'password'>): Promise<User> => {
   try {
-    
-  } catch (error: any) {
-    throw new Error(`Failed to `);
-  }
+    const hashedPassword = await hash(user.password);
 
-  try {
-    return await userModel.updateUser({ password: user.password });
-  } catch (error: any) {
-    throw new Error(`Failed to store new password: ${error.message}`);
+    return await userModel.updateUser({
+      email: user.email,
+      password: hashedPassword,
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to reset password: ${errorMessage}`);
   }
 };
 
-const verifyVerificationToken = async (verificationToken: string) => {
-  const decoded = jwt.verification.verify(verificationToken);
-
-  if (!decoded) {
+/**
+ * Verifies a verification token
+ * @param {string} verificationToken - Token to verify
+ * @returns {Promise<object|boolean>} Decoded token or false if invalid
+ */
+const verifyVerificationToken = async (
+  verificationToken: string,
+): Promise<Record<string, unknown> | boolean> => {
+  try {
+    const decoded = jwt.verification.verify(verificationToken);
+    return decoded || false;
+  } catch (error) {
     return false;
   }
-
-  return decoded;
 };
+
 exports.verifyVerificationToken = verifyVerificationToken;

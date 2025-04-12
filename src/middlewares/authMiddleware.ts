@@ -1,51 +1,96 @@
-import { Request, Response } from 'express';
+/**
+ * Authentication Middleware
+ *
+ * Provides middleware functions for verifying JWT tokens
+ * @module middlewares/authMiddleware
+ */
 
-const { verify } = require('@/utils/jwt');
+import { Request, Response, NextFunction } from 'express';
+
+const jwt = require('@/utils/jwt');
 const { sendResponse } = require('@/utils/response');
 
-exports.accessToken = (req: Request, res: Response, next: any) => {
-  const headers: any = req.headers
-  const token = headers.authorization?.split(' ')[1];
+/**
+ * Extended request interface with token payload
+ */
+interface AuthenticatedRequest extends Request {
+  user?: Record<string, unknown>;
+}
+
+/**
+ * Middleware to verify access tokens in the Authorization header
+ * @param {AuthenticatedRequest} req - Express request object
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function
+ * @returns {void}
+ */
+exports.accessToken = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+  const token = req.headers.authorization?.split(' ')[1];
 
   if (!token) {
-    return sendResponse(res, 401, 'Unauthorized');
+    sendResponse(res, 401, 'Unauthorized');
+    return;
   }
 
   try {
-    req.body = verify.accessToken(token);
+    const payload = jwt.verify.accessToken(token);
+    req.user = payload;
     next();
   } catch (error) {
-    return sendResponse(res, 401, 'Invalid or expired access token');
+    sendResponse(res, 401, 'Invalid or expired access token');
   }
 };
 
-exports.refreshToken = (req: Request, res: Response, next: any) => {
+/**
+ * Middleware to verify refresh tokens in the request body
+ * @param {AuthenticatedRequest} req - Express request object
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function
+ * @returns {void}
+ */
+exports.refreshToken = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
   const refreshToken = req.body.refresh_token;
 
   if (!refreshToken) {
-    return sendResponse(res, 401, 'Refresh token is required!');
+    sendResponse(res, 401, 'Refresh token is required!');
+    return;
   }
 
   try {
-    req.body = verify.refreshToken(refreshToken);
+    const payload = jwt.verify.refreshToken(refreshToken);
+    req.user = payload;
+    next();
   } catch (error) {
-
-  } finally {
+    // Token is invalid, but we let the controller handle this case
+    // to potentially issue a new token or handle the error appropriately
     next();
   }
 };
 
-exports.verificationToken = (req: Request, res: Response, next: any) => {
+/**
+ * Middleware to verify email verification tokens in the request body
+ * @param {AuthenticatedRequest} req - Express request object
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next middleware function
+ * @returns {void}
+ */
+exports.verificationToken = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): void => {
   const { token: verificationToken } = req.body;
 
   if (!verificationToken) {
-    return sendResponse(res, 401, 'Token is required!');
+    sendResponse(res, 401, 'Token is required!');
+    return;
   }
 
   try {
-    req.body = verify.verificationToken(verificationToken);
+    const payload = jwt.verify.verificationToken(verificationToken);
+    req.user = payload;
     next();
   } catch (error) {
-    return sendResponse(res, 401, 'Invalid or expired verification token');
+    sendResponse(res, 401, 'Invalid or expired verification token');
   }
 };

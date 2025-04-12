@@ -1,4 +1,11 @@
-const { Pool } = require('pg');
+/**
+ * Database Configuration
+ *
+ * Configures and exports PostgreSQL connection pool
+ * @module config/database
+ */
+
+import { Pool, PoolClient, QueryResult } from 'pg';
 
 const logger = require('@/utils/logger');
 require('dotenv').config({
@@ -6,24 +13,57 @@ require('dotenv').config({
   path: `${__dirname}/../../${process.env.NODE_ENV === 'test' ? '.env.test' : '.env'}`,
 });
 
+/**
+ * Database connection pool
+ */
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
 });
 
-const setDefaultSchema = async (client: any) => {
+/**
+ * Sets the default schema for a database connection
+ * @param {PoolClient} client - PostgreSQL client connection
+ * @returns {Promise<void>}
+ */
+const setDefaultSchema = async (client: PoolClient): Promise<void> => {
   try {
     const searchPath = 'SET search_path TO ' + process.env.DATABASE_SCHEMA;
     await client.query(searchPath);
-  } catch (error: any) {
-    logger.error(`Database Error: Failed to set search path: ${error.message}`);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Database Error: Failed to set search path: ${errorMessage}`);
   }
+};
+
+pool.on('connect', async (client: PoolClient) => await setDefaultSchema(client));
+
+/**
+ * Extended Pool interface with transaction support
+ */
+interface ExtendedPool extends Pool {
+  runTransaction: (
+    query: string,
+    values?: unknown[],
+    retries?: number,
+    delay?: number,
+  ) => Promise<QueryResult>;
 }
 
-pool.on('connect', async (client: any) => await setDefaultSchema(client));
-
-// Run a single query inside a transaction. Retries if failed
-pool.runTransaction = async (query: string, values = [], retries = 3, delay = 1000) => {
+/**
+ * Run a single query inside a transaction with retry capability
+ * @param {string} query - SQL query to execute
+ * @param {unknown[]} values - Parameter values for the query
+ * @param {number} retries - Number of retry attempts (default: 3)
+ * @param {number} delay - Delay between retries in ms (default: 1000)
+ * @returns {Promise<QueryResult>} Query result
+ */
+(pool as ExtendedPool).runTransaction = async (
+  query: string,
+  values: unknown[] = [],
+  retries = 3,
+  delay = 1000,
+): Promise<QueryResult> => {
   const client = await pool.connect();
 
   /* eslint-disable no-await-in-loop */
@@ -33,7 +73,7 @@ pool.runTransaction = async (query: string, values = [], retries = 3, delay = 10
 
       await setDefaultSchema(client);
 
-      let result;
+      let result: QueryResult;
 
       if (values.length > 0) {
         result = await client.query(query, values);
@@ -44,18 +84,18 @@ pool.runTransaction = async (query: string, values = [], retries = 3, delay = 10
       await client.query('COMMIT');
 
       return result;
-
-    } catch (error: any) {
+    } catch (error) {
       await client.query('ROLLBACK');
 
-      logger.error(`Database error: Query attempt ${attempt} failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error(`Database error: Query attempt ${attempt} failed: ${errorMessage}`);
 
       if (attempt === retries) {
-        throw new Error(`Transaction failed after ${retries} attempts: ${error.message}`);
+        throw new Error(`Transaction failed after ${retries} attempts: ${errorMessage}`);
       } else {
         logger.info(`Database info: Retrying query in ${delay}ms...`);
         /* eslint-disable no-promise-executor-return */
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        await new Promise(resolve => setTimeout(resolve, delay));
         /* eslint-enable no-promise-executor-return */
       }
     } finally {
@@ -63,6 +103,9 @@ pool.runTransaction = async (query: string, values = [], retries = 3, delay = 10
     }
   }
   /* eslint-enable no-await-in-loop */
+
+  // This should never be reached due to the throw in the catch block
+  throw new Error('Transaction failed unexpectedly');
 };
 
-module.exports = pool;
+export = pool as ExtendedPool;
