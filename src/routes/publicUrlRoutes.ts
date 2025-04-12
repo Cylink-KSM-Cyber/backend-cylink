@@ -1,9 +1,8 @@
-const router = require("express").Router();
+const router = require('express').Router();
 
-const urlController = require("@/controllers/urlController");
-const validate = require("@/utils/validator");
-const fields = require("@/validators/urlValidator");
-
+const urlController = require('@/controllers/urlController');
+const validate = require('@/utils/validator');
+const fields = require('@/validators/urlValidator');
 
 /**
  * Public URL Routes
@@ -13,45 +12,87 @@ const fields = require("@/validators/urlValidator");
  */
 
 /**
- * Create a shortened URL for anonymous users
- *
- * @route POST /api/v1/public/urls
- * @param {string} original_url - The original URL to shorten
- * @param {string} [custom_code] - Optional custom short code
- * @param {string} [title] - Optional title for the URL
- * @param {string} [expiry_date] - Optional expiration date in ISO format
- * @returns {object} The created shortened URL object
- *
- * @example
- * // Request
- * POST /api/v1/public/urls
- * {
- *   "original_url": "https://example.com/very-long-url-path",
- *   "custom_code": "mylink",
- *   "title": "Example Title",
- *   "expiry_date": "2025-05-10T00:00:00Z"
- * }
- *
- * // Response
- * {
- *   "status": 201,
- *   "message": "Successfully created shortened URL",
- *   "data": {
- *     "id": 124,
- *     "original_url": "https://example.com/very-long-url-path",
- *     "short_code": "xyz789",
- *     "short_url": "https://cylink.id/xyz789",
- *     "title": "Example Title",
- *     "created_at": "2025-04-10T12:30:00Z",
- *     "expiry_date": "2025-05-10T00:00:00Z",
- *     "is_active": true
- *   }
- * }
+ * @swagger
+ * /api/v1/public/urls:
+ *   post:
+ *     summary: Create a shortened URL without authentication
+ *     tags: [Public URLs]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - original_url
+ *             properties:
+ *               original_url:
+ *                 type: string
+ *                 description: The original URL to shorten
+ *                 example: https://example.com/very-long-url-path
+ *               custom_code:
+ *                 type: string
+ *                 description: Optional custom short code
+ *                 example: mylink
+ *               title:
+ *                 type: string
+ *                 description: Optional title for the URL
+ *                 example: Example Title
+ *               expiry_date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Optional expiration date in ISO format
+ *                 example: 2025-05-10T00:00:00Z
+ *     responses:
+ *       201:
+ *         description: URL successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 201
+ *                 message:
+ *                   type: string
+ *                   example: Successfully created shortened URL
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 124
+ *                     original_url:
+ *                       type: string
+ *                       example: https://example.com/very-long-url-path
+ *                     short_code:
+ *                       type: string
+ *                       example: xyz789
+ *                     short_url:
+ *                       type: string
+ *                       example: https://cylink.id/xyz789
+ *                     title:
+ *                       type: string
+ *                       example: Example Title
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-04-10T12:30:00Z
+ *                     expiry_date:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-05-10T00:00:00Z
+ *                     is_active:
+ *                       type: boolean
+ *                       example: true
+ *       400:
+ *         description: Invalid input
+ *       409:
+ *         description: Custom code already in use
+ *       500:
+ *         description: Internal server error
  */
-router.post(
-  "/",
-  validate({ fields: fields.createUrl }),
-  urlController.createAnonymousUrl
-);
+router.post('/', validate({ fields: fields.createUrl }), urlController.createAnonymousUrl);
 
 module.exports = router;
