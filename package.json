@@ -11,6 +11,8 @@
     "build": "tsc",
     "dev": "ts-node -r tsconfig-paths/register src/index.ts",
     "db:migrate": "ts-node -r tsconfig-paths/register src/database/migrations.ts",
+    "db:seed": "ts-node -r tsconfig-paths/register src/database/seed.ts",
+    "db:seed:admin": "ts-node -r tsconfig-paths/register src/database/seed.ts admin",
     "lint": "eslint \"**/*.{js,ts}\"",
     "lint:fix": "eslint \"**/*.{js,ts}\" --fix"
   },
