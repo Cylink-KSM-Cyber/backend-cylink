@@ -8,12 +8,13 @@
  * @module moduleAlias
  */
 
-import * as path from 'path';
+// import * as path from 'path';
 import moduleAlias from 'module-alias';
+import 'module-alias/register';
 
-// Register module aliases
-moduleAlias.addAliases({
-  '@': path.join(__dirname),
-});
+// // Register module aliases
+// moduleAlias.addAliases({
+//   '@': path.join(__dirname),
+// });
 
 export default moduleAlias;
