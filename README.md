@@ -141,16 +141,32 @@ npm run db:migrate
 
 ### Database Seeding
 
-The project includes seeders for initializing the database with essential data.
+The project includes seeders for initializing the database with essential data and sample data for testing.
 
 ```bash
 # Run all seeders
 npm run db:seed
 
-# Run specific seeder (admin user)
-npm run db:seed:admin
+# Run specific seeders
+npm run db:seed:admin    # Creates admin user
+npm run db:seed:urls     # Creates sample URLs
+npm run db:seed:qrcodes  # Creates sample QR codes
+npm run db:seed:clicks   # Creates sample click analytics data
+
+# Run all seeders sequentially in correct order
+npm run db:seed:all
 ```
 
 Available seeders:
 
 - `admin` - Creates an admin user with email `admin@cylink.id` and password `Admin@Cylink123`
+- `urls` - Creates 100 sample URLs with various configurations
+- `qrcodes` - Creates QR codes for approximately 80% of the URLs
+- `clicks` - Creates 150 sample click analytics records
+
+Note: Seeders should be run in the correct order as some depend on data created by others:
+
+1. admin
+2. urls
+3. qrcodes
+4. clicks

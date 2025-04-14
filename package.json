@@ -13,6 +13,10 @@
     "db:migrate": "ts-node -r tsconfig-paths/register src/database/migrations.ts",
     "db:seed": "ts-node -r tsconfig-paths/register src/database/seed.ts",
     "db:seed:admin": "ts-node -r tsconfig-paths/register src/database/seed.ts admin",
+    "db:seed:urls": "ts-node -r tsconfig-paths/register src/database/seed.ts urls",
+    "db:seed:qrcodes": "ts-node -r tsconfig-paths/register src/database/seed.ts qrcodes",
+    "db:seed:clicks": "ts-node -r tsconfig-paths/register src/database/seed.ts clicks",
+    "db:seed:all": "npm run db:seed:admin && npm run db:seed:urls && npm run db:seed:qrcodes && npm run db:seed:clicks",
     "lint": "eslint \"**/*.{js,ts}\"",
     "lint:fix": "eslint \"**/*.{js,ts}\" --fix"
   },
