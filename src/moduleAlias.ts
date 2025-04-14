@@ -8,13 +8,15 @@
  * @module moduleAlias
  */
 
-// import * as path from 'path';
+import * as path from 'path';
 import moduleAlias from 'module-alias';
-import 'module-alias/register';
 
-// // Register module aliases
-// moduleAlias.addAliases({
-//   '@': path.join(__dirname),
-// });
+const isProd = process.env.NODE_ENV === 'production';
+const baseDir = path.join(isProd ? '' : '..', isProd ? 'src' : 'dist')
+
+// Register module aliases
+moduleAlias.addAliases({
+  '@': path.join(__dirname, baseDir),
+});
 
 export default moduleAlias;
