@@ -6,12 +6,20 @@
  */
 
 import { AdminSeeder } from './adminSeeder';
+import { UrlSeeder } from './urlSeeder';
+import { QrCodeSeeder } from './qrCodeSeeder';
+import { ClickSeeder } from './clickSeeder';
 
 /**
  * Registers all available seeders
  * @returns {Array<{name: string, seeder: any}>} Array of seeder objects with their names
  */
-const getRegisteredSeeders = () => [{ name: 'admin', seeder: AdminSeeder }];
+const getRegisteredSeeders = () => [
+  { name: 'admin', seeder: AdminSeeder },
+  { name: 'urls', seeder: UrlSeeder },
+  { name: 'qrcodes', seeder: QrCodeSeeder },
+  { name: 'clicks', seeder: ClickSeeder },
+];
 
 /**
  * Executes all registered seeders
