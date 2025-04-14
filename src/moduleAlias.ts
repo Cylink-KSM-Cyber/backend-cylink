@@ -12,11 +12,11 @@ import * as path from 'path';
 import moduleAlias from 'module-alias';
 
 const isProd = process.env.NODE_ENV === 'production';
-const baseDir = path.join(isProd ? '' : '..', isProd ? 'src' : 'dist')
+const baseDir = isProd ? __dirname : path.join(__dirname, '..', 'dist');
 
 // Register module aliases
 moduleAlias.addAliases({
-  '@': path.join(__dirname, baseDir),
+  '@': path.join(baseDir),
 });
 
 export default moduleAlias;
