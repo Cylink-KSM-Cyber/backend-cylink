@@ -12,7 +12,7 @@
     "moduleDetection": "force",
     "baseUrl": "./src",
     "paths": {
-      "@/*": ["*"],
+      "@/*": ["*"]
     },
   },
   "include": ["src/**/*.ts"],
