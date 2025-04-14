@@ -7,11 +7,11 @@
 
 import { Request, Response } from 'express';
 
-import { User } from '@/collections/userCollection';
+import { User } from '../collections/userCollection';
 
-const authService = require('@/services/authService');
-const logger = require('@/utils/logger');
-const { sendResponse } = require('@/utils/response');
+const authService = require('../services/authService');
+const logger = require('../utils/logger');
+const { sendResponse } = require('../utils/response');
 
 /**
  * Flag to determine if email verification is enabled based on environment variable

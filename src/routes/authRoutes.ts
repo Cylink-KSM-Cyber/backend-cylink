@@ -1,9 +1,9 @@
 const router = require('express').Router();
 
-const authController = require('@/controllers/authController');
-const { accessToken, refreshToken, verificationToken } = require('@/middlewares/authMiddleware');
-const validate = require('@/utils/validator');
-const fields = require('@/validators/authValidator');
+const authController = require('../controllers/authController');
+const { accessToken, refreshToken, verificationToken } = require('../middlewares/authMiddleware');
+const validate = require('../utils/validator');
+const fields = require('../validators/authValidator');
 
 /**
  * Authentication Routes

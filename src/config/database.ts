@@ -7,7 +7,7 @@
 
 import { Pool, PoolClient, QueryResult } from 'pg';
 
-const logger = require('@/utils/logger');
+const logger = require('../utils/logger');
 require('dotenv').config({
   // Traces back to root directory (absolute path)
   path: `${__dirname}/../../${process.env.NODE_ENV === 'test' ? '.env.test' : '.env'}`,

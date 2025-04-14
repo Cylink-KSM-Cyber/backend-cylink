@@ -10,10 +10,10 @@ import {
   downloadQrCodeByShortCode,
   QrCodeFormat,
   getQrCodeColors,
-} from '@/services/qrCodeService';
+} from '../services/qrCodeService';
 
-const logger = require('@/utils/logger');
-const { sendResponse } = require('@/utils/response');
+const logger = require('../utils/logger');
+const { sendResponse } = require('../utils/response');
 
 /**
  * QR Code Controller

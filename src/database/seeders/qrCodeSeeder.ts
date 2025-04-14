@@ -5,8 +5,8 @@
  * @module database/seeders/qrCodeSeeder
  */
 
-import pool from '@/config/database';
-import { foregroundColors, backgroundColors } from '@/config/qrCodeColors';
+import pool from '../../config/database';
+import { foregroundColors, backgroundColors } from '../../config/qrCodeColors';
 
 /**
  * QR Code Seeder class - Responsible for creating sample QR codes

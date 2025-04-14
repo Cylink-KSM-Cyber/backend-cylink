@@ -5,16 +5,16 @@
  * @module services/authService
  */
 
-import { User } from '@/collections/userCollection';
+import { User } from '../collections/userCollection';
 
-const userCollection = require('@/collections/userCollection');
-const registerMail = require('@/mails/register');
-const resendVerificationMail = require('@/mails/resend-verification');
-const resetPasswordMail = require('@/mails/reset-password');
-const userModel = require('@/models/userModel');
-const { hash, compare } = require('@/utils/crypto');
-const jwt = require('@/utils/jwt');
-const { sendMail } = require('@/utils/mailer');
+const userCollection = require('../collections/userCollection');
+const registerMail = require('../mails/register');
+const resendVerificationMail = require('../mails/resend-verification');
+const resetPasswordMail = require('../mails/reset-password');
+const userModel = require('../models/userModel');
+const { hash, compare } = require('../utils/crypto');
+const jwt = require('../utils/jwt');
+const { sendMail } = require('../utils/mailer');
 
 /**
  * User registration data interface

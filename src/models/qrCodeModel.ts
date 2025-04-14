@@ -1,5 +1,5 @@
-const pool = require('@/config/database');
-import { QrCode, QrCodeCreateData, QrCodeUpdateData } from '@/interfaces/QrCode';
+const pool = require('../config/database');
+import { QrCode, QrCodeCreateData, QrCodeUpdateData } from '../interfaces/QrCode';
 
 /**
  * QR Code Model
