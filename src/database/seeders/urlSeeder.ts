@@ -5,9 +5,9 @@
  * @module database/seeders/urlSeeder
  */
 
-import pool from '@/config/database';
+import pool from '../../config/database';
 
-const { hash } = require('@/utils/crypto');
+const { hash } = require('../../utils/crypto');
 
 /**
  * Sample website domains for generating URLs

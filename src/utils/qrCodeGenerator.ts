@@ -6,7 +6,7 @@
  */
 
 import * as QRCode from 'qrcode';
-import { QrCode } from '@/interfaces/QrCode';
+import { QrCode } from '../interfaces/QrCode';
 
 /**
  * Options for QR code generation

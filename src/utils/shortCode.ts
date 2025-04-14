@@ -5,7 +5,7 @@
  * @module utils/shortCode
  */
 
-const { shortCodeExists } = require("@/models/urlModel");
+const { shortCodeExists } = require("../models/urlModel");
 
 /**
  * Default character set for generating short codes

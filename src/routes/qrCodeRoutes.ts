@@ -8,9 +8,9 @@ const {
   downloadQrCodeByIdController,
   downloadQrCodeByShortCodeController,
   getQrCodeColorOptions,
-} = require('@/controllers/qrCodeController');
-const validate = require('@/utils/validator');
-const qrCodeValidator = require('@/validators/qrCodeValidator');
+} = require('../controllers/qrCodeController');
+const validate = require('../utils/validator');
+const qrCodeValidator = require('../validators/qrCodeValidator');
 
 /**
  * QR Code Routes

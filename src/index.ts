@@ -6,19 +6,19 @@
  */
 
 // Set up module aliases before anything else
-import './moduleAlias';
+// import './moduleAlias';
 
 require('dotenv').config();
 
 import express, { json, urlencoded, Request, Response } from 'express';
-import { setupSwagger } from '@/middlewares/swagger';
+import { setupSwagger } from './middlewares/swagger';
 import cors from 'cors';
 
 const app = express();
 const port = process.env.PORT || 3000;
-const clickTrackerMiddleware = require('@/middlewares/clickTracker');
-const redirectMiddleware = require('@/middlewares/redirectMiddleware');
-const routes = require('@/routes');
+const clickTrackerMiddleware = require('./middlewares/clickTracker');
+const redirectMiddleware = require('./middlewares/redirectMiddleware');
+const routes = require('./routes');
 
 // CORS middleware - allow cross-origin requests
 const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';

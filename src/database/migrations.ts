@@ -5,10 +5,10 @@
  * @module database/migrations
  */
 
-const pool = require('@/config/database');
-const { createIndexes, dropIndexes } = require('@/database/indexes');
-const schema = require('@/database/schema');
-const { generateQuery } = require('@/utils/query');
+const pool = require('../config/database');
+const { createIndexes, dropIndexes } = require('../database/indexes');
+const schema = require('../database/schema');
+const { generateQuery } = require('../utils/query');
 
 /**
  * Database migration script

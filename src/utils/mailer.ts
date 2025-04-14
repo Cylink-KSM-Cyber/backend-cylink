@@ -1,4 +1,4 @@
-const mailer = require('@/config/mailer');
+const mailer = require('../config/mailer');
 
 /**
  * Sends user registration verification to email.

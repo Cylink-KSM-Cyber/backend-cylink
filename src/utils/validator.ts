@@ -1,11 +1,11 @@
-import { Request, Response } from "express";
+import { Request, Response } from 'express';
 
 const {
   check,
   query,
   validationResult,
   matchedData,
-} = require("express-validator");
+} = require('express-validator');
 
 /**
  * Utility function to dynamically build field validation rules based on the fields array
