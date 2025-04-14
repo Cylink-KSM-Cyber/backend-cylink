@@ -11,6 +11,8 @@
     "build": "tsc",
     "dev": "ts-node -r tsconfig-paths/register src/index.ts",
     "db:migrate": "ts-node -r tsconfig-paths/register src/database/migrations.ts",
+    "db:seed": "ts-node -r tsconfig-paths/register src/database/seed.ts",
+    "db:seed:admin": "ts-node -r tsconfig-paths/register src/database/seed.ts admin",
     "lint": "eslint \"**/*.{js,ts}\"",
     "lint:fix": "eslint \"**/*.{js,ts}\" --fix"
   },
@@ -26,7 +28,9 @@
   },
   "homepage": "https://github.com/haikalrafifas/test-cylink#readme",
   "dependencies": {
+    "@types/cors": "^2.8.17",
     "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
     "jsonwebtoken": "^9.0.2",

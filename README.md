@@ -138,3 +138,19 @@ NODE_ENV=development
 # Run database migrations
 npm run db:migrate
 ```
+
+### Database Seeding
+
+The project includes seeders for initializing the database with essential data.
+
+```bash
+# Run all seeders
+npm run db:seed
+
+# Run specific seeder (admin user)
+npm run db:seed:admin
+```
+
+Available seeders:
+
+- `admin` - Creates an admin user with email `admin@cylink.id` and password `Admin@Cylink123`
