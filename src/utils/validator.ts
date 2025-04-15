@@ -1,11 +1,6 @@
 import { Request, Response } from 'express';
 
-const {
-  check,
-  query,
-  validationResult,
-  matchedData,
-} = require('express-validator');
+const { check, query, validationResult, matchedData } = require('express-validator');
 
 /**
  * Utility function to dynamically build field validation rules based on the fields array
@@ -30,6 +25,7 @@ const {
  *     ...
  *   ],
  *   areRequired: true|false, // optional, default is true (for body fields)
+ *   preserveBodyProps: true|false, // optional, default is false - if true, keeps existing req.body properties
  * });
  *
  * @param {Object} args - Arguments for configuring validation
@@ -38,10 +34,15 @@ const {
 const fieldValidationRules = (args: any) => {
   // Ensure at least one validation type is provided
   if (!args || (!args.fields && !args.query)) {
-    throw new Error("Expected fields or query property in argument");
+    throw new Error('Expected fields or query property in argument');
   }
 
-  const { fields = [], query: queryParams = [], areRequired = true } = args;
+  const {
+    fields = [],
+    query: queryParams = [],
+    areRequired = true,
+    preserveBodyProps = false,
+  } = args;
   const validationRules = [];
 
   // Process body field validations
@@ -54,24 +55,20 @@ const fieldValidationRules = (args: any) => {
 
       // Apply validation based on the type
       switch (field.type) {
-        case "integer":
+        case 'integer':
           validationChain = validationChain
             .isInt({ min: 1 })
-            .withMessage(
-              `${field.name} is required and must be a positive integer.`
-            );
+            .withMessage(`${field.name} is required and must be a positive integer.`);
           break;
 
-        case "signed_integer":
-        case "number":
+        case 'signed_integer':
+        case 'number':
           validationChain = validationChain
             .isInt()
-            .withMessage(
-              `${field.name} is required and must be a signed integer.`
-            );
+            .withMessage(`${field.name} is required and must be a signed integer.`);
           break;
 
-        case "string":
+        case 'string':
           validationChain = validationChain
             .isString()
             .trim()
@@ -81,7 +78,7 @@ const fieldValidationRules = (args: any) => {
             .withMessage(`${field.name} must be no more than 255 characters.`);
           break;
 
-        case "text":
+        case 'text':
           validationChain = validationChain
             .isString()
             .trim()
@@ -89,37 +86,35 @@ const fieldValidationRules = (args: any) => {
             .withMessage(`${field.name} is required. No data provided.`);
           break;
 
-        case "image":
-          validationChain = validationChain.custom(
-            (value: any, { req }: any) => {
-              const imageNotSpecified = !req.files || !req.files[field.name];
+        case 'image':
+          validationChain = validationChain.custom((value: any, { req }: any) => {
+            const imageNotSpecified = !req.files || !req.files[field.name];
 
-              // Skip-optional and not specified image
-              if (isFieldOptional && imageNotSpecified) {
-                return true;
-              }
-
-              // Ensure the image exists in the request
-              if (imageNotSpecified) {
-                throw new Error(`${field.name} is required.`);
-              }
-
-              // Extract the uploaded file object from req.files
-              const image = req.files[field.name];
-
-              // Check if the file is an image and has .webp extension
-              if (!image.name.match(/\.(webp)$/)) {
-                throw new Error("Image must be in webp format.");
-              }
-
-              // Check file size
-              if (image.size > 10 * 1024 * 1024) {
-                throw new Error("Image must be smaller than 10MB.");
-              }
-
+            // Skip-optional and not specified image
+            if (isFieldOptional && imageNotSpecified) {
               return true;
             }
-          );
+
+            // Ensure the image exists in the request
+            if (imageNotSpecified) {
+              throw new Error(`${field.name} is required.`);
+            }
+
+            // Extract the uploaded file object from req.files
+            const image = req.files[field.name];
+
+            // Check if the file is an image and has .webp extension
+            if (!image.name.match(/\.(webp)$/)) {
+              throw new Error('Image must be in webp format.');
+            }
+
+            // Check file size
+            if (image.size > 10 * 1024 * 1024) {
+              throw new Error('Image must be smaller than 10MB.');
+            }
+
+            return true;
+          });
           break;
 
         default:
@@ -127,7 +122,7 @@ const fieldValidationRules = (args: any) => {
       }
 
       // Handle optional fields
-      if (isFieldOptional && field.type !== "image") {
+      if (isFieldOptional && field.type !== 'image') {
         validationChain = validationChain.optional();
       }
 
@@ -135,9 +130,7 @@ const fieldValidationRules = (args: any) => {
       if (field.min) {
         validationChain = validationChain
           .isLength({ min: field.min })
-          .withMessage(
-            `${field.name} must be no less than ${field.min} characters.`
-          );
+          .withMessage(`${field.name} must be no less than ${field.min} characters.`);
       }
 
       // Handle email type
@@ -159,22 +152,22 @@ const fieldValidationRules = (args: any) => {
 
       // Apply validation based on the type
       switch (param.type) {
-        case "integer":
+        case 'integer':
           validationChain = validationChain
             .optional({ nullable: true, checkFalsy: true })
             .isInt({ min: 1 })
             .withMessage(`${param.name} must be a positive integer.`);
           break;
 
-        case "signed_integer":
-        case "number":
+        case 'signed_integer':
+        case 'number':
           validationChain = validationChain
             .optional({ nullable: true, checkFalsy: true })
             .isInt()
             .withMessage(`${param.name} must be an integer.`);
           break;
 
-        case "string":
+        case 'string':
           validationChain = validationChain
             .optional({ nullable: true, checkFalsy: true })
             .isString()
@@ -183,7 +176,7 @@ const fieldValidationRules = (args: any) => {
             .withMessage(`${param.name} must be no more than 255 characters.`);
           break;
 
-        case "text":
+        case 'text':
           validationChain = validationChain
             .optional({ nullable: true, checkFalsy: true })
             .isString()
@@ -200,9 +193,7 @@ const fieldValidationRules = (args: any) => {
 
       // Make required if specified
       if (isRequired) {
-        validationChain = validationChain
-          .exists()
-          .withMessage(`${param.name} is required.`);
+        validationChain = validationChain.exists().withMessage(`${param.name} is required.`);
       }
 
       // Handle enum values if specified
@@ -210,9 +201,7 @@ const fieldValidationRules = (args: any) => {
         validationChain = validationChain
           .optional({ nullable: true, checkFalsy: true })
           .isIn(param.enum)
-          .withMessage(
-            `${param.name} must be one of: ${param.enum.join(", ")}`
-          );
+          .withMessage(`${param.name} must be one of: ${param.enum.join(', ')}`);
       }
 
       validationRules.push(validationChain);
@@ -221,6 +210,9 @@ const fieldValidationRules = (args: any) => {
 
   // Add response middleware for validation errors
   validationRules.push((req: Request, res: Response, next: any) => {
+    // Store existing req.body properties if preserveBodyProps is true
+    const existingBodyProps = preserveBodyProps ? { ...req.body } : {};
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       const formattedErrors = errors.array().reduce((acc: any, error: any) => {
@@ -234,14 +226,31 @@ const fieldValidationRules = (args: any) => {
 
       return res.status(400).json({
         status: 400,
-        message: "Validation failed",
+        message: 'Validation failed',
         errors: formattedErrors,
       });
     }
 
-    // Only populate validated data for body
+    // Only populate validated data for body if there are field validations
     if (fields.length > 0) {
-      req.body = matchedData(req, { onlyValidData: true, locations: ["body"] });
+      // Get validated body data
+      const validatedBody = matchedData(req, { onlyValidData: true, locations: ['body'] });
+
+      if (preserveBodyProps) {
+        // Merge validated body with existing body props, prioritizing validated data
+        req.body = { ...existingBodyProps, ...validatedBody };
+      } else {
+        // Save user ID before overwriting req.body
+        const userId = req.body.id;
+
+        // Use only validated data
+        req.body = validatedBody;
+
+        // Restore user ID if it existed
+        if (userId !== undefined) {
+          req.body.id = userId;
+        }
+      }
     }
 
     next();

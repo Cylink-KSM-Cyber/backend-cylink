@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import {
-  QrCodeResponseData,
   generateQrCode,
   getQrCodeResponseById,
   getQrCodeResponseByUrlId,

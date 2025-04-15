@@ -144,7 +144,12 @@ const fields = require('../validators/urlValidator');
  *       500:
  *         description: Internal server error
  */
-router.get('/', accessToken, validate({ query: fields.getUrls }), urlController.getAllUrls);
+router.get(
+  '/',
+  accessToken,
+  validate({ query: fields.getUrls, preserveBodyProps: true }),
+  urlController.getAllUrls,
+);
 
 /**
  * @swagger
@@ -208,7 +213,7 @@ router.get('/', accessToken, validate({ query: fields.getUrls }), urlController.
 router.post(
   '/',
   accessToken,
-  validate({ fields: fields.createUrl }),
+  validate({ fields: fields.createUrl, preserveBodyProps: true }),
   urlController.createAuthenticatedUrl,
 );
 
@@ -454,7 +459,12 @@ router.delete('/:id', accessToken, urlController.deleteUrl);
  *       500:
  *         description: Internal server error
  */
-router.get('/:id/analytics', accessToken, urlController.getUrlAnalytics);
+router.get(
+  '/:id/analytics',
+  accessToken,
+  validate({ query: fields.getUrlAnalytics, preserveBodyProps: true }),
+  urlController.getUrlAnalytics,
+);
 
 /**
  * Get QR code for a specific URL by URL ID

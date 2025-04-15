@@ -69,6 +69,10 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
     // Get user ID from authentication token
     const userId = req.body.id;
 
+    if (!userId) {
+      return sendResponse(res, 401, 'Unauthorized: No user ID');
+    }
+
     // Parse query parameters for pagination and sorting
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
