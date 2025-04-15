@@ -22,6 +22,6 @@ router.use('/urls', urlRoutes);
 router.use('/public/urls', publicUrlRoutes);
 
 // QR code generation routes
-router.use('/api/v1/qr-codes', qrCodeRoutes);
+router.use('/qr-codes', qrCodeRoutes);
 
 module.exports = router;
