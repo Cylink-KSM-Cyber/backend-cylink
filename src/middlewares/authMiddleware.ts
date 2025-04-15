@@ -33,8 +33,33 @@ exports.accessToken = (req: AuthenticatedRequest, res: Response, next: NextFunct
   }
 
   try {
-    const payload = jwt.verify.accessToken(token);
+    const payload = jwt.access.verify(token);
     req.user = payload;
+
+    // Make sure req.body exists before setting id
+    if (!req.body) {
+      req.body = {};
+    }
+
+    // Copy user ID from payload to req.body for controller access
+    if (payload && payload.id) {
+      try {
+        req.body.id = payload.id;
+      } catch (bodyError) {
+        // Try using defineProperty as an alternative approach
+        try {
+          Object.defineProperty(req, 'body', {
+            value: { ...(req.body || {}), id: payload.id },
+            writable: true,
+            configurable: true,
+          });
+        } catch (propError) {
+          const propErrMsg = propError instanceof Error ? propError.message : String(propError);
+          throw new Error(`Cannot set user ID in request: ${propErrMsg}`);
+        }
+      }
+    }
+
     next();
   } catch (error) {
     sendResponse(res, 401, 'Invalid or expired access token');
@@ -57,7 +82,7 @@ exports.refreshToken = (req: AuthenticatedRequest, res: Response, next: NextFunc
   }
 
   try {
-    const payload = jwt.verify.refreshToken(refreshToken);
+    const payload = jwt.refresh.verify(refreshToken);
     req.user = payload;
     next();
   } catch (error) {
@@ -87,7 +112,7 @@ exports.verificationToken = (
   }
 
   try {
-    const payload = jwt.verify.verificationToken(verificationToken);
+    const payload = jwt.verification.verify(verificationToken);
     req.user = payload;
     next();
   } catch (error) {
