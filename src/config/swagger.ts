@@ -9,6 +9,9 @@
 
 import swaggerJsDoc from 'swagger-jsdoc';
 import { Options } from 'swagger-jsdoc';
+import path from 'path';
+
+const isProd = process.env.NODE_ENV === 'production';
 
 const swaggerOptions: Options = {
   definition: {
@@ -114,7 +117,17 @@ const swaggerOptions: Options = {
       },
     ],
   },
-  apis: ['./src/routes/*.ts', './src/models/*.ts', './src/docs/*.ts'],
+  apis: isProd
+  ? [
+      path.join(__dirname, '../../dist/routes/*.js'),
+      path.join(__dirname, '../../dist/models/*.js'),
+      path.join(__dirname, '../../dist/docs/*.js'),
+    ]
+  : [
+      path.join(__dirname, '../routes/*.ts'),
+      path.join(__dirname, '../models/*.ts'),
+      path.join(__dirname, '../docs/*.ts'),
+    ]
 };
 
 const swaggerSpec = swaggerJsDoc(swaggerOptions);
