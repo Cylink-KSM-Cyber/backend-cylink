@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 import { QrCode, QrCodeCreateData, QrCodeUpdateData } from '../interfaces/QrCode';
+const logger = require('../utils/logger');
 
 /**
  * QR Code Model
@@ -24,15 +25,75 @@ export const createQrCode = async (qrCodeData: QrCodeCreateData): Promise<QrCode
     size = 300,
   } = qrCodeData;
 
-  const result = await pool.query(
-    `INSERT INTO qr_codes 
-    (url_id, color, background_color, include_logo, logo_size, size)
-    VALUES ($1, $2, $3, $4, $5, $6)
-    RETURNING *`,
-    [url_id, color, background_color, include_logo, logo_size, size],
-  );
+  logger.info('createQrCode: Inserting QR code into database with data:', {
+    url_id,
+    color,
+    background_color,
+    include_logo,
+    logo_size: `${logo_size} (${typeof logo_size})`,
+    size,
+  });
 
-  return result.rows[0];
+  // Additional validation for logo_size at the last line of defense
+  let finalLogoSize = logo_size;
+  if (typeof finalLogoSize === 'number') {
+    if (finalLogoSize > 1) {
+      finalLogoSize = finalLogoSize / 100;
+      logger.warn(`Converting large logo_size ${logo_size} to ${finalLogoSize} as a last defense`);
+    }
+
+    // Round to 2 decimal places to ensure it meets database precision
+    finalLogoSize = Math.round(finalLogoSize * 100) / 100;
+    logger.info(`Final logo_size value: ${finalLogoSize}`);
+  } else {
+    finalLogoSize = 0.2;
+    logger.warn(`Non-numeric logo_size detected in model: ${logo_size}, using default 0.2`);
+  }
+
+  try {
+    logger.info(
+      `Database query parameters: [${url_id}, ${color}, ${background_color}, ${include_logo}, ${finalLogoSize}, ${size}]`,
+    );
+
+    const result = await pool.query(
+      `INSERT INTO qr_codes 
+      (url_id, color, background_color, include_logo, logo_size, size)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *`,
+      [url_id, color, background_color, include_logo, finalLogoSize, size],
+    );
+
+    logger.info(
+      'QR code inserted successfully, returning:',
+      JSON.stringify(result.rows[0], null, 2),
+    );
+    return result.rows[0];
+  } catch (error) {
+    logger.error('Error inserting QR code into database:', error);
+
+    // Enhanced error logging
+    if (error instanceof Error) {
+      logger.error(`Database error message: ${error.message}`);
+
+      // Check for specific PostgreSQL error properties
+      const pgError = error as any;
+      if (pgError.code) {
+        logger.error(`PostgreSQL error code: ${pgError.code}`);
+      }
+      if (pgError.detail) {
+        logger.error(`PostgreSQL error detail: ${pgError.detail}`);
+      }
+      if (pgError.hint) {
+        logger.error(`PostgreSQL error hint: ${pgError.hint}`);
+      }
+      if (pgError.where) {
+        logger.error(`PostgreSQL error where: ${pgError.where}`);
+      }
+    }
+
+    // Re-throw the error
+    throw error;
+  }
 };
 
 /**
