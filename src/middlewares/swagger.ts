@@ -23,10 +23,10 @@ export const setupSwagger = (app: Express): void => {
     swaggerUi.setup(swaggerSpec, {
       explorer: true,
       customCss: '.swagger-ui .topbar { display: none }',
-      customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui.css',
+      customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui.min.css',
       customJs: [
-        'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-bundle.js',
-        'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-standalone-preset.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-bundle.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-standalone-preset.min.js',
       ],
       customSiteTitle: 'CyLink API Documentation',
       customfavIcon: '/favicon.ico',
