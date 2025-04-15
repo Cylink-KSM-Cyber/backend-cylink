@@ -24,12 +24,25 @@ export const createQrCode = async (qrCodeData: QrCodeCreateData): Promise<QrCode
     size = 300,
   } = qrCodeData;
 
+  // Additional validation for logo_size at the last line of defense
+  let finalLogoSize = logo_size;
+  if (typeof finalLogoSize === 'number') {
+    if (finalLogoSize > 1) {
+      finalLogoSize = finalLogoSize / 100;
+    }
+
+    // Round to 2 decimal places to ensure it meets database precision
+    finalLogoSize = Math.round(finalLogoSize * 100) / 100;
+  } else {
+    finalLogoSize = 0.2;
+  }
+
   const result = await pool.query(
     `INSERT INTO qr_codes 
     (url_id, color, background_color, include_logo, logo_size, size)
     VALUES ($1, $2, $3, $4, $5, $6)
     RETURNING *`,
-    [url_id, color, background_color, include_logo, logo_size, size],
+    [url_id, color, background_color, include_logo, finalLogoSize, size],
   );
 
   return result.rows[0];

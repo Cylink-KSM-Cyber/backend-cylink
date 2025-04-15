@@ -99,13 +99,33 @@ export const generateQrCode = async (options: QrCodeOptions): Promise<QrCodeResp
     color = '#000000',
     backgroundColor = '#FFFFFF',
     includeLogo = true,
-    logoSize = 0.2,
     size = 300,
   } = options;
+
+  // Extract logoSize separately since we need to modify it
+  let logoSize = options.logoSize ?? 0.2;
 
   // Validate that either urlId or shortCode is provided
   if (!urlId && !shortCode) {
     throw new Error('Either url_id or short_code is required');
+  }
+
+  // Ensure logoSize is properly formatted (should be between 0.1 and 0.3)
+  // Additional validation to catch any values that might have passed through controller
+  if (typeof logoSize === 'number') {
+    if (logoSize > 1) {
+      logoSize = logoSize / 100;
+    }
+
+    if (logoSize < 0.1 || logoSize > 0.3) {
+      logoSize = 0.2; // Set to default if invalid
+      logger.warn('Invalid logo_size provided, using default value of 0.2');
+    }
+
+    // Ensure the precision doesn't exceed database limits
+    logoSize = Math.round(logoSize * 100) / 100; // Ensures 2 decimal places
+  } else {
+    logoSize = 0.2; // Default if not a number
   }
 
   // Find the URL
@@ -280,30 +300,58 @@ export const updateQrCodeWithResponse = async (
   id: number,
   updateData: QrCodeUpdateData,
 ): Promise<QrCodeResponseData | null> => {
-  // Verify QR code exists
-  const existingQrCode = await qrCodeModel.getQrCodeById(id);
-  if (!existingQrCode) {
-    throw new Error('QR code not found');
-  }
+  // Prepare normalized update data
+  const normalizedUpdateData = { ...updateData };
 
-  // Get the URL to retrieve the short_code
-  const url = await urlModel.getUrlById(existingQrCode.url_id);
-  if (!url) {
-    logger.error(`URL not found for QR code ID ${id} with URL ID ${existingQrCode.url_id}`);
-    throw new Error('Associated URL not found');
+  // Validate and normalize logo_size if present
+  if (normalizedUpdateData.logo_size !== undefined) {
+    let logoSize = normalizedUpdateData.logo_size;
+
+    if (typeof logoSize === 'number') {
+      if (logoSize > 1) {
+        logoSize = logoSize / 100;
+      }
+
+      if (logoSize < 0.1 || logoSize > 0.3) {
+        logoSize = 0.2; // Set to default if invalid
+        logger.warn('Invalid logo_size provided for update, using default value of 0.2');
+      }
+
+      // Ensure the precision doesn't exceed database limits
+      logoSize = Math.round(logoSize * 100) / 100; // Ensures 2 decimal places
+      normalizedUpdateData.logo_size = logoSize;
+    } else {
+      normalizedUpdateData.logo_size = 0.2; // Default if not a number
+    }
   }
 
   try {
+    // Get the QR code to update
+    const existingQrCode = await qrCodeModel.getQrCodeById(id);
+    if (!existingQrCode) {
+      throw new Error('QR code not found');
+    }
+
+    // Get the associated URL
+    const url = await urlModel.getUrlById(existingQrCode.url_id);
+    if (!url) {
+      throw new Error('Associated URL not found');
+    }
+
     // Update the QR code
-    const updatedQrCode = await qrCodeModel.updateQrCode(id, updateData);
+    const updatedQrCode = await qrCodeModel.updateQrCode(id, normalizedUpdateData);
     if (!updatedQrCode) {
       throw new Error('Failed to update QR code');
     }
 
-    // Format the response
+    // Return formatted response
     return formatQrCodeResponse(updatedQrCode, url.short_code);
   } catch (error) {
-    logger.error(`Failed to update QR code ${id}:`, error);
+    if (error instanceof Error) {
+      logger.error(`Update QR code error: ${error.message}`);
+      throw error;
+    }
+    logger.error('Update QR code error:', error);
     throw new Error('Failed to update QR code');
   }
 };

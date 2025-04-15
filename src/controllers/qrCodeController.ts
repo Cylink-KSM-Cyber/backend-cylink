@@ -52,14 +52,40 @@ export const createQrCode = async (req: Request, res: Response): Promise<Respons
   try {
     const { url_id, short_code, color, background_color, include_logo, logo_size, size } = req.body;
 
-    // Generate QR code
+    // Deep clone the request body to avoid direct mutation
+    const qrCodeData = { ...req.body };
+
+    // Validate logo_size to ensure it matches database constraints
+    if (logo_size !== undefined) {
+      // Check if logo_size is a number
+      if (typeof logo_size !== 'number') {
+        return sendResponse(res, 400, 'Invalid QR code parameters', {
+          errors: ['logo_size must be a number'],
+        });
+      }
+
+      // If logo_size is greater than 1, assume it's a percentage and convert to decimal
+      const normalizedLogoSize = logo_size > 1 ? logo_size / 100 : logo_size;
+
+      // Check if normalized value is within the allowed range
+      if (normalizedLogoSize < 0.1 || normalizedLogoSize > 0.3) {
+        return sendResponse(res, 400, 'Invalid QR code parameters', {
+          errors: ['logo_size must be between 0.1 (10%) and 0.3 (30%)'],
+        });
+      }
+
+      // Update the processed data object, not the req.body
+      qrCodeData.logo_size = normalizedLogoSize;
+    }
+
+    // Generate QR code with the normalized data
     const qrCode = await generateQrCode({
       urlId: url_id,
       shortCode: short_code,
       color,
       backgroundColor: background_color,
       includeLogo: include_logo,
-      logoSize: logo_size,
+      logoSize: qrCodeData.logo_size, // Use the normalized value
       size,
     });
 
@@ -104,12 +130,35 @@ export const updateQrCode = async (req: Request, res: Response): Promise<Respons
 
     const { color, background_color, include_logo, logo_size, size } = req.body;
 
-    // Prepare update data
+    // Create a copy for our normalized data
+    let normalizedLogoSize = logo_size;
+
+    // Validate logo_size to ensure it matches database constraints
+    if (logo_size !== undefined) {
+      // Check if logo_size is a number
+      if (typeof logo_size !== 'number') {
+        return sendResponse(res, 400, 'Invalid QR code parameters', {
+          errors: ['logo_size must be a number'],
+        });
+      }
+
+      // If logo_size is greater than 1, assume it's a percentage and convert to decimal
+      normalizedLogoSize = logo_size > 1 ? logo_size / 100 : logo_size;
+
+      // Check if normalized value is within the allowed range
+      if (normalizedLogoSize < 0.1 || normalizedLogoSize > 0.3) {
+        return sendResponse(res, 400, 'Invalid QR code parameters', {
+          errors: ['logo_size must be between 0.1 (10%) and 0.3 (30%)'],
+        });
+      }
+    }
+
+    // Prepare update data with normalized values
     const updateData = {
       ...(color !== undefined && { color }),
       ...(background_color !== undefined && { background_color }),
       ...(include_logo !== undefined && { include_logo }),
-      ...(logo_size !== undefined && { logo_size }),
+      ...(logo_size !== undefined && { logo_size: normalizedLogoSize }),
       ...(size !== undefined && { size }),
     };
 
