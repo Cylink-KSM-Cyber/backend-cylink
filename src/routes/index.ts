@@ -1,9 +1,9 @@
 const router = require('express').Router();
 
-const authRoutes = require('@/routes/authRoutes');
-const publicUrlRoutes = require('@/routes/publicUrlRoutes');
-const urlRoutes = require('@/routes/urlRoutes');
-const qrCodeRoutes = require('@/routes/qrCodeRoutes');
+const authRoutes = require('../routes/authRoutes');
+const publicUrlRoutes = require('../routes/publicUrlRoutes');
+const urlRoutes = require('../routes/urlRoutes');
+const qrCodeRoutes = require('../routes/qrCodeRoutes');
 
 /**
  * Main router

@@ -5,7 +5,7 @@
  * @module database/seeders/clickSeeder
  */
 
-import pool from '@/config/database';
+import pool from '../../config/database';
 
 /**
  * Sample IP addresses for generating click data

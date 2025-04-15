@@ -7,10 +7,10 @@
 
 const bcrypt = require("bcrypt");
 
-const clickModel = require("@/models/clickModel");
-const urlModel = require("@/models/urlModel");
-const logger = require("@/utils/logger");
-const shortCodeUtil = require("@/utils/shortCode");
+const clickModel = require("../models/clickModel");
+const urlModel = require("../models/urlModel");
+const logger = require("../utils/logger");
+const shortCodeUtil = require("../utils/shortCode");
 
 
 

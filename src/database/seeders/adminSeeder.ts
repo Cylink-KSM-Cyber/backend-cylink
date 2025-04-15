@@ -5,10 +5,10 @@
  * @module database/seeders/adminSeeder
  */
 
-import { User } from '@/collections/userCollection';
-import pool from '@/config/database';
+import { User } from '../../collections/userCollection';
+import pool from '../../config/database';
 
-const { hash } = require('@/utils/crypto');
+const { hash } = require('../../utils/crypto');
 
 /**
  * AdminSeeder class - Responsible for creating admin user

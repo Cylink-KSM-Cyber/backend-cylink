@@ -6,10 +6,10 @@
  */
 
 // Set up module aliases before anything else
-import '../moduleAlias';
+// import '../moduleAlias';
 require('dotenv').config();
 
-import { runAllSeeders, runSeeder } from '@/database/seeders/index';
+import { runAllSeeders, runSeeder } from './seeders/index';
 
 /**
  * Main CLI entry point

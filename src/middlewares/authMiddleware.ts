@@ -7,8 +7,8 @@
 
 import { Request, Response, NextFunction } from 'express';
 
-const jwt = require('@/utils/jwt');
-const { sendResponse } = require('@/utils/response');
+const jwt = require('../utils/jwt');
+const { sendResponse } = require('../utils/response');
 
 /**
  * Extended request interface with token payload

@@ -5,9 +5,9 @@
  * @module models/userModel
  */
 
-import { User } from '@/collections/userCollection';
+import { User } from '../collections/userCollection';
 
-const pool = require('@/config/database');
+const pool = require('../config/database');
 
 /**
  * Retrieves a user by email

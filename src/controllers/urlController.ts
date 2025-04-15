@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 
-const clickModel = require('@/models/clickModel');
-const urlModel = require('@/models/urlModel');
-const urlService = require('@/services/urlService');
-const logger = require('@/utils/logger');
-const { sendResponse } = require('@/utils/response');
+const clickModel = require('../models/clickModel');
+const urlModel = require('../models/urlModel');
+const urlService = require('../services/urlService');
+const logger = require('../utils/logger');
+const { sendResponse } = require('../utils/response');
 
 /**
  * URL Controller
