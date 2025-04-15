@@ -32,6 +32,7 @@ const single = (data: User): object | null => {
   if (!data) return null;
 
   return {
+    id: data.id,
     username: data.username,
     email: data.email,
     created_at: data.created_at,
