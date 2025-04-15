@@ -50,20 +50,7 @@ export const getQrCodeColorOptions = async (req: Request, res: Response): Promis
  */
 export const createQrCode = async (req: Request, res: Response): Promise<Response> => {
   try {
-    // Log the entire request body for debugging
-    logger.info('QR Code creation request received with data:', JSON.stringify(req.body, null, 2));
-
     const { url_id, short_code, color, background_color, include_logo, logo_size, size } = req.body;
-
-    logger.info('QR Code parameters:', {
-      url_id,
-      short_code,
-      color,
-      background_color,
-      include_logo,
-      logo_size: typeof logo_size === 'number' ? logo_size : `${logo_size} (${typeof logo_size})`,
-      size,
-    });
 
     // Deep clone the request body to avoid direct mutation
     const qrCodeData = { ...req.body };
@@ -72,7 +59,6 @@ export const createQrCode = async (req: Request, res: Response): Promise<Respons
     if (logo_size !== undefined) {
       // Check if logo_size is a number
       if (typeof logo_size !== 'number') {
-        logger.warn(`Invalid logo_size type: ${typeof logo_size}, value: ${logo_size}`);
         return sendResponse(res, 400, 'Invalid QR code parameters', {
           errors: ['logo_size must be a number'],
         });
@@ -80,11 +66,9 @@ export const createQrCode = async (req: Request, res: Response): Promise<Respons
 
       // If logo_size is greater than 1, assume it's a percentage and convert to decimal
       const normalizedLogoSize = logo_size > 1 ? logo_size / 100 : logo_size;
-      logger.info(`Logo size conversion: original=${logo_size}, normalized=${normalizedLogoSize}`);
 
       // Check if normalized value is within the allowed range
       if (normalizedLogoSize < 0.1 || normalizedLogoSize > 0.3) {
-        logger.warn(`Logo size out of range: ${normalizedLogoSize}`);
         return sendResponse(res, 400, 'Invalid QR code parameters', {
           errors: ['logo_size must be between 0.1 (10%) and 0.3 (30%)'],
         });
@@ -92,20 +76,9 @@ export const createQrCode = async (req: Request, res: Response): Promise<Respons
 
       // Update the processed data object, not the req.body
       qrCodeData.logo_size = normalizedLogoSize;
-      logger.info(`Using normalized logo_size: ${normalizedLogoSize}`);
     }
 
     // Generate QR code with the normalized data
-    logger.info('Sending the following data to QR code service:', {
-      urlId: url_id,
-      shortCode: short_code,
-      color,
-      backgroundColor: background_color,
-      includeLogo: include_logo,
-      logoSize: qrCodeData.logo_size,
-      size,
-    });
-
     const qrCode = await generateQrCode({
       urlId: url_id,
       shortCode: short_code,
@@ -132,24 +105,8 @@ export const createQrCode = async (req: Request, res: Response): Promise<Respons
       }
 
       logger.error('QR code generation error:', error.message);
-      // Log any additional error properties for debugging
-      if (Object.prototype.hasOwnProperty.call(error, 'stack')) {
-        logger.error('Error stack:', error.stack);
-      }
-
-      // Log any additional properties that might be in the error object
-      const errorObj = Object.getOwnPropertyNames(error)
-        .filter(prop => prop !== 'stack' && prop !== 'message')
-        .reduce((acc, prop) => {
-          acc[prop] = (error as any)[prop];
-          return acc;
-        }, {} as any);
-
-      if (Object.keys(errorObj).length > 0) {
-        logger.error('Additional error properties:', errorObj);
-      }
     } else {
-      logger.error('QR code generation error (non-Error object):', error);
+      logger.error('QR code generation error:', error);
     }
 
     return sendResponse(res, 500, 'Internal Server Error');

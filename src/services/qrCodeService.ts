@@ -93,8 +93,6 @@ export const formatQrCodeResponse = (qrCode: QrCode, shortCode: string): QrCodeR
  * @throws {Error} If URL is not found or invalid parameters are provided
  */
 export const generateQrCode = async (options: QrCodeOptions): Promise<QrCodeResponseData> => {
-  logger.info('generateQrCode called with options:', JSON.stringify(options, null, 2));
-
   const {
     urlId,
     shortCode,
@@ -106,7 +104,6 @@ export const generateQrCode = async (options: QrCodeOptions): Promise<QrCodeResp
 
   // Extract logoSize separately since we need to modify it
   let logoSize = options.logoSize ?? 0.2;
-  logger.info(`Initial logoSize: ${logoSize} (${typeof logoSize})`);
 
   // Validate that either urlId or shortCode is provided
   if (!urlId && !shortCode) {
@@ -117,38 +114,28 @@ export const generateQrCode = async (options: QrCodeOptions): Promise<QrCodeResp
   // Additional validation to catch any values that might have passed through controller
   if (typeof logoSize === 'number') {
     if (logoSize > 1) {
-      const originalSize = logoSize;
       logoSize = logoSize / 100;
-      logger.info(`Converted logo size from ${originalSize} to ${logoSize}`);
     }
 
     if (logoSize < 0.1 || logoSize > 0.3) {
-      const originalSize = logoSize;
       logoSize = 0.2; // Set to default if invalid
-      logger.warn(
-        `Invalid logo_size ${originalSize} out of range [0.1, 0.3], using default value of 0.2`,
-      );
+      logger.warn('Invalid logo_size provided, using default value of 0.2');
     }
 
     // Ensure the precision doesn't exceed database limits
-    const originalSize = logoSize;
     logoSize = Math.round(logoSize * 100) / 100; // Ensures 2 decimal places
-    logger.info(`Rounded logo_size from ${originalSize} to ${logoSize} for precision control`);
   } else {
-    logger.warn(`Non-numeric logo_size: ${logoSize}, setting to default 0.2`);
     logoSize = 0.2; // Default if not a number
   }
 
   // Find the URL
   let url;
   if (shortCode) {
-    logger.info(`Finding URL by short code: ${shortCode}`);
     url = await urlModel.getUrlByShortCode(shortCode);
     if (!url) {
       throw new Error('URL not found for the provided short code');
     }
   } else if (urlId) {
-    logger.info(`Finding URL by ID: ${urlId}`);
     url = await urlModel.getUrlById(urlId);
     if (!url) {
       throw new Error('URL not found for the provided ID');
@@ -158,8 +145,6 @@ export const generateQrCode = async (options: QrCodeOptions): Promise<QrCodeResp
   if (!url) {
     throw new Error('URL not found');
   }
-
-  logger.info(`Found URL: ${url.id} (${url.original_url})`);
 
   // Create QR code in database
   const qrCodeData: QrCodeCreateData = {
@@ -171,33 +156,11 @@ export const generateQrCode = async (options: QrCodeOptions): Promise<QrCodeResp
     size,
   };
 
-  logger.info('Preparing to create QR code with data:', JSON.stringify(qrCodeData, null, 2));
-
   try {
     const qrCode = await qrCodeModel.createQrCode(qrCodeData);
-    logger.info('QR code created successfully:', JSON.stringify(qrCode, null, 2));
     return formatQrCodeResponse(qrCode, url.short_code);
   } catch (error) {
     logger.error('Failed to create QR code:', error);
-    // Log detailed error information
-    if (error instanceof Error) {
-      logger.error(`Error message: ${error.message}`);
-      if (Object.prototype.hasOwnProperty.call(error, 'stack')) {
-        logger.error(`Error stack: ${error.stack}`);
-      }
-
-      // Capture any additional properties
-      const errorDetails = Object.getOwnPropertyNames(error)
-        .filter(prop => prop !== 'stack' && prop !== 'message')
-        .reduce((acc, prop) => {
-          acc[prop] = (error as any)[prop];
-          return acc;
-        }, {} as any);
-
-      if (Object.keys(errorDetails).length > 0) {
-        logger.error('Additional error details:', errorDetails);
-      }
-    }
     throw new Error('Failed to generate QR code');
   }
 };
