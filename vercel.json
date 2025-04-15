@@ -9,15 +9,15 @@
   "routes": [
     {
       "src": "/api/docs/swagger-ui.css",
-      "dest": "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui.min.css"
+      "dest": "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.6.2/swagger-ui.min.css"
     },
     {
       "src": "/api/docs/swagger-ui-bundle.js",
-      "dest": "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-bundle.min.js"
+      "dest": "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.6.2/swagger-ui-bundle.min.js"
     },
     {
       "src": "/api/docs/swagger-ui-standalone-preset.js",
-      "dest": "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-standalone-preset.min.js"
+      "dest": "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.6.2/swagger-ui-standalone-preset.min.js"
     },
     {
       "src": "/(.*)",
