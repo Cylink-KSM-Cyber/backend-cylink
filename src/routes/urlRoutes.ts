@@ -1,7 +1,7 @@
 const router = require('express').Router();
 
-const urlController = require('../controllers/urlController');
 const { getQrCodeByUrlId } = require('../controllers/qrCodeController');
+const urlController = require('../controllers/urlController');
 const { accessToken } = require('../middlewares/authMiddleware');
 const validate = require('../utils/validator');
 const fields = require('../validators/urlValidator');
@@ -219,9 +219,267 @@ router.post(
 
 /**
  * @swagger
+ * /api/v1/urls/total-clicks:
+ *   get:
+ *     summary: Get total clicks analytics across all user's URLs
+ *     tags: [URLs]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: start_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date for analysis (format YYYY-MM-DD, default 30 days ago)
+ *       - in: query
+ *         name: end_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date for analysis (format YYYY-MM-DD, default today)
+ *       - in: query
+ *         name: comparison
+ *         schema:
+ *           type: string
+ *           enum: ['7', '14', '30', '90', 'custom']
+ *           default: '30'
+ *         description: Comparison period in days
+ *       - in: query
+ *         name: custom_comparison_start
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Custom comparison period start date (required when comparison=custom)
+ *       - in: query
+ *         name: custom_comparison_end
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Custom comparison period end date (required when comparison=custom)
+ *       - in: query
+ *         name: group_by
+ *         schema:
+ *           type: string
+ *           enum: [day, week, month]
+ *           default: day
+ *         description: How to group time series data
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for time series data pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 30
+ *           maximum: 90
+ *         description: Number of time series data points per page
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved total clicks analytics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Successfully retrieved total clicks analytics
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     summary:
+ *                       type: object
+ *                       properties:
+ *                         total_clicks:
+ *                           type: integer
+ *                           example: 14256
+ *                         total_urls:
+ *                           type: integer
+ *                           example: 143
+ *                         avg_clicks_per_url:
+ *                           type: number
+ *                           format: float
+ *                           example: 99.69
+ *                         analysis_period:
+ *                           type: object
+ *                           properties:
+ *                             start_date:
+ *                               type: string
+ *                               format: date
+ *                               example: 2025-03-19
+ *                             end_date:
+ *                               type: string
+ *                               format: date
+ *                               example: 2025-04-18
+ *                             days:
+ *                               type: integer
+ *                               example: 30
+ *                         comparison:
+ *                           type: object
+ *                           properties:
+ *                             period_days:
+ *                               type: integer
+ *                               example: 30
+ *                             previous_period:
+ *                               type: object
+ *                               properties:
+ *                                 start_date:
+ *                                   type: string
+ *                                   format: date
+ *                                   example: 2025-02-17
+ *                                 end_date:
+ *                                   type: string
+ *                                   format: date
+ *                                   example: 2025-03-18
+ *                             total_clicks:
+ *                               type: object
+ *                               properties:
+ *                                 current:
+ *                                   type: integer
+ *                                   example: 14256
+ *                                 previous:
+ *                                   type: integer
+ *                                   example: 12105
+ *                                 change:
+ *                                   type: integer
+ *                                   example: 2151
+ *                                 change_percentage:
+ *                                   type: number
+ *                                   format: float
+ *                                   example: 17.77
+ *                             avg_clicks_per_url:
+ *                               type: object
+ *                               properties:
+ *                                 current:
+ *                                   type: number
+ *                                   format: float
+ *                                   example: 99.69
+ *                                 previous:
+ *                                   type: number
+ *                                   format: float
+ *                                   example: 91.02
+ *                                 change:
+ *                                   type: number
+ *                                   format: float
+ *                                   example: 8.67
+ *                                 change_percentage:
+ *                                   type: number
+ *                                   format: float
+ *                                   example: 9.53
+ *                             active_urls:
+ *                               type: object
+ *                               properties:
+ *                                 current:
+ *                                   type: integer
+ *                                   example: 143
+ *                                 previous:
+ *                                   type: integer
+ *                                   example: 133
+ *                                 change:
+ *                                   type: integer
+ *                                   example: 10
+ *                                 change_percentage:
+ *                                   type: number
+ *                                   format: float
+ *                                   example: 7.52
+ *                     time_series:
+ *                       type: object
+ *                       properties:
+ *                         data:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               date:
+ *                                 type: string
+ *                                 example: 2025-03-20
+ *                               clicks:
+ *                                 type: integer
+ *                                 example: 486
+ *                               urls_count:
+ *                                 type: integer
+ *                                 example: 122
+ *                               avg_clicks:
+ *                                 type: number
+ *                                 format: float
+ *                                 example: 3.98
+ *                         pagination:
+ *                           type: object
+ *                           properties:
+ *                             total_items:
+ *                               type: integer
+ *                               example: 30
+ *                             total_pages:
+ *                               type: integer
+ *                               example: 1
+ *                             current_page:
+ *                               type: integer
+ *                               example: 1
+ *                             limit:
+ *                               type: integer
+ *                               example: 30
+ *                     top_performing_days:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           date:
+ *                             type: string
+ *                             example: 2025-04-05
+ *                           clicks:
+ *                             type: integer
+ *                             example: 689
+ *                           urls_count:
+ *                             type: integer
+ *                             example: 138
+ *                           avg_clicks:
+ *                             type: number
+ *                             format: float
+ *                             example: 4.99
+ *       400:
+ *         description: Invalid parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: Invalid parameters
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example:
+ *                     - end_date must be after start_date
+ *                     - comparison value must be one of: 7, 14, 30, 90, custom
+ *       401:
+ *         description: Unauthorized, authentication required
+ *       500:
+ *         description: Internal server error
+ */
+router.get(
+  '/total-clicks',
+  accessToken,
+  validate({ query: fields.getTotalClicksAnalytics, preserveBodyProps: true }),
+  urlController.getTotalClicksAnalytics,
+);
+
+/**
+ * @swagger
  * /api/v1/urls/{identifier}:
  *   get:
- *     summary: Get URL details by ID or short code
+ *     summary: Get details of a specific URL by ID
  *     tags: [URLs]
  *     security:
  *       - BearerAuth: []
@@ -234,7 +492,7 @@ router.post(
  *         description: URL ID or short code
  *     responses:
  *       200:
- *         description: URL details with analytics
+ *         description: URL details
  *         content:
  *           application/json:
  *             schema:
@@ -245,61 +503,9 @@ router.post(
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: Successfully retrieved URL
+ *                   example: Successfully retrieved URL details
  *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                       example: 123
- *                     original_url:
- *                       type: string
- *                       example: https://example.com/very-long-url-path
- *                     short_code:
- *                       type: string
- *                       example: abc123
- *                     short_url:
- *                       type: string
- *                       example: https://cylink.id/abc123
- *                     title:
- *                       type: string
- *                       example: Example Title
- *                     clicks:
- *                       type: integer
- *                       example: 42
- *                     created_at:
- *                       type: string
- *                       format: date-time
- *                     updated_at:
- *                       type: string
- *                       format: date-time
- *                     expiry_date:
- *                       type: string
- *                       format: date-time
- *                     is_active:
- *                       type: boolean
- *                       example: true
- *                     analytics:
- *                       type: object
- *                       properties:
- *                         browser_stats:
- *                           type: object
- *                           additionalProperties:
- *                             type: integer
- *                         device_stats:
- *                           type: object
- *                           additionalProperties:
- *                             type: integer
- *                         recent_clicks:
- *                           type: array
- *                           items:
- *                             type: object
- *                             properties:
- *                               timestamp:
- *                                 type: string
- *                                 format: date-time
- *                               device_type:
- *                                 type: string
+ *                   $ref: '#/components/schemas/Url'
  *       401:
  *         description: Unauthorized, authentication required
  *       404:

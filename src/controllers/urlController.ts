@@ -99,7 +99,7 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
         const expiryDate = url.expiry_date ? new Date(url.expiry_date).toISOString() : null;
 
         // Generate the full short URL
-        const baseUrl = process.env.SHORT_URL_BASE || 'https://cylink.id/';
+        const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
         const shortUrl = baseUrl + url.short_code;
 
         return {
@@ -107,7 +107,7 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
           original_url: url.original_url,
           short_code: url.short_code,
           short_url: shortUrl,
-          title: url.title || null,
+          title: url.title ?? null,
           clicks: clickCount,
           created_at: new Date(url.created_at).toISOString(),
           expiry_date: expiryDate,
@@ -117,7 +117,7 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
     );
 
     // Apply sorting based on sortBy and sortOrder parameters
-    const sortedUrls = urlsWithClicks.sort((a: UrlWithClicks, b: UrlWithClicks) => {
+    const sortedUrls = [...urlsWithClicks].sort((a: UrlWithClicks, b: UrlWithClicks) => {
       let comparison = 0;
 
       // Handle different sortBy fields
@@ -126,7 +126,7 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
       } else if (sortBy === 'created_at') {
         comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       } else if (sortBy === 'title') {
-        comparison = (a.title || '').localeCompare(b.title || '');
+        comparison = (a.title ?? '').localeCompare(b.title ?? '');
       } else {
         // Default to sorting by created_at
         comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
@@ -155,10 +155,18 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
 
     // Return the response in the requested format
     return sendResponse(res, 200, 'Successfully retrieved all URLs', paginatedUrls, pagination);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('URL error: Failed to retrieve URLs:', errorMessage);
-    return sendResponse(res, 500, 'Failed to retrieve URLs', []);
+  } catch (error: unknown) {
+    // Handle specific error types
+    if (error instanceof TypeError) {
+      logger.error('URL error: Type error while retrieving URLs:', error.message);
+      return sendResponse(res, 400, 'Invalid data format');
+    } else if (error instanceof Error) {
+      logger.error('URL error: Failed to retrieve URLs:', error.message);
+      return sendResponse(res, 500, 'Failed to retrieve URLs', []);
+    } else {
+      logger.error('URL error: Unknown error while retrieving URLs:', String(error));
+      return sendResponse(res, 500, 'Internal server error');
+    }
   }
 };
 
@@ -172,7 +180,11 @@ function isValidUrl(url: string): boolean {
   try {
     const parsedUrl = new URL(url);
     return ['http:', 'https:'].includes(parsedUrl.protocol);
-  } catch (error) {
+  } catch (error: unknown) {
+    // URL constructor throws TypeError for invalid URLs
+    if (error instanceof TypeError) {
+      logger.debug('Invalid URL format:', url);
+    }
     return false;
   }
 }
@@ -206,7 +218,7 @@ exports.createAnonymousUrl = async (req: Request, res: Response): Promise<Respon
       const newUrl = await urlService.createShortenedUrl(urlOptions);
 
       // Generate the full short URL
-      const baseUrl = process.env.SHORT_URL_BASE || 'https://cylink.id/';
+      const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
       const shortUrl = baseUrl + newUrl.short_code;
 
       // Format the response
@@ -215,7 +227,7 @@ exports.createAnonymousUrl = async (req: Request, res: Response): Promise<Respon
         original_url: newUrl.original_url,
         short_code: newUrl.short_code,
         short_url: shortUrl,
-        title: newUrl.title || null,
+        title: newUrl.title ?? null,
         created_at: new Date(newUrl.created_at).toISOString(),
         expiry_date: newUrl.expiry_date ? new Date(newUrl.expiry_date).toISOString() : null,
         is_active: newUrl.is_active,
@@ -228,14 +240,29 @@ exports.createAnonymousUrl = async (req: Request, res: Response): Promise<Respon
       // Handle custom code already taken error
       if (error instanceof Error && error.message === 'This custom short code is already taken') {
         return sendResponse(res, 409, 'Custom code already in use');
+      } else if (error instanceof TypeError) {
+        logger.error('URL error: Type error while creating anonymous URL:', error.message);
+        return sendResponse(res, 400, 'Invalid data format');
+      } else if (error instanceof Error) {
+        logger.error('URL error: Failed to create anonymous URL:', error.message);
+        return sendResponse(res, 500, 'Internal Server Error');
+      } else {
+        logger.error('URL error: Unknown error while creating anonymous URL:', String(error));
+        return sendResponse(res, 500, 'Internal server error');
       }
-
-      throw error; // Re-throw for generic error handling
     }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('URL error: Failed to create shortened URL:', errorMessage);
-    return sendResponse(res, 500, 'Internal Server Error');
+  } catch (error: unknown) {
+    // Handle specific error types
+    if (error instanceof TypeError) {
+      logger.error('URL error: Type error while creating shortened URL:', error.message);
+      return sendResponse(res, 400, 'Invalid data format');
+    } else if (error instanceof Error) {
+      logger.error('URL error: Failed to create shortened URL:', error.message);
+      return sendResponse(res, 500, 'Internal Server Error');
+    } else {
+      logger.error('URL error: Unknown error while creating shortened URL:', String(error));
+      return sendResponse(res, 500, 'Internal server error');
+    }
   }
 };
 
@@ -273,7 +300,7 @@ exports.createAuthenticatedUrl = async (req: Request, res: Response): Promise<Re
       const newUrl = await urlService.createShortenedUrl(urlOptions);
 
       // Generate the full short URL
-      const baseUrl = process.env.SHORT_URL_BASE || 'https://cylink.id/';
+      const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
       const shortUrl = baseUrl + newUrl.short_code;
 
       // Format the response
@@ -282,7 +309,7 @@ exports.createAuthenticatedUrl = async (req: Request, res: Response): Promise<Re
         original_url: newUrl.original_url,
         short_code: newUrl.short_code,
         short_url: shortUrl,
-        title: newUrl.title || null,
+        title: newUrl.title ?? null,
         created_at: new Date(newUrl.created_at).toISOString(),
         expiry_date: newUrl.expiry_date ? new Date(newUrl.expiry_date).toISOString() : null,
         is_active: newUrl.is_active,
@@ -293,15 +320,22 @@ exports.createAuthenticatedUrl = async (req: Request, res: Response): Promise<Re
       );
 
       return sendResponse(res, 201, 'Successfully created shortened URL', response);
-    } catch (error) {
+    } catch (error: unknown) {
       // Handle custom code already taken error
       if (error instanceof Error && error.message === 'This custom short code is already taken') {
         return sendResponse(res, 409, 'Custom code already in use');
+      } else if (error instanceof TypeError) {
+        logger.error('URL error: Type error while creating authenticated URL:', error.message);
+        return sendResponse(res, 400, 'Invalid data format');
+      } else if (error instanceof Error) {
+        logger.error('URL error: Failed to create authenticated URL:', error.message);
+        return sendResponse(res, 500, 'Internal Server Error');
+      } else {
+        logger.error('URL error: Unknown error while creating authenticated URL:', String(error));
+        return sendResponse(res, 500, 'Internal server error');
       }
-
-      throw error; // Re-throw for generic error handling
     }
-  } catch (error) {
+  } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error('URL error: Failed to create shortened URL:', errorMessage);
     return sendResponse(res, 500, 'Internal Server Error');
@@ -364,11 +398,11 @@ exports.getUrlDetails = async (req: Request, res: Response): Promise<Response> =
     // Format recent clicks
     const formattedRecentClicks = recentClicks.map((click: RecentClick) => ({
       timestamp: new Date(click.clicked_at).toISOString(),
-      device_type: click.device_type || 'unknown',
+      device_type: click.device_type ?? 'unknown',
     }));
 
     // Generate the full short URL
-    const baseUrl = process.env.SHORT_URL_BASE || 'https://cylink.id/';
+    const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
     const shortUrl = baseUrl + url.short_code;
 
     // Format dates
@@ -382,7 +416,7 @@ exports.getUrlDetails = async (req: Request, res: Response): Promise<Response> =
       original_url: url.original_url,
       short_code: url.short_code,
       short_url: shortUrl,
-      title: url.title || null,
+      title: url.title ?? null,
       clicks: clickCount,
       created_at: createdAt,
       updated_at: updatedAt,
@@ -400,10 +434,17 @@ exports.getUrlDetails = async (req: Request, res: Response): Promise<Response> =
     );
 
     return sendResponse(res, 200, 'Successfully retrieved URL', response);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('URL error: Failed to retrieve URL details:', errorMessage);
-    return sendResponse(res, 500, 'Internal Server Error');
+  } catch (error: unknown) {
+    if (error instanceof TypeError) {
+      logger.error('URL error: Type error while retrieving URL details:', error.message);
+      return sendResponse(res, 400, 'Invalid request format');
+    } else if (error instanceof Error) {
+      logger.error('URL error: Failed to retrieve URL details:', error.message);
+      return sendResponse(res, 500, 'Internal Server Error');
+    } else {
+      logger.error('URL error: Unknown error while retrieving URL details:', String(error));
+      return sendResponse(res, 500, 'Internal server error');
+    }
   }
 };
 
@@ -458,10 +499,17 @@ exports.deleteUrl = async (req: Request, res: Response): Promise<Response> => {
     logger.info(`Successfully deleted URL with ID ${urlId}`);
 
     return sendResponse(res, 200, 'Successfully deleted URL', response);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('URL error: Failed to delete URL:', errorMessage);
-    return sendResponse(res, 500, 'Internal Server Error');
+  } catch (error: unknown) {
+    if (error instanceof TypeError) {
+      logger.error('URL error: Type error while deleting URL:', error.message);
+      return sendResponse(res, 400, 'Invalid request format');
+    } else if (error instanceof Error) {
+      logger.error('URL error: Failed to delete URL:', error.message);
+      return sendResponse(res, 500, 'Internal Server Error');
+    } else {
+      logger.error('URL error: Unknown error while deleting URL:', String(error));
+      return sendResponse(res, 500, 'Internal server error');
+    }
   }
 };
 
@@ -529,14 +577,398 @@ exports.getUrlAnalytics = async (req: Request, res: Response): Promise<Response>
     logger.info(`Successfully retrieved analytics for URL ID ${urlId}`);
 
     return sendResponse(res, 200, 'Successfully retrieved URL analytics', analytics);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('URL error: Failed to retrieve URL analytics:', errorMessage);
-
+  } catch (error: unknown) {
     if (error instanceof Error && error.message === 'URL not found') {
       return sendResponse(res, 404, 'URL not found');
+    } else if (error instanceof TypeError) {
+      logger.error('URL error: Type error while retrieving analytics:', error.message);
+      return sendResponse(res, 400, 'Invalid request format');
+    } else if (error instanceof Error) {
+      logger.error('URL error: Failed to retrieve URL analytics:', error.message);
+      return sendResponse(res, 500, 'Internal Server Error');
+    } else {
+      logger.error('URL error: Unknown error while retrieving analytics:', String(error));
+      return sendResponse(res, 500, 'Internal server error');
+    }
+  }
+};
+
+/**
+ * Response for total clicks analytics
+ */
+interface TotalClicksAnalyticsResponse {
+  summary: {
+    total_clicks: number;
+    total_urls: number;
+    avg_clicks_per_url: number;
+    analysis_period: {
+      start_date: string;
+      end_date: string;
+      days: number;
+    };
+    comparison: {
+      period_days: number;
+      previous_period: {
+        start_date: string;
+        end_date: string;
+      };
+      total_clicks: {
+        current: number;
+        previous: number;
+        change: number;
+        change_percentage: number;
+      };
+      avg_clicks_per_url: {
+        current: number;
+        previous: number;
+        change: number;
+        change_percentage: number;
+      };
+      active_urls: {
+        current: number;
+        previous: number;
+        change: number;
+        change_percentage: number;
+      };
+    };
+  };
+  time_series: {
+    data: Array<{
+      date: string;
+      clicks: number;
+      urls_count: number;
+      avg_clicks: number;
+    }>;
+    pagination: {
+      total_items: number;
+      total_pages: number;
+      current_page: number;
+      limit: number;
+    };
+  };
+  top_performing_days: Array<{
+    date: string;
+    clicks: number;
+    urls_count: number;
+    avg_clicks: number;
+  }>;
+}
+
+/**
+ * Summary data interface for click analytics
+ */
+interface ClicksSummary {
+  total_clicks?: number;
+  total_urls?: number;
+  avg_clicks_per_url?: number;
+}
+
+/**
+ * Parse and validate date parameters for analytics
+ *
+ * @param startDateString Optional start date string
+ * @param endDateString Optional end date string
+ * @returns Object with validated dates or error response
+ */
+const parseAnalyticsDates = (startDateString?: string, endDateString?: string) => {
+  const now = new Date();
+  let startDate: Date;
+  let endDate: Date = now;
+
+  // Parse start date
+  if (startDateString) {
+    startDate = new Date(startDateString);
+    if (isNaN(startDate.getTime())) {
+      return { error: 'Invalid start_date format. Use YYYY-MM-DD' };
+    }
+  } else {
+    // Default to 30 days ago
+    startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+  }
+
+  // Parse end date
+  if (endDateString) {
+    endDate = new Date(endDateString);
+    if (isNaN(endDate.getTime())) {
+      return { error: 'Invalid end_date format. Use YYYY-MM-DD' };
+    }
+  }
+
+  // Validate date range
+  if (endDate < startDate) {
+    return { error: 'end_date must be after start_date' };
+  }
+
+  return { startDate, endDate };
+};
+
+/**
+ * Determine comparison period for analytics
+ *
+ * @param comparison Comparison type
+ * @param startDate Analysis start date
+ * @param customStartString Custom comparison start date
+ * @param customEndString Custom comparison end date
+ * @returns Object with comparison period info or error
+ */
+const determineComparisonPeriod = (
+  comparison: string,
+  startDate: Date,
+  customStartString?: string,
+  customEndString?: string,
+) => {
+  let comparisonPeriodDays: number;
+  let previousPeriodStartDate: Date;
+  let previousPeriodEndDate: Date;
+
+  if (comparison === 'custom') {
+    // Custom comparison period
+    if (!customStartString || !customEndString) {
+      return {
+        error:
+          'custom_comparison_start and custom_comparison_end are required when comparison=custom',
+      };
     }
 
-    return sendResponse(res, 500, 'Internal Server Error');
+    previousPeriodStartDate = new Date(customStartString);
+    previousPeriodEndDate = new Date(customEndString);
+
+    if (isNaN(previousPeriodStartDate.getTime()) || isNaN(previousPeriodEndDate.getTime())) {
+      return { error: 'Invalid custom comparison date format. Use YYYY-MM-DD' };
+    }
+
+    if (previousPeriodEndDate < previousPeriodStartDate) {
+      return { error: 'custom_comparison_end must be after custom_comparison_start' };
+    }
+
+    comparisonPeriodDays =
+      Math.ceil(
+        (previousPeriodEndDate.getTime() - previousPeriodStartDate.getTime()) /
+          (1000 * 60 * 60 * 24),
+      ) + 1;
+  } else {
+    // Standard comparison periods
+    comparisonPeriodDays = parseInt(comparison) || 30;
+
+    if (![7, 14, 30, 90].includes(comparisonPeriodDays)) {
+      return { error: 'comparison must be one of: 7, 14, 30, 90, custom' };
+    }
+
+    // Calculate previous period dates
+    previousPeriodEndDate = new Date(startDate);
+    previousPeriodEndDate.setDate(previousPeriodEndDate.getDate() - 1);
+
+    previousPeriodStartDate = new Date(previousPeriodEndDate);
+    previousPeriodStartDate.setDate(previousPeriodStartDate.getDate() - (comparisonPeriodDays - 1));
+  }
+
+  return {
+    comparisonPeriodDays,
+    previousPeriodStartDate,
+    previousPeriodEndDate,
+  };
+};
+
+/**
+ * Calculate comparison metrics for analytics
+ *
+ * @param current Current period data
+ * @param previous Previous period data
+ * @param activeUrlsCount Current period active URLs
+ * @param previousActiveUrlsCount Previous period active URLs
+ * @returns Comparison metrics
+ */
+const calculateComparisonMetrics = (
+  current: ClicksSummary,
+  previous: ClicksSummary,
+  activeUrlsCount: number,
+  previousActiveUrlsCount: number,
+) => {
+  const currentTotalClicks = current?.total_clicks ?? 0;
+  const previousTotalClicks = previous?.total_clicks ?? 0;
+  const clicksChange = currentTotalClicks - previousTotalClicks;
+  const clicksChangePercentage =
+    previousTotalClicks === 0
+      ? 0
+      : parseFloat(((clicksChange / previousTotalClicks) * 100).toFixed(2));
+
+  const currentAvgClicks = current?.avg_clicks_per_url ?? 0;
+  const previousAvgClicks = previous?.avg_clicks_per_url ?? 0;
+  const avgClicksChange = currentAvgClicks - previousAvgClicks;
+  const avgClicksChangePercentage =
+    previousAvgClicks === 0
+      ? 0
+      : parseFloat(((avgClicksChange / previousAvgClicks) * 100).toFixed(2));
+
+  const urlsChange = activeUrlsCount - previousActiveUrlsCount;
+  const urlsChangePercentage =
+    previousActiveUrlsCount === 0
+      ? 0
+      : parseFloat(((urlsChange / previousActiveUrlsCount) * 100).toFixed(2));
+
+  return {
+    total_clicks: {
+      current: currentTotalClicks,
+      previous: previousTotalClicks,
+      change: clicksChange,
+      change_percentage: clicksChangePercentage,
+    },
+    avg_clicks_per_url: {
+      current: currentAvgClicks,
+      previous: previousAvgClicks,
+      change: avgClicksChange,
+      change_percentage: avgClicksChangePercentage,
+    },
+    active_urls: {
+      current: activeUrlsCount,
+      previous: previousActiveUrlsCount,
+      change: urlsChange,
+      change_percentage: urlsChangePercentage,
+    },
+  };
+};
+
+/**
+ * Get total clicks analytics for all URLs of a user
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Response with analytics data
+ */
+exports.getTotalClicksAnalytics = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    // Get user ID from authentication token
+    const userId = req.body.id;
+
+    if (!userId) {
+      return sendResponse(res, 401, 'Unauthorized: No user ID');
+    }
+
+    // Parse query parameters
+    const startDateString = req.query.start_date as string;
+    const endDateString = req.query.end_date as string;
+    const comparison = (req.query.comparison as string) ?? '30';
+    const customComparisonStartString = req.query.custom_comparison_start as string;
+    const customComparisonEndString = req.query.custom_comparison_end as string;
+    const groupBy = (req.query.group_by as 'day' | 'week' | 'month') ?? 'day';
+    const page = parseInt(req.query.page as string) ?? 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 30, 90); // Cap at 90 data points
+
+    // Parse and validate dates
+    const dateResult = parseAnalyticsDates(startDateString, endDateString);
+    if ('error' in dateResult) {
+      return sendResponse(res, 400, dateResult.error);
+    }
+    const { startDate, endDate } = dateResult;
+
+    // Calculate days in the analysis period
+    const analysisPeriodDays =
+      Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    // Determine comparison period
+    const comparisonResult = determineComparisonPeriod(
+      comparison,
+      startDate,
+      customComparisonStartString,
+      customComparisonEndString,
+    );
+
+    if ('error' in comparisonResult) {
+      return sendResponse(res, 400, comparisonResult.error);
+    }
+
+    const { comparisonPeriodDays, previousPeriodStartDate, previousPeriodEndDate } =
+      comparisonResult;
+
+    // Prepare query options
+    const options = { startDate, endDate, groupBy };
+    const previousPeriodOptions = {
+      startDate: previousPeriodStartDate,
+      endDate: previousPeriodEndDate,
+    };
+
+    // Fetch analytics data
+    const [
+      clicksAnalytics,
+      summary,
+      topPerformingDays,
+      activeUrlsCount,
+      previousSummary,
+      previousActiveUrlsCount,
+    ] = await Promise.all([
+      clickModel.getTotalClicksAnalytics(userId, options),
+      clickModel.getTotalClicksSummary(userId, options),
+      clickModel.getTopPerformingDays(userId, options),
+      clickModel.getActiveUrlsCount(userId, options),
+      clickModel.getTotalClicksSummary(userId, previousPeriodOptions),
+      clickModel.getActiveUrlsCount(userId, previousPeriodOptions),
+    ]);
+
+    // Apply pagination to time series data
+    const totalItems = clicksAnalytics.length;
+    const totalPages = Math.ceil(totalItems / limit);
+    const offset = (page - 1) * limit;
+    const paginatedTimeSeries = clicksAnalytics.slice(offset, offset + limit);
+
+    // Format dates for response
+    const analysisStartDateStr = startDate.toISOString().split('T')[0];
+    const analysisEndDateStr = endDate.toISOString().split('T')[0];
+    const prevStartDateStr = previousPeriodStartDate.toISOString().split('T')[0];
+    const prevEndDateStr = previousPeriodEndDate.toISOString().split('T')[0];
+
+    // Calculate comparison metrics
+    const comparisonMetrics = calculateComparisonMetrics(
+      summary,
+      previousSummary,
+      activeUrlsCount,
+      previousActiveUrlsCount,
+    );
+
+    // Construct the response
+    const responseData: TotalClicksAnalyticsResponse = {
+      summary: {
+        total_clicks: summary?.total_clicks ?? 0,
+        total_urls: summary?.total_urls ?? 0,
+        avg_clicks_per_url: summary?.avg_clicks_per_url ?? 0,
+        analysis_period: {
+          start_date: analysisStartDateStr,
+          end_date: analysisEndDateStr,
+          days: analysisPeriodDays,
+        },
+        comparison: {
+          period_days: comparisonPeriodDays,
+          previous_period: {
+            start_date: prevStartDateStr,
+            end_date: prevEndDateStr,
+          },
+          ...comparisonMetrics,
+        },
+      },
+      time_series: {
+        data: paginatedTimeSeries,
+        pagination: {
+          total_items: totalItems,
+          total_pages: totalPages,
+          current_page: page,
+          limit,
+        },
+      },
+      top_performing_days: topPerformingDays,
+    };
+
+    logger.info(`Successfully retrieved total clicks analytics for user ${userId}`);
+    return sendResponse(res, 200, 'Successfully retrieved total clicks analytics', responseData);
+  } catch (error: unknown) {
+    if (error instanceof TypeError) {
+      logger.error('URL error: Type error while retrieving total clicks analytics:', error.message);
+      return sendResponse(res, 400, 'Invalid request format');
+    } else if (error instanceof Error) {
+      logger.error('URL error: Failed to retrieve total clicks analytics:', error.message);
+      return sendResponse(res, 500, 'Failed to retrieve total clicks analytics');
+    } else {
+      logger.error('URL error: Unknown error while retrieving total clicks:', String(error));
+      return sendResponse(res, 500, 'Internal server error');
+    }
   }
 };

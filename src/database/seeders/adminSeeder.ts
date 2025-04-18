@@ -14,10 +14,10 @@ const { hash } = require('../../utils/crypto');
  * AdminSeeder class - Responsible for creating admin user
  */
 export class AdminSeeder {
-  private email: string = 'admin@cylink.id';
-  private password: string = 'Admin@Cylink123';
-  private username: string = 'Admin';
-  private role: string = 'admin';
+  private readonly email: string = 'admin@cylink.id';
+  private readonly password: string = 'Admin@Cylink123';
+  private readonly username: string = 'Admin';
+  private readonly role: string = 'admin';
 
   /**
    * Seeds the admin user to the database
@@ -68,7 +68,7 @@ export class AdminSeeder {
   private async checkUserExists(): Promise<User | null> {
     try {
       const result = await pool.query('SELECT * FROM users WHERE email = $1', [this.email]);
-      return result.rows[0] || null;
+      return result.rows[0] ?? null;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error(`Error checking if user exists: ${errorMessage}`);

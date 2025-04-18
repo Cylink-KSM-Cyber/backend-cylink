@@ -19,6 +19,12 @@ exports.createIndexes = (): string => {
   // Indexes for Clicks table
   query += 'CREATE INDEX IF NOT EXISTS idx_clicks_url_id ON clicks(url_id);\n';
   query += 'CREATE INDEX IF NOT EXISTS idx_clicks_clicked_at ON clicks(clicked_at);\n';
+  // Add composite index for analytics queries to improve performance
+  query +=
+    'CREATE INDEX IF NOT EXISTS idx_clicks_url_id_clicked_at ON clicks(url_id, clicked_at);\n';
+  // Add index for analytics with additional columns to avoid table lookups
+  query +=
+    'CREATE INDEX IF NOT EXISTS idx_clicks_analytics ON clicks(url_id, clicked_at) INCLUDE (country, browser, device_type);\n';
 
   // Indexes for QR Codes table
   query += 'CREATE INDEX IF NOT EXISTS idx_qr_codes_url_id ON qr_codes(url_id);\n';
@@ -41,6 +47,8 @@ exports.dropIndexes = (): string => {
   // Drop indexes for Clicks table
   query += 'DROP INDEX IF EXISTS idx_clicks_url_id;\n';
   query += 'DROP INDEX IF EXISTS idx_clicks_clicked_at;\n';
+  query += 'DROP INDEX IF EXISTS idx_clicks_url_id_clicked_at;\n';
+  query += 'DROP INDEX IF EXISTS idx_clicks_analytics;\n';
 
   // Drop indexes for QR Codes table
   query += 'DROP INDEX IF EXISTS idx_qr_codes_url_id;\n';

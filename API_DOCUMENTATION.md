@@ -94,3 +94,38 @@ This API documentation provides numerous benefits for both internal developers a
 - **Interactive Testing**: Makes it easy to verify understanding of the API
 - **Consistent Documentation**: Ensures documentation stays in sync with the actual API
 - **Visual Reference**: Provides a visual representation of the API structure
+
+## API Endpoints
+
+### Authentication
+
+- `POST /api/v1/auth/register` - Register a new user
+- `POST /api/v1/auth/login` - Login to get access token
+- `POST /api/v1/auth/refresh` - Refresh access token
+- `POST /api/v1/auth/verify-email` - Verify user email
+- `POST /api/v1/auth/resend-verification` - Resend verification email
+
+### URLs (Authenticated)
+
+- `GET /api/v1/urls` - Get all user's URLs
+- `POST /api/v1/urls` - Create a new shortened URL
+- `GET /api/v1/urls/:id` - Get a specific URL by ID
+- `PUT /api/v1/urls/:id` - Update a URL
+- `DELETE /api/v1/urls/:id` - Delete a URL
+- `GET /api/v1/urls/:id/qr-code` - Get QR code for a URL
+- `GET /api/v1/urls/:id/analytics` - Get analytics for a specific URL
+- `GET /api/v1/urls/total-clicks` - Get aggregated click analytics across all user's URLs
+  - Supports filtering by date range with `start_date` and `end_date`
+  - Allows comparison with previous periods using `comparison` parameter (7, 14, 30, 90 days or custom)
+  - Supports different time period groupings (daily, weekly, monthly) using `group_by`
+  - Includes pagination for time series data with `page` and `limit`
+
+### Public URLs (Unauthenticated)
+
+- `POST /api/v1/public/urls` - Create a new anonymous shortened URL
+- `GET /api/v1/public/urls/:short_code` - Resolve and redirect to original URL
+
+### QR Codes
+
+- `POST /api/v1/qr-codes` - Generate a new QR code
+- `GET /api/v1/qr-codes/:id` - Get a specific QR code by ID
