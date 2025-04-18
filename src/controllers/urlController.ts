@@ -655,6 +655,172 @@ interface TotalClicksAnalyticsResponse {
 }
 
 /**
+ * Parse and validate date parameters for analytics
+ *
+ * @param startDateString Optional start date string
+ * @param endDateString Optional end date string
+ * @returns Object with validated dates or error response
+ */
+const parseAnalyticsDates = (startDateString?: string, endDateString?: string) => {
+  const now = new Date();
+  let startDate: Date;
+  let endDate: Date = now;
+
+  // Parse start date
+  if (startDateString) {
+    startDate = new Date(startDateString);
+    if (isNaN(startDate.getTime())) {
+      return { error: 'Invalid start_date format. Use YYYY-MM-DD' };
+    }
+  } else {
+    // Default to 30 days ago
+    startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+  }
+
+  // Parse end date
+  if (endDateString) {
+    endDate = new Date(endDateString);
+    if (isNaN(endDate.getTime())) {
+      return { error: 'Invalid end_date format. Use YYYY-MM-DD' };
+    }
+  }
+
+  // Validate date range
+  if (endDate < startDate) {
+    return { error: 'end_date must be after start_date' };
+  }
+
+  return { startDate, endDate };
+};
+
+/**
+ * Determine comparison period for analytics
+ *
+ * @param comparison Comparison type
+ * @param startDate Analysis start date
+ * @param customStartString Custom comparison start date
+ * @param customEndString Custom comparison end date
+ * @returns Object with comparison period info or error
+ */
+const determineComparisonPeriod = (
+  comparison: string,
+  startDate: Date,
+  customStartString?: string,
+  customEndString?: string,
+) => {
+  let comparisonPeriodDays: number;
+  let previousPeriodStartDate: Date;
+  let previousPeriodEndDate: Date;
+
+  if (comparison === 'custom') {
+    // Custom comparison period
+    if (!customStartString || !customEndString) {
+      return {
+        error:
+          'custom_comparison_start and custom_comparison_end are required when comparison=custom',
+      };
+    }
+
+    previousPeriodStartDate = new Date(customStartString);
+    previousPeriodEndDate = new Date(customEndString);
+
+    if (isNaN(previousPeriodStartDate.getTime()) || isNaN(previousPeriodEndDate.getTime())) {
+      return { error: 'Invalid custom comparison date format. Use YYYY-MM-DD' };
+    }
+
+    if (previousPeriodEndDate < previousPeriodStartDate) {
+      return { error: 'custom_comparison_end must be after custom_comparison_start' };
+    }
+
+    comparisonPeriodDays =
+      Math.ceil(
+        (previousPeriodEndDate.getTime() - previousPeriodStartDate.getTime()) /
+          (1000 * 60 * 60 * 24),
+      ) + 1;
+  } else {
+    // Standard comparison periods
+    comparisonPeriodDays = parseInt(comparison) || 30;
+
+    if (![7, 14, 30, 90].includes(comparisonPeriodDays)) {
+      return { error: 'comparison must be one of: 7, 14, 30, 90, custom' };
+    }
+
+    // Calculate previous period dates
+    previousPeriodEndDate = new Date(startDate);
+    previousPeriodEndDate.setDate(previousPeriodEndDate.getDate() - 1);
+
+    previousPeriodStartDate = new Date(previousPeriodEndDate);
+    previousPeriodStartDate.setDate(previousPeriodStartDate.getDate() - (comparisonPeriodDays - 1));
+  }
+
+  return {
+    comparisonPeriodDays,
+    previousPeriodStartDate,
+    previousPeriodEndDate,
+  };
+};
+
+/**
+ * Calculate comparison metrics for analytics
+ *
+ * @param current Current period data
+ * @param previous Previous period data
+ * @param activeUrlsCount Current period active URLs
+ * @param previousActiveUrlsCount Previous period active URLs
+ * @returns Comparison metrics
+ */
+const calculateComparisonMetrics = (
+  current: any,
+  previous: any,
+  activeUrlsCount: number,
+  previousActiveUrlsCount: number,
+) => {
+  const currentTotalClicks = current?.total_clicks ?? 0;
+  const previousTotalClicks = previous?.total_clicks ?? 0;
+  const clicksChange = currentTotalClicks - previousTotalClicks;
+  const clicksChangePercentage =
+    previousTotalClicks === 0
+      ? 0
+      : parseFloat(((clicksChange / previousTotalClicks) * 100).toFixed(2));
+
+  const currentAvgClicks = current?.avg_clicks_per_url ?? 0;
+  const previousAvgClicks = previous?.avg_clicks_per_url ?? 0;
+  const avgClicksChange = currentAvgClicks - previousAvgClicks;
+  const avgClicksChangePercentage =
+    previousAvgClicks === 0
+      ? 0
+      : parseFloat(((avgClicksChange / previousAvgClicks) * 100).toFixed(2));
+
+  const urlsChange = activeUrlsCount - previousActiveUrlsCount;
+  const urlsChangePercentage =
+    previousActiveUrlsCount === 0
+      ? 0
+      : parseFloat(((urlsChange / previousActiveUrlsCount) * 100).toFixed(2));
+
+  return {
+    total_clicks: {
+      current: currentTotalClicks,
+      previous: previousTotalClicks,
+      change: clicksChange,
+      change_percentage: clicksChangePercentage,
+    },
+    avg_clicks_per_url: {
+      current: currentAvgClicks,
+      previous: previousAvgClicks,
+      change: avgClicksChange,
+      change_percentage: avgClicksChangePercentage,
+    },
+    active_urls: {
+      current: activeUrlsCount,
+      previous: previousActiveUrlsCount,
+      change: urlsChange,
+      change_percentage: urlsChangePercentage,
+    },
+  };
+};
+
+/**
  * Get total clicks analytics for all URLs of a user
  *
  * @param {Request} req - Express request object
@@ -680,117 +846,55 @@ exports.getTotalClicksAnalytics = async (req: Request, res: Response): Promise<R
     const page = parseInt(req.query.page as string) ?? 1;
     const limit = Math.min(parseInt(req.query.limit as string) || 30, 90); // Cap at 90 data points
 
-    // Parse dates
-    const now = new Date();
-    let startDate: Date;
-    let endDate: Date = now;
-
-    if (startDateString) {
-      // Parse ISO date string (YYYY-MM-DD)
-      startDate = new Date(startDateString);
-      if (isNaN(startDate.getTime())) {
-        return sendResponse(res, 400, 'Invalid start_date format. Use YYYY-MM-DD');
-      }
-    } else {
-      // Default to 30 days ago
-      startDate = new Date();
-      startDate.setDate(startDate.getDate() - 30);
+    // Parse and validate dates
+    const dateResult = parseAnalyticsDates(startDateString, endDateString);
+    if ('error' in dateResult) {
+      return sendResponse(res, 400, dateResult.error);
     }
-
-    if (endDateString) {
-      // Parse ISO date string (YYYY-MM-DD)
-      endDate = new Date(endDateString);
-      if (isNaN(endDate.getTime())) {
-        return sendResponse(res, 400, 'Invalid end_date format. Use YYYY-MM-DD');
-      }
-    }
-
-    // Validate date range
-    if (endDate < startDate) {
-      return sendResponse(res, 400, 'end_date must be after start_date');
-    }
+    const { startDate, endDate } = dateResult;
 
     // Calculate days in the analysis period
     const analysisPeriodDays =
-      Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1; // +1 to include the end date
+      Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
     // Determine comparison period
-    let comparisonPeriodDays: number;
-    let previousPeriodStartDate: Date;
-    let previousPeriodEndDate: Date;
+    const comparisonResult = determineComparisonPeriod(
+      comparison,
+      startDate,
+      customComparisonStartString,
+      customComparisonEndString,
+    );
 
-    if (comparison === 'custom') {
-      // Custom comparison period
-      if (!customComparisonStartString || !customComparisonEndString) {
-        return sendResponse(
-          res,
-          400,
-          'custom_comparison_start and custom_comparison_end are required when comparison=custom',
-        );
-      }
-
-      previousPeriodStartDate = new Date(customComparisonStartString);
-      previousPeriodEndDate = new Date(customComparisonEndString);
-
-      if (isNaN(previousPeriodStartDate.getTime()) || isNaN(previousPeriodEndDate.getTime())) {
-        return sendResponse(res, 400, 'Invalid custom comparison date format. Use YYYY-MM-DD');
-      }
-
-      if (previousPeriodEndDate < previousPeriodStartDate) {
-        return sendResponse(
-          res,
-          400,
-          'custom_comparison_end must be after custom_comparison_start',
-        );
-      }
-
-      comparisonPeriodDays =
-        Math.ceil(
-          (previousPeriodEndDate.getTime() - previousPeriodStartDate.getTime()) /
-            (1000 * 60 * 60 * 24),
-        ) + 1;
-    } else {
-      // Standard comparison periods (7, 14, 30, 90 days)
-      comparisonPeriodDays = parseInt(comparison) || 30;
-
-      if (![7, 14, 30, 90].includes(comparisonPeriodDays)) {
-        return sendResponse(res, 400, 'comparison must be one of: 7, 14, 30, 90, custom');
-      }
-
-      // Calculate the previous period dates (same duration as the analysis period)
-      previousPeriodEndDate = new Date(startDate);
-      previousPeriodEndDate.setDate(previousPeriodEndDate.getDate() - 1); // Day before start date
-
-      previousPeriodStartDate = new Date(previousPeriodEndDate);
-      previousPeriodStartDate.setDate(
-        previousPeriodStartDate.getDate() - (comparisonPeriodDays - 1),
-      );
+    if ('error' in comparisonResult) {
+      return sendResponse(res, 400, comparisonResult.error);
     }
 
-    // Fetch analytics data
-    const options = {
-      startDate,
-      endDate,
-      groupBy,
-    };
+    const { comparisonPeriodDays, previousPeriodStartDate, previousPeriodEndDate } =
+      comparisonResult;
 
+    // Prepare query options
+    const options = { startDate, endDate, groupBy };
     const previousPeriodOptions = {
       startDate: previousPeriodStartDate,
       endDate: previousPeriodEndDate,
     };
 
-    // Get current period data
-    const clicksAnalytics = await clickModel.getTotalClicksAnalytics(userId, options);
-    const summary = await clickModel.getTotalClicksSummary(userId, options);
-    const topPerformingDays = await clickModel.getTopPerformingDays(userId, options);
-    const activeUrlsCount = await clickModel.getActiveUrlsCount(userId, options);
-
-    // Get previous period data for comparison
-    const previousSummary = await clickModel.getTotalClicksSummary(userId, previousPeriodOptions);
-    const previousActiveUrlsCount = await clickModel.getActiveUrlsCount(
-      userId,
-      previousPeriodOptions,
-    );
+    // Fetch analytics data
+    const [
+      clicksAnalytics,
+      summary,
+      topPerformingDays,
+      activeUrlsCount,
+      previousSummary,
+      previousActiveUrlsCount,
+    ] = await Promise.all([
+      clickModel.getTotalClicksAnalytics(userId, options),
+      clickModel.getTotalClicksSummary(userId, options),
+      clickModel.getTopPerformingDays(userId, options),
+      clickModel.getActiveUrlsCount(userId, options),
+      clickModel.getTotalClicksSummary(userId, previousPeriodOptions),
+      clickModel.getActiveUrlsCount(userId, previousPeriodOptions),
+    ]);
 
     // Apply pagination to time series data
     const totalItems = clicksAnalytics.length;
@@ -798,35 +902,21 @@ exports.getTotalClicksAnalytics = async (req: Request, res: Response): Promise<R
     const offset = (page - 1) * limit;
     const paginatedTimeSeries = clicksAnalytics.slice(offset, offset + limit);
 
-    // Format the response object
+    // Format dates for response
     const analysisStartDateStr = startDate.toISOString().split('T')[0];
     const analysisEndDateStr = endDate.toISOString().split('T')[0];
     const prevStartDateStr = previousPeriodStartDate.toISOString().split('T')[0];
     const prevEndDateStr = previousPeriodEndDate.toISOString().split('T')[0];
 
     // Calculate comparison metrics
-    const currentTotalClicks = summary?.total_clicks ?? 0;
-    const previousTotalClicks = previousSummary?.total_clicks ?? 0;
-    const clicksChange = currentTotalClicks - previousTotalClicks;
-    const clicksChangePercentage =
-      previousTotalClicks === 0
-        ? 0
-        : parseFloat(((clicksChange / previousTotalClicks) * 100).toFixed(2));
+    const comparisonMetrics = calculateComparisonMetrics(
+      summary,
+      previousSummary,
+      activeUrlsCount,
+      previousActiveUrlsCount,
+    );
 
-    const currentAvgClicks = summary?.avg_clicks_per_url ?? 0;
-    const previousAvgClicks = previousSummary?.avg_clicks_per_url ?? 0;
-    const avgClicksChange = currentAvgClicks - previousAvgClicks;
-    const avgClicksChangePercentage =
-      previousAvgClicks === 0
-        ? 0
-        : parseFloat(((avgClicksChange / previousAvgClicks) * 100).toFixed(2));
-
-    const urlsChange = activeUrlsCount - previousActiveUrlsCount;
-    const urlsChangePercentage =
-      previousActiveUrlsCount === 0
-        ? 0
-        : parseFloat(((urlsChange / previousActiveUrlsCount) * 100).toFixed(2));
-
+    // Construct the response
     const responseData: TotalClicksAnalyticsResponse = {
       summary: {
         total_clicks: summary?.total_clicks ?? 0,
@@ -843,24 +933,7 @@ exports.getTotalClicksAnalytics = async (req: Request, res: Response): Promise<R
             start_date: prevStartDateStr,
             end_date: prevEndDateStr,
           },
-          total_clicks: {
-            current: currentTotalClicks,
-            previous: previousTotalClicks,
-            change: clicksChange,
-            change_percentage: clicksChangePercentage,
-          },
-          avg_clicks_per_url: {
-            current: currentAvgClicks,
-            previous: previousAvgClicks,
-            change: avgClicksChange,
-            change_percentage: avgClicksChangePercentage,
-          },
-          active_urls: {
-            current: activeUrlsCount,
-            previous: previousActiveUrlsCount,
-            change: urlsChange,
-            change_percentage: urlsChangePercentage,
-          },
+          ...comparisonMetrics,
         },
       },
       time_series: {
@@ -876,7 +949,6 @@ exports.getTotalClicksAnalytics = async (req: Request, res: Response): Promise<R
     };
 
     logger.info(`Successfully retrieved total clicks analytics for user ${userId}`);
-
     return sendResponse(res, 200, 'Successfully retrieved total clicks analytics', responseData);
   } catch (error: unknown) {
     if (error instanceof TypeError) {
