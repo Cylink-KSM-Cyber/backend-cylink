@@ -224,7 +224,7 @@ exports.getUniqueVisitorsByUrlId = async (urlId: number, startDate?: Date, endDa
     WHERE url_id = $1
   `;
 
-  const queryParams: any[] = [urlId];
+  const queryParams: (number | Date | string)[] = [urlId];
   let paramIndex = 2;
 
   // Add date filtering if provided
@@ -263,7 +263,7 @@ exports.getClickCountByUrlIdWithDateRange = async (
     WHERE url_id = $1
   `;
 
-  const queryParams: any[] = [urlId];
+  const queryParams: (number | Date | string)[] = [urlId];
   let paramIndex = 2;
 
   // Add date filtering if provided
@@ -323,7 +323,7 @@ exports.getTimeSeriesData = async (
     WHERE url_id = $1
   `;
 
-  const queryParams: any[] = [urlId, dateFormat];
+  const queryParams: (number | Date | string)[] = [urlId, dateFormat];
   let paramIndex = 3;
 
   // Add date filtering if provided
@@ -347,7 +347,12 @@ exports.getTimeSeriesData = async (
 
   const result = await pool.query(query, queryParams);
 
-  return result.rows.map((row: any) => ({
+  interface ClickTimeSeriesRow {
+    date: string;
+    clicks: string;
+  }
+
+  return result.rows.map((row: ClickTimeSeriesRow) => ({
     date: row.date,
     clicks: parseInt(row.clicks, 10),
   }));
@@ -370,7 +375,7 @@ exports.getBrowserStatsWithDateRange = async (urlId: number, startDate?: Date, e
     WHERE url_id = $1
   `;
 
-  const queryParams: any[] = [urlId];
+  const queryParams: (number | Date | string)[] = [urlId];
   let paramIndex = 2;
 
   // Add date filtering if provided
@@ -412,7 +417,7 @@ exports.getDeviceStatsWithDateRange = async (urlId: number, startDate?: Date, en
     WHERE url_id = $1
   `;
 
-  const queryParams: any[] = [urlId];
+  const queryParams: (number | Date | string)[] = [urlId];
   let paramIndex = 2;
 
   // Add date filtering if provided
@@ -454,7 +459,7 @@ exports.getCountryStatsWithDateRange = async (urlId: number, startDate?: Date, e
     WHERE url_id = $1 AND country IS NOT NULL
   `;
 
-  const queryParams: any[] = [urlId];
+  const queryParams: (number | Date | string)[] = [urlId];
   let paramIndex = 2;
 
   // Add date filtering if provided
@@ -530,7 +535,7 @@ exports.getTotalClicksAnalytics = async (
     WHERE u.user_id = $1
   `;
 
-  const queryParams: any[] = [userId];
+  const queryParams: (number | Date | string)[] = [userId];
   let paramIndex = 2;
 
   // Add date filtering if provided
@@ -581,7 +586,7 @@ exports.getTotalClicksSummary = async (
     WHERE u.user_id = $1
   `;
 
-  const queryParams: any[] = [userId];
+  const queryParams: (number | Date | string)[] = [userId];
   let paramIndex = 2;
 
   // Add date filtering if provided
@@ -631,8 +636,8 @@ exports.getTopPerformingDays = async (
     WHERE u.user_id = $1
   `;
 
-  // Start with basic parameters - use any[] type to accept both numbers and dates
-  const queryParams: any[] = [userId];
+  // Start with basic parameters - use a more specific type that includes string
+  const queryParams: (number | Date | string)[] = [userId];
 
   // Build the WHERE clause part of the query with correct param indexing
   if (options.startDate) {
@@ -682,7 +687,7 @@ exports.getActiveUrlsCount = async (
     WHERE u.user_id = $1
   `;
 
-  const queryParams: any[] = [userId];
+  const queryParams: (number | Date | string)[] = [userId];
   let paramIndex = 2;
 
   // Add date filtering if provided
