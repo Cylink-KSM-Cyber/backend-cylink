@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import * as http from 'http';
 
 const urlService = require('../services/urlService');
 const logger = require('../utils/logger');
@@ -25,6 +26,80 @@ interface ExtendedRequest extends Request {
     trackingId?: string;
   };
   setClickId?: (clickId: number, urlId: number) => void;
+}
+
+/**
+ * Auto-tracks a conversion for testing and development purposes
+ *
+ * @param {string} trackingId - The tracking ID to use
+ * @param {number} goalId - The goal ID for the conversion
+ * @returns {Promise<void>}
+ */
+async function autoTrackConversion(trackingId: string, goalId: number = 1): Promise<void> {
+  try {
+    // Get the host from environment or use default localhost
+    const host = process.env.HOST || 'localhost';
+    const port = process.env.PORT || 5000;
+
+    // Prepare post data
+    const postData = JSON.stringify({
+      tracking_id: trackingId,
+      goal_id: goalId,
+    });
+
+    // Make the API call using Node.js http module
+    const options = {
+      hostname: host,
+      port: port,
+      path: '/api/v1/conversions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData),
+      },
+    };
+
+    // Return a promise to handle the request
+    return new Promise((resolve, reject) => {
+      const req = http.request(options, res => {
+        let data = '';
+
+        res.on('data', chunk => {
+          data += chunk;
+        });
+
+        res.on('end', () => {
+          try {
+            const result = JSON.parse(data);
+            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+              logger.info(
+                `Conversion tracked successfully: ID=${result.data.conversion_id}, tracking_id=${trackingId}`,
+              );
+            } else {
+              logger.error(`Error tracking conversion: ${result.message || 'Unknown error'}`);
+            }
+            resolve();
+          } catch (e) {
+            logger.error(`Error parsing conversion response: ${e}`);
+            reject(e);
+          }
+        });
+      });
+
+      req.on('error', e => {
+        logger.error(`Error sending conversion request: ${e}`);
+        reject(e);
+      });
+
+      // Write data to request body
+      req.write(postData);
+      req.end();
+    });
+  } catch (error) {
+    logger.error(`Exception in conversion tracking: ${error}`);
+  }
+
+  return Promise.resolve();
 }
 
 /**
@@ -76,11 +151,21 @@ module.exports = async (req: ExtendedRequest, res: Response, next: NextFunction)
 
       logger.info(`Redirecting ${shortCode} to ${originalUrl} (${redirectType})`);
 
-      // Add the tracking ID to the original URL as a query parameter if it exists
+      // Add UTM parameters to the original URL for tracking
       let redirectUrl = originalUrl;
       if (req.clickInfo?.trackingId) {
+        // Use UTM parameters format instead of cyt
         const separator = redirectUrl.includes('?') ? '&' : '?';
-        redirectUrl = `${redirectUrl}${separator}cyt=${req.clickInfo.trackingId}`;
+        redirectUrl = `${redirectUrl}${separator}utm_source=cylink&utm_medium=shortlink&utm_campaign=conversion&utm_content=${req.clickInfo.trackingId}`;
+
+        // Auto-track conversion
+        // This will send a conversion event automatically
+        // Use setTimeout to make this non-blocking
+        setTimeout(() => {
+          autoTrackConversion(req.clickInfo!.trackingId!, 1).catch(err =>
+            logger.error(`Error in auto-tracking conversion: ${err}`),
+          );
+        }, 100);
       }
 
       // Redirect to the original URL

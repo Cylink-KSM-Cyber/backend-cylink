@@ -30,9 +30,27 @@ declare global {
 }
 
 (function () {
-  // Get the CyLink tracking ID from the URL
+  // Get the CyLink tracking ID from the URL's UTM parameters
   function getCylinkTrackingId(): string | null {
     const urlParams = new URLSearchParams(window.location.search);
+
+    // Look for the tracking ID in utm_content when coming from a CyLink shortlink
+    const utmSource = urlParams.get('utm_source');
+    const utmMedium = urlParams.get('utm_medium');
+    const utmCampaign = urlParams.get('utm_campaign');
+    const utmContent = urlParams.get('utm_content');
+
+    // Only use the tracking ID if it's from a CyLink shortlink
+    if (
+      utmSource === 'cylink' &&
+      utmMedium === 'shortlink' &&
+      utmCampaign === 'conversion' &&
+      utmContent
+    ) {
+      return utmContent;
+    }
+
+    // Fallback to support legacy 'cyt' parameter during transition period
     return urlParams.get('cyt');
   }
 

@@ -82,11 +82,32 @@ For more control, you can make API calls directly to our conversion endpoint.
 
 ### Step 1: Get the Tracking ID
 
-When someone clicks on a CyLink shortened URL, we add a `cyt` parameter to your destination URL. Extract this parameter to get the tracking ID:
+When someone clicks on a CyLink shortened URL, we add UTM parameters to your destination URL. Extract these parameters to get the tracking ID:
 
 ```javascript
-const urlParams = new URLSearchParams(window.location.search);
-const trackingId = urlParams.get('cyt');
+function getTrackingId() {
+  const urlParams = new URLSearchParams(window.location.search);
+
+  // Get tracking ID from UTM parameters
+  const utmSource = urlParams.get('utm_source');
+  const utmMedium = urlParams.get('utm_medium');
+  const utmCampaign = urlParams.get('utm_campaign');
+  const utmContent = urlParams.get('utm_content');
+
+  // Verify this is from a CyLink shortlink
+  if (
+    utmSource === 'cylink' &&
+    utmMedium === 'shortlink' &&
+    utmCampaign === 'conversion' &&
+    utmContent
+  ) {
+    return utmContent;
+  }
+
+  return null;
+}
+
+const trackingId = getTrackingId();
 ```
 
 Store this tracking ID in a session or local storage for later use, as it identifies the user who clicked on your shortened link.
@@ -139,6 +160,23 @@ Once you've set up conversion tracking, you can view your conversion data in the
    - Conversion trends over time
    - Value of conversions
 
+## How Tracking Works
+
+When someone clicks on your CyLink shortened URL, our system:
+
+1. Records the click in our database
+2. Generates a unique tracking ID
+3. Adds UTM parameters to your destination URL:
+   - `utm_source=cylink`
+   - `utm_medium=shortlink`
+   - `utm_campaign=conversion`
+   - `utm_content=[tracking_id]`
+
+These UTM parameters provide dual benefits:
+
+- They carry our tracking ID for conversion tracking
+- They help you identify CyLink traffic in your analytics tools like Google Analytics
+
 ## Troubleshooting
 
 If your conversions aren't being tracked correctly, check these common issues:
@@ -146,7 +184,7 @@ If your conversions aren't being tracked correctly, check these common issues:
 1. **Script not loaded**: Make sure the tracking script is properly included on your site.
 2. **No tracking ID**: The user may not have come from a CyLink shortened link, or the tracking ID might be lost.
 3. **Goal ID mismatch**: Verify that the goal ID you're using matches a goal in your CyLink account.
-4. **CORS issues**: If you're using the API directly, ensure your domain is allowed to make requests to the CyLink API.
+4. **UTM parameters stripped**: Some sites might strip UTM parameters from URLs. Consider using our JavaScript script which can persist the tracking ID.
 
 ## Need Help?
 
