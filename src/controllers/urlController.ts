@@ -540,3 +540,295 @@ exports.getUrlAnalytics = async (req: Request, res: Response): Promise<Response>
     return sendResponse(res, 500, 'Internal Server Error');
   }
 };
+
+/**
+ * Response for total clicks analytics
+ */
+interface TotalClicksAnalyticsResponse {
+  summary: {
+    total_clicks: number;
+    total_urls: number;
+    avg_clicks_per_url: number;
+    analysis_period: {
+      start_date: string;
+      end_date: string;
+      days: number;
+    };
+    comparison: {
+      period_days: number;
+      previous_period: {
+        start_date: string;
+        end_date: string;
+      };
+      total_clicks: {
+        current: number;
+        previous: number;
+        change: number;
+        change_percentage: number;
+      };
+      avg_clicks_per_url: {
+        current: number;
+        previous: number;
+        change: number;
+        change_percentage: number;
+      };
+      active_urls: {
+        current: number;
+        previous: number;
+        change: number;
+        change_percentage: number;
+      };
+    };
+  };
+  time_series: {
+    data: Array<{
+      date: string;
+      clicks: number;
+      urls_count: number;
+      avg_clicks: number;
+    }>;
+    pagination: {
+      total_items: number;
+      total_pages: number;
+      current_page: number;
+      limit: number;
+    };
+  };
+  top_performing_days: Array<{
+    date: string;
+    clicks: number;
+    urls_count: number;
+    avg_clicks: number;
+  }>;
+}
+
+/**
+ * Get total clicks analytics for all URLs of a user
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Response with analytics data
+ */
+exports.getTotalClicksAnalytics = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    // Get user ID from authentication token
+    const userId = req.body.id;
+
+    if (!userId) {
+      return sendResponse(res, 401, 'Unauthorized: No user ID');
+    }
+
+    // Parse query parameters
+    const startDateString = req.query.start_date as string;
+    const endDateString = req.query.end_date as string;
+    const comparison = (req.query.comparison as string) || '30';
+    const customComparisonStartString = req.query.custom_comparison_start as string;
+    const customComparisonEndString = req.query.custom_comparison_end as string;
+    const groupBy = (req.query.group_by as 'day' | 'week' | 'month') || 'day';
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = Math.min(parseInt(req.query.limit as string) || 30, 90); // Cap at 90 data points
+
+    // Parse dates
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date = now;
+
+    if (startDateString) {
+      // Parse ISO date string (YYYY-MM-DD)
+      startDate = new Date(startDateString);
+      if (isNaN(startDate.getTime())) {
+        return sendResponse(res, 400, 'Invalid start_date format. Use YYYY-MM-DD');
+      }
+    } else {
+      // Default to 30 days ago
+      startDate = new Date();
+      startDate.setDate(startDate.getDate() - 30);
+    }
+
+    if (endDateString) {
+      // Parse ISO date string (YYYY-MM-DD)
+      endDate = new Date(endDateString);
+      if (isNaN(endDate.getTime())) {
+        return sendResponse(res, 400, 'Invalid end_date format. Use YYYY-MM-DD');
+      }
+    }
+
+    // Validate date range
+    if (endDate < startDate) {
+      return sendResponse(res, 400, 'end_date must be after start_date');
+    }
+
+    // Calculate days in the analysis period
+    const analysisPeriodDays =
+      Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1; // +1 to include the end date
+
+    // Determine comparison period
+    let comparisonPeriodDays: number;
+    let previousPeriodStartDate: Date;
+    let previousPeriodEndDate: Date;
+
+    if (comparison === 'custom') {
+      // Custom comparison period
+      if (!customComparisonStartString || !customComparisonEndString) {
+        return sendResponse(
+          res,
+          400,
+          'custom_comparison_start and custom_comparison_end are required when comparison=custom',
+        );
+      }
+
+      previousPeriodStartDate = new Date(customComparisonStartString);
+      previousPeriodEndDate = new Date(customComparisonEndString);
+
+      if (isNaN(previousPeriodStartDate.getTime()) || isNaN(previousPeriodEndDate.getTime())) {
+        return sendResponse(res, 400, 'Invalid custom comparison date format. Use YYYY-MM-DD');
+      }
+
+      if (previousPeriodEndDate < previousPeriodStartDate) {
+        return sendResponse(
+          res,
+          400,
+          'custom_comparison_end must be after custom_comparison_start',
+        );
+      }
+
+      comparisonPeriodDays =
+        Math.ceil(
+          (previousPeriodEndDate.getTime() - previousPeriodStartDate.getTime()) /
+            (1000 * 60 * 60 * 24),
+        ) + 1;
+    } else {
+      // Standard comparison periods (7, 14, 30, 90 days)
+      comparisonPeriodDays = parseInt(comparison) || 30;
+
+      if (![7, 14, 30, 90].includes(comparisonPeriodDays)) {
+        return sendResponse(res, 400, 'comparison must be one of: 7, 14, 30, 90, custom');
+      }
+
+      // Calculate the previous period dates (same duration as the analysis period)
+      previousPeriodEndDate = new Date(startDate);
+      previousPeriodEndDate.setDate(previousPeriodEndDate.getDate() - 1); // Day before start date
+
+      previousPeriodStartDate = new Date(previousPeriodEndDate);
+      previousPeriodStartDate.setDate(
+        previousPeriodStartDate.getDate() - (comparisonPeriodDays - 1),
+      );
+    }
+
+    // Fetch analytics data
+    const options = {
+      startDate,
+      endDate,
+      groupBy,
+    };
+
+    const previousPeriodOptions = {
+      startDate: previousPeriodStartDate,
+      endDate: previousPeriodEndDate,
+    };
+
+    // Get current period data
+    const clicksAnalytics = await clickModel.getTotalClicksAnalytics(userId, options);
+    const summary = await clickModel.getTotalClicksSummary(userId, options);
+    const topPerformingDays = await clickModel.getTopPerformingDays(userId, options);
+    const activeUrlsCount = await clickModel.getActiveUrlsCount(userId, options);
+
+    // Get previous period data for comparison
+    const previousSummary = await clickModel.getTotalClicksSummary(userId, previousPeriodOptions);
+    const previousActiveUrlsCount = await clickModel.getActiveUrlsCount(
+      userId,
+      previousPeriodOptions,
+    );
+
+    // Apply pagination to time series data
+    const totalItems = clicksAnalytics.length;
+    const totalPages = Math.ceil(totalItems / limit);
+    const offset = (page - 1) * limit;
+    const paginatedTimeSeries = clicksAnalytics.slice(offset, offset + limit);
+
+    // Format the response object
+    const analysisStartDateStr = startDate.toISOString().split('T')[0];
+    const analysisEndDateStr = endDate.toISOString().split('T')[0];
+    const prevStartDateStr = previousPeriodStartDate.toISOString().split('T')[0];
+    const prevEndDateStr = previousPeriodEndDate.toISOString().split('T')[0];
+
+    // Calculate comparison metrics
+    const currentTotalClicks = summary?.total_clicks || 0;
+    const previousTotalClicks = previousSummary?.total_clicks || 0;
+    const clicksChange = currentTotalClicks - previousTotalClicks;
+    const clicksChangePercentage =
+      previousTotalClicks === 0
+        ? 0
+        : parseFloat(((clicksChange / previousTotalClicks) * 100).toFixed(2));
+
+    const currentAvgClicks = summary?.avg_clicks_per_url || 0;
+    const previousAvgClicks = previousSummary?.avg_clicks_per_url || 0;
+    const avgClicksChange = currentAvgClicks - previousAvgClicks;
+    const avgClicksChangePercentage =
+      previousAvgClicks === 0
+        ? 0
+        : parseFloat(((avgClicksChange / previousAvgClicks) * 100).toFixed(2));
+
+    const urlsChange = activeUrlsCount - previousActiveUrlsCount;
+    const urlsChangePercentage =
+      previousActiveUrlsCount === 0
+        ? 0
+        : parseFloat(((urlsChange / previousActiveUrlsCount) * 100).toFixed(2));
+
+    const responseData: TotalClicksAnalyticsResponse = {
+      summary: {
+        total_clicks: summary?.total_clicks || 0,
+        total_urls: summary?.total_urls || 0,
+        avg_clicks_per_url: summary?.avg_clicks_per_url || 0,
+        analysis_period: {
+          start_date: analysisStartDateStr,
+          end_date: analysisEndDateStr,
+          days: analysisPeriodDays,
+        },
+        comparison: {
+          period_days: comparisonPeriodDays,
+          previous_period: {
+            start_date: prevStartDateStr,
+            end_date: prevEndDateStr,
+          },
+          total_clicks: {
+            current: currentTotalClicks,
+            previous: previousTotalClicks,
+            change: clicksChange,
+            change_percentage: clicksChangePercentage,
+          },
+          avg_clicks_per_url: {
+            current: currentAvgClicks,
+            previous: previousAvgClicks,
+            change: avgClicksChange,
+            change_percentage: avgClicksChangePercentage,
+          },
+          active_urls: {
+            current: activeUrlsCount,
+            previous: previousActiveUrlsCount,
+            change: urlsChange,
+            change_percentage: urlsChangePercentage,
+          },
+        },
+      },
+      time_series: {
+        data: paginatedTimeSeries,
+        pagination: {
+          total_items: totalItems,
+          total_pages: totalPages,
+          current_page: page,
+          limit,
+        },
+      },
+      top_performing_days: topPerformingDays,
+    };
+
+    logger.info(`Successfully retrieved total clicks analytics for user ${userId}`);
+
+    return sendResponse(res, 200, 'Successfully retrieved total clicks analytics', responseData);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error('URL error: Failed to retrieve total clicks analytics:', errorMessage);
+    return sendResponse(res, 500, 'Failed to retrieve total clicks analytics');
+  }
+};
