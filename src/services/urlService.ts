@@ -5,14 +5,12 @@
  * @module services/urlService
  */
 
-const bcrypt = require("bcrypt");
+const bcrypt = require('bcrypt');
 
-const clickModel = require("../models/clickModel");
-const urlModel = require("../models/urlModel");
-const logger = require("../utils/logger");
-const shortCodeUtil = require("../utils/shortCode");
-
-
+const clickModel = require('../models/clickModel');
+const urlModel = require('../models/urlModel');
+const logger = require('../utils/logger');
+const shortCodeUtil = require('../utils/shortCode');
 
 /**
  * URL creation options interface
@@ -43,7 +41,7 @@ exports.createShortenedUrl = async (options: CreateUrlOptions) => {
     expiryDate,
     isPasswordProtected = false,
     password,
-    redirectType = "302",
+    redirectType = '302',
   } = options;
 
   // Generate or use custom short code
@@ -51,7 +49,7 @@ exports.createShortenedUrl = async (options: CreateUrlOptions) => {
   if (customShortCode && shortCodeUtil.isValidShortCode(customShortCode)) {
     const exists = await urlModel.shortCodeExists(customShortCode);
     if (exists) {
-      throw new Error("This custom short code is already taken");
+      throw new Error('This custom short code is already taken');
     }
     shortCode = customShortCode;
   } else if (customShortCode) {
@@ -124,10 +122,7 @@ exports.updateUrl = async (urlId: number, updateData: any) => {
  * @param {string} password - The password to verify
  * @returns {Promise<boolean>} Whether the password is correct
  */
-exports.verifyUrlPassword = async (
-  url: any,
-  password: string
-): Promise<boolean> => {
+exports.verifyUrlPassword = async (url: any, password: string): Promise<boolean> => {
   if (!url.has_password || !url.password_hash) {
     return true; // No password protection
   }
@@ -140,11 +135,13 @@ exports.verifyUrlPassword = async (
  *
  * @param {string} shortCode - The short code that was clicked
  * @param {object} clickInfo - Information about the click
- * @returns {Promise<string|null>} The original URL or null if not found/expired/inactive
+ * @param {boolean} returnClickId - Whether to return the click ID
+ * @returns {Promise<string|object|null>} The original URL, or object with originalUrl and clickId, or null if not found/expired/inactive
  */
 exports.recordClickAndGetOriginalUrl = async (
   shortCode: string,
-  clickInfo: any
+  clickInfo: any,
+  returnClickId: boolean = false,
 ) => {
   try {
     // Get the URL
@@ -166,8 +163,9 @@ exports.recordClickAndGetOriginalUrl = async (
     }
 
     // Record the click with error handling
+    let clickRecord;
     try {
-      await clickModel.recordClick({
+      clickRecord = await clickModel.recordClick({
         url_id: url.id,
         ip_address: clickInfo.ipAddress,
         user_agent: clickInfo.userAgent,
@@ -179,6 +177,15 @@ exports.recordClickAndGetOriginalUrl = async (
     } catch (error) {
       // If click recording fails, log the error but still allow the redirect
       logger.error(`Failed to record click for ${shortCode}:`, error);
+    }
+
+    // Return appropriate result based on returnClickId flag
+    if (returnClickId && clickRecord) {
+      return {
+        originalUrl: url.original_url,
+        clickId: clickRecord.id,
+        urlId: url.id,
+      };
     }
 
     return url.original_url;
@@ -202,16 +209,13 @@ exports.getUrlAnalytics = async (urlId: number) => {
   // Format browser stats into an object
   const formattedBrowserStats: Record<string, number> = {};
   browserStats.forEach((stat: any) => {
-    formattedBrowserStats[stat.browser || "unknown"] = parseInt(stat.count, 10);
+    formattedBrowserStats[stat.browser || 'unknown'] = parseInt(stat.count, 10);
   });
 
   // Format device stats into an object
   const formattedDeviceStats: Record<string, number> = {};
   deviceStats.forEach((stat: any) => {
-    formattedDeviceStats[stat.device_type || "unknown"] = parseInt(
-      stat.count,
-      10
-    );
+    formattedDeviceStats[stat.device_type || 'unknown'] = parseInt(stat.count, 10);
   });
 
   return {
@@ -251,16 +255,13 @@ exports.getUrlWithAnalytics = async (shortCode: string) => {
  * @param {string} [options.groupBy] - Group time series by ('day', 'week', 'month')
  * @returns {Promise<object>} Comprehensive analytics data
  */
-exports.getUrlAnalyticsWithFilters = async (
-  urlId: number,
-  options: any = {}
-) => {
-  const { startDate, endDate, groupBy = "day" } = options;
+exports.getUrlAnalyticsWithFilters = async (urlId: number, options: any = {}) => {
+  const { startDate, endDate, groupBy = 'day' } = options;
 
   // Get the URL details
   const url = await urlModel.getUrlById(urlId);
   if (!url) {
-    throw new Error("URL not found");
+    throw new Error('URL not found');
   }
 
   // Parse dates if they are provided as strings
@@ -268,62 +269,32 @@ exports.getUrlAnalyticsWithFilters = async (
   const parsedEndDate = endDate ? new Date(endDate) : undefined;
 
   // Gather all analytics data in parallel
-  const [
-    totalClicks,
-    uniqueVisitors,
-    timeSeriesData,
-    browserStats,
-    deviceStats,
-    countryStats,
-  ] = await Promise.all([
-    clickModel.getClickCountByUrlIdWithDateRange(
-      urlId,
-      parsedStartDate,
-      parsedEndDate
-    ),
-    clickModel.getUniqueVisitorsByUrlId(urlId, parsedStartDate, parsedEndDate),
-    clickModel.getTimeSeriesData(
-      urlId,
-      groupBy,
-      parsedStartDate,
-      parsedEndDate
-    ),
-    clickModel.getBrowserStatsWithDateRange(
-      urlId,
-      parsedStartDate,
-      parsedEndDate
-    ),
-    clickModel.getDeviceStatsWithDateRange(
-      urlId,
-      parsedStartDate,
-      parsedEndDate
-    ),
-    clickModel.getCountryStatsWithDateRange(
-      urlId,
-      parsedStartDate,
-      parsedEndDate
-    ),
-  ]);
+  const [totalClicks, uniqueVisitors, timeSeriesData, browserStats, deviceStats, countryStats] =
+    await Promise.all([
+      clickModel.getClickCountByUrlIdWithDateRange(urlId, parsedStartDate, parsedEndDate),
+      clickModel.getUniqueVisitorsByUrlId(urlId, parsedStartDate, parsedEndDate),
+      clickModel.getTimeSeriesData(urlId, groupBy, parsedStartDate, parsedEndDate),
+      clickModel.getBrowserStatsWithDateRange(urlId, parsedStartDate, parsedEndDate),
+      clickModel.getDeviceStatsWithDateRange(urlId, parsedStartDate, parsedEndDate),
+      clickModel.getCountryStatsWithDateRange(urlId, parsedStartDate, parsedEndDate),
+    ]);
 
   // Format browser stats into an object
   const formattedBrowserStats: Record<string, number> = {};
   browserStats.forEach((stat: any) => {
-    formattedBrowserStats[stat.browser || "unknown"] = parseInt(stat.count, 10);
+    formattedBrowserStats[stat.browser || 'unknown'] = parseInt(stat.count, 10);
   });
 
   // Format device stats into an object
   const formattedDeviceStats: Record<string, number> = {};
   deviceStats.forEach((stat: any) => {
-    formattedDeviceStats[stat.device_type || "unknown"] = parseInt(
-      stat.count,
-      10
-    );
+    formattedDeviceStats[stat.device_type || 'unknown'] = parseInt(stat.count, 10);
   });
 
   // Format country stats into an object
   const formattedCountryStats: Record<string, number> = {};
   countryStats.forEach((stat: any) => {
-    formattedCountryStats[stat.country || "unknown"] = parseInt(stat.count, 10);
+    formattedCountryStats[stat.country || 'unknown'] = parseInt(stat.count, 10);
   });
 
   // Construct comprehensive analytics data
