@@ -35,7 +35,7 @@ interface ExtendedRequest extends Request {
  * @param {number} goalId - The goal ID for the conversion
  * @returns {Promise<void>}
  */
-async function autoTrackConversion(trackingId: string, goalId: number = 1): Promise<void> {
+async function autoTrackConversion(trackingId: string, goalId: number): Promise<void> {
   try {
     // Get the host from environment or use default localhost
     const host = process.env.HOST || 'localhost';

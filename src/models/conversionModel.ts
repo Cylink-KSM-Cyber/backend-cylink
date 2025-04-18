@@ -345,75 +345,83 @@ exports.getConversionRate = async (
   // Goal-specific stats for current period
   let goalStats: any[] = [];
   if (!goal_id) {
-    const goalStatsResult = await pool.query(
-      `
-      SELECT
-        cg.id as goal_id,
-        cg.name,
-        COUNT(DISTINCT cv.id) as conversions,
-        COALESCE(SUM(cv.conversion_value), 0) as conversion_value
-      FROM conversion_goals cg
-      JOIN url_conversion_goals ucg ON cg.id = ucg.goal_id
-      LEFT JOIN conversions cv ON cg.id = cv.goal_id AND cv.url_id = ucg.url_id
-        AND cv.converted_at >= $2 AND cv.converted_at <= $3
-      WHERE ucg.url_id = $1
-      GROUP BY cg.id, cg.name
-    `,
-      [urlId, startDate.toISOString(), endDate.toISOString()],
-    );
+    // Get the user ID associated with this URL
+    const userIdResult = await pool.query(`SELECT user_id FROM urls WHERE id = $1`, [urlId]);
+    const userId = userIdResult.rows[0]?.user_id;
 
-    goalStats = goalStatsResult.rows;
+    // Only proceed if we have a valid user ID
+    if (userId) {
+      const goalStatsResult = await pool.query(
+        `
+        SELECT
+          cg.id as goal_id,
+          cg.name,
+          COUNT(DISTINCT cv.id) as conversions,
+          COALESCE(SUM(cv.conversion_value), 0) as conversion_value
+        FROM conversion_goals cg
+        LEFT JOIN conversions cv ON cg.id = cv.goal_id
+          AND cv.converted_at >= $2 AND cv.converted_at <= $3
+        WHERE cg.user_id = $1
+        GROUP BY cg.id, cg.name
+        `,
+        [userId, startDate.toISOString(), endDate.toISOString()],
+      );
 
-    // Goal-specific stats for previous period
-    const previousGoalStatsResult = await pool.query(
-      `
-      SELECT
-        cg.id as goal_id,
-        COUNT(DISTINCT cv.id) as conversions,
-        COALESCE(SUM(cv.conversion_value), 0) as conversion_value
-      FROM conversion_goals cg
-      JOIN url_conversion_goals ucg ON cg.id = ucg.goal_id
-      LEFT JOIN conversions cv ON cg.id = cv.goal_id AND cv.url_id = ucg.url_id
-        AND cv.converted_at >= $2 AND cv.converted_at <= $3
-      WHERE ucg.url_id = $1
-      GROUP BY cg.id
-    `,
-      [urlId, previousStartDate.toISOString(), previousEndDate.toISOString()],
-    );
+      goalStats = goalStatsResult.rows;
 
-    const previousGoalStats = previousGoalStatsResult.rows;
+      // Goal-specific stats for previous period
+      const previousGoalStatsResult = await pool.query(
+        `
+        SELECT
+          cg.id as goal_id,
+          COUNT(DISTINCT cv.id) as conversions,
+          COALESCE(SUM(cv.conversion_value), 0) as conversion_value
+        FROM conversion_goals cg
+        LEFT JOIN conversions cv ON cg.id = cv.goal_id
+          AND cv.converted_at >= $2 AND cv.converted_at <= $3
+        WHERE cg.user_id = $1
+        GROUP BY cg.id
+        `,
+        [userId, previousStartDate.toISOString(), previousEndDate.toISOString()],
+      );
 
-    // Merge goal stats with previous period data
-    goalStats = goalStats.map(goal => {
-      const previousGoal = previousGoalStats.find(
-        (pg: { goal_id: number }) => pg.goal_id === goal.goal_id,
-      ) || {
-        conversions: 0,
-        conversion_value: 0,
-      };
+      const previousGoalStats = previousGoalStatsResult.rows;
 
-      const currentRate =
-        currentPeriodStats.rows[0].total_clicks > 0
-          ? (goal.conversions / currentPeriodStats.rows[0].total_clicks) * 100
-          : 0;
+      // Merge goal stats with previous period data
+      goalStats = goalStats.map(goal => {
+        const previousGoal = previousGoalStats.find(
+          (pg: { goal_id: number }) => pg.goal_id === goal.goal_id,
+        ) || {
+          conversions: 0,
+          conversion_value: 0,
+        };
 
-      const previousRate =
-        previousPeriodStats.rows[0].total_clicks > 0
-          ? (previousGoal.conversions / previousPeriodStats.rows[0].total_clicks) * 100
-          : 0;
+        const currentRate =
+          currentPeriodStats.rows[0].total_clicks > 0
+            ? (goal.conversions / currentPeriodStats.rows[0].total_clicks) * 100
+            : 0;
 
-      return {
-        ...goal,
-        conversion_rate: parseFloat(currentRate.toFixed(2)),
-        previous_conversion_rate: parseFloat(previousRate.toFixed(2)),
-        change_percentage:
-          previousRate > 0
-            ? parseFloat((((currentRate - previousRate) / previousRate) * 100).toFixed(2))
-            : null,
-        previous_conversions: parseInt(previousGoal.conversions, 10),
-        change: parseInt(goal.conversions, 10) - parseInt(previousGoal.conversions, 10),
-      };
-    });
+        const previousRate =
+          previousPeriodStats.rows[0].total_clicks > 0
+            ? (previousGoal.conversions / previousPeriodStats.rows[0].total_clicks) * 100
+            : 0;
+
+        return {
+          ...goal,
+          conversion_rate: parseFloat(currentRate.toFixed(2)),
+          previous_conversion_rate: parseFloat(previousRate.toFixed(2)),
+          change_percentage:
+            previousRate > 0
+              ? parseFloat((((currentRate - previousRate) / previousRate) * 100).toFixed(2))
+              : null,
+          previous_conversions: parseInt(previousGoal.conversions, 10),
+          change: parseInt(goal.conversions, 10) - parseInt(previousGoal.conversions, 10),
+        };
+      });
+    } else {
+      // No user ID found, set goalStats to empty array
+      goalStats = [];
+    }
   }
 
   // Get URL info
@@ -570,9 +578,9 @@ exports.getOverallConversionRate = async (
         COUNT(DISTINCT cv.id) as conversions,
         COALESCE(SUM(cv.conversion_value), 0) as conversion_value
       FROM conversion_goals cg
-      WHERE cg.user_id = $1
       LEFT JOIN conversions cv ON cg.id = cv.goal_id
         AND cv.converted_at >= $2 AND cv.converted_at <= $3
+      WHERE cg.user_id = $1
       GROUP BY cg.id, cg.name
     `,
       [userId, startDate.toISOString(), endDate.toISOString()],
@@ -588,9 +596,9 @@ exports.getOverallConversionRate = async (
         COUNT(DISTINCT cv.id) as conversions,
         COALESCE(SUM(cv.conversion_value), 0) as conversion_value
       FROM conversion_goals cg
-      WHERE cg.user_id = $1
       LEFT JOIN conversions cv ON cg.id = cv.goal_id
         AND cv.converted_at >= $2 AND cv.converted_at <= $3
+      WHERE cg.user_id = $1
       GROUP BY cg.id
     `,
       [userId, previousStartDate.toISOString(), previousEndDate.toISOString()],
