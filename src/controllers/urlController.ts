@@ -99,7 +99,7 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
         const expiryDate = url.expiry_date ? new Date(url.expiry_date).toISOString() : null;
 
         // Generate the full short URL
-        const baseUrl = process.env.SHORT_URL_BASE || 'https://cylink.id/';
+        const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
         const shortUrl = baseUrl + url.short_code;
 
         return {
@@ -107,7 +107,7 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
           original_url: url.original_url,
           short_code: url.short_code,
           short_url: shortUrl,
-          title: url.title || null,
+          title: url.title ?? null,
           clicks: clickCount,
           created_at: new Date(url.created_at).toISOString(),
           expiry_date: expiryDate,
@@ -117,7 +117,7 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
     );
 
     // Apply sorting based on sortBy and sortOrder parameters
-    const sortedUrls = urlsWithClicks.sort((a: UrlWithClicks, b: UrlWithClicks) => {
+    const sortedUrls = [...urlsWithClicks].sort((a: UrlWithClicks, b: UrlWithClicks) => {
       let comparison = 0;
 
       // Handle different sortBy fields
@@ -126,7 +126,7 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
       } else if (sortBy === 'created_at') {
         comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       } else if (sortBy === 'title') {
-        comparison = (a.title || '').localeCompare(b.title || '');
+        comparison = (a.title ?? '').localeCompare(b.title ?? '');
       } else {
         // Default to sorting by created_at
         comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
@@ -206,7 +206,7 @@ exports.createAnonymousUrl = async (req: Request, res: Response): Promise<Respon
       const newUrl = await urlService.createShortenedUrl(urlOptions);
 
       // Generate the full short URL
-      const baseUrl = process.env.SHORT_URL_BASE || 'https://cylink.id/';
+      const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
       const shortUrl = baseUrl + newUrl.short_code;
 
       // Format the response
@@ -215,7 +215,7 @@ exports.createAnonymousUrl = async (req: Request, res: Response): Promise<Respon
         original_url: newUrl.original_url,
         short_code: newUrl.short_code,
         short_url: shortUrl,
-        title: newUrl.title || null,
+        title: newUrl.title ?? null,
         created_at: new Date(newUrl.created_at).toISOString(),
         expiry_date: newUrl.expiry_date ? new Date(newUrl.expiry_date).toISOString() : null,
         is_active: newUrl.is_active,
@@ -273,7 +273,7 @@ exports.createAuthenticatedUrl = async (req: Request, res: Response): Promise<Re
       const newUrl = await urlService.createShortenedUrl(urlOptions);
 
       // Generate the full short URL
-      const baseUrl = process.env.SHORT_URL_BASE || 'https://cylink.id/';
+      const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
       const shortUrl = baseUrl + newUrl.short_code;
 
       // Format the response
@@ -282,7 +282,7 @@ exports.createAuthenticatedUrl = async (req: Request, res: Response): Promise<Re
         original_url: newUrl.original_url,
         short_code: newUrl.short_code,
         short_url: shortUrl,
-        title: newUrl.title || null,
+        title: newUrl.title ?? null,
         created_at: new Date(newUrl.created_at).toISOString(),
         expiry_date: newUrl.expiry_date ? new Date(newUrl.expiry_date).toISOString() : null,
         is_active: newUrl.is_active,
@@ -364,11 +364,11 @@ exports.getUrlDetails = async (req: Request, res: Response): Promise<Response> =
     // Format recent clicks
     const formattedRecentClicks = recentClicks.map((click: RecentClick) => ({
       timestamp: new Date(click.clicked_at).toISOString(),
-      device_type: click.device_type || 'unknown',
+      device_type: click.device_type ?? 'unknown',
     }));
 
     // Generate the full short URL
-    const baseUrl = process.env.SHORT_URL_BASE || 'https://cylink.id/';
+    const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
     const shortUrl = baseUrl + url.short_code;
 
     // Format dates
@@ -382,7 +382,7 @@ exports.getUrlDetails = async (req: Request, res: Response): Promise<Response> =
       original_url: url.original_url,
       short_code: url.short_code,
       short_url: shortUrl,
-      title: url.title || null,
+      title: url.title ?? null,
       clicks: clickCount,
       created_at: createdAt,
       updated_at: updatedAt,
@@ -621,11 +621,11 @@ exports.getTotalClicksAnalytics = async (req: Request, res: Response): Promise<R
     // Parse query parameters
     const startDateString = req.query.start_date as string;
     const endDateString = req.query.end_date as string;
-    const comparison = (req.query.comparison as string) || '30';
+    const comparison = (req.query.comparison as string) ?? '30';
     const customComparisonStartString = req.query.custom_comparison_start as string;
     const customComparisonEndString = req.query.custom_comparison_end as string;
-    const groupBy = (req.query.group_by as 'day' | 'week' | 'month') || 'day';
-    const page = parseInt(req.query.page as string) || 1;
+    const groupBy = (req.query.group_by as 'day' | 'week' | 'month') ?? 'day';
+    const page = parseInt(req.query.page as string) ?? 1;
     const limit = Math.min(parseInt(req.query.limit as string) || 30, 90); // Cap at 90 data points
 
     // Parse dates
@@ -753,16 +753,16 @@ exports.getTotalClicksAnalytics = async (req: Request, res: Response): Promise<R
     const prevEndDateStr = previousPeriodEndDate.toISOString().split('T')[0];
 
     // Calculate comparison metrics
-    const currentTotalClicks = summary?.total_clicks || 0;
-    const previousTotalClicks = previousSummary?.total_clicks || 0;
+    const currentTotalClicks = summary?.total_clicks ?? 0;
+    const previousTotalClicks = previousSummary?.total_clicks ?? 0;
     const clicksChange = currentTotalClicks - previousTotalClicks;
     const clicksChangePercentage =
       previousTotalClicks === 0
         ? 0
         : parseFloat(((clicksChange / previousTotalClicks) * 100).toFixed(2));
 
-    const currentAvgClicks = summary?.avg_clicks_per_url || 0;
-    const previousAvgClicks = previousSummary?.avg_clicks_per_url || 0;
+    const currentAvgClicks = summary?.avg_clicks_per_url ?? 0;
+    const previousAvgClicks = previousSummary?.avg_clicks_per_url ?? 0;
     const avgClicksChange = currentAvgClicks - previousAvgClicks;
     const avgClicksChangePercentage =
       previousAvgClicks === 0
@@ -777,9 +777,9 @@ exports.getTotalClicksAnalytics = async (req: Request, res: Response): Promise<R
 
     const responseData: TotalClicksAnalyticsResponse = {
       summary: {
-        total_clicks: summary?.total_clicks || 0,
-        total_urls: summary?.total_urls || 0,
-        avg_clicks_per_url: summary?.avg_clicks_per_url || 0,
+        total_clicks: summary?.total_clicks ?? 0,
+        total_urls: summary?.total_urls ?? 0,
+        avg_clicks_per_url: summary?.avg_clicks_per_url ?? 0,
         analysis_period: {
           start_date: analysisStartDateStr,
           end_date: analysisEndDateStr,
