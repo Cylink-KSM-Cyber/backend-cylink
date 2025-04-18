@@ -44,7 +44,11 @@ const conversionController = require('../controllers/conversionController');
  *       500:
  *         description: Server error
  */
-router.post('/conversion-goals', authMiddleware, conversionController.createConversionGoal);
+router.post(
+  '/conversion-goals',
+  authMiddleware.accessToken,
+  conversionController.createConversionGoal,
+);
 
 /**
  * @swagger
@@ -62,7 +66,11 @@ router.post('/conversion-goals', authMiddleware, conversionController.createConv
  *       500:
  *         description: Server error
  */
-router.get('/conversion-goals', authMiddleware, conversionController.getConversionGoals);
+router.get(
+  '/conversion-goals',
+  authMiddleware.accessToken,
+  conversionController.getConversionGoals,
+);
 
 /**
  * @swagger
@@ -107,7 +115,11 @@ router.get('/conversion-goals', authMiddleware, conversionController.getConversi
  *       500:
  *         description: Server error
  */
-router.post('/urls/:url_id/goals', authMiddleware, conversionController.associateGoalWithUrl);
+router.post(
+  '/urls/:url_id/goals',
+  authMiddleware.accessToken,
+  conversionController.associateGoalWithUrl,
+);
 
 /**
  * @swagger
@@ -136,7 +148,7 @@ router.post('/urls/:url_id/goals', authMiddleware, conversionController.associat
  *       500:
  *         description: Server error
  */
-router.get('/urls/:url_id/goals', authMiddleware, conversionController.getGoalsByUrl);
+router.get('/urls/:url_id/goals', authMiddleware.accessToken, conversionController.getGoalsByUrl);
 
 /**
  * @swagger
@@ -173,7 +185,7 @@ router.get('/urls/:url_id/goals', authMiddleware, conversionController.getGoalsB
  */
 router.delete(
   '/urls/:url_id/goals/:goal_id',
-  authMiddleware,
+  authMiddleware.accessToken,
   conversionController.removeGoalFromUrl,
 );
 
@@ -269,7 +281,7 @@ router.post('/conversions', conversionController.trackConversion);
  */
 router.get(
   '/urls/:url_id/conversion-rate',
-  authMiddleware,
+  authMiddleware.accessToken,
   conversionController.getUrlConversionRate,
 );
 
@@ -313,7 +325,11 @@ router.get(
  *       500:
  *         description: Server error
  */
-router.get('/conversion-rate', authMiddleware, conversionController.getOverallConversionRate);
+router.get(
+  '/conversion-rate',
+  authMiddleware.accessToken,
+  conversionController.getOverallConversionRate,
+);
 
 /**
  * @swagger
@@ -333,8 +349,13 @@ router.get('/conversion-tracking.js', (req, res) => {
   const fs = require('fs');
   const path = require('path');
 
-  // Path to the transpiled JavaScript version of the script
-  const scriptPath = path.join(__dirname, '../utils/conversionTrackingScript.js');
+  // First try dist directory for production build
+  let scriptPath = path.join(__dirname, '../../../dist/utils/conversionTrackingScript.js');
+
+  if (!fs.existsSync(scriptPath)) {
+    // Try direct transpiled file from ts-node
+    scriptPath = path.join(__dirname, '../utils/conversionTrackingScript.js');
+  }
 
   if (fs.existsSync(scriptPath)) {
     res.setHeader('Content-Type', 'application/javascript');
@@ -342,9 +363,27 @@ router.get('/conversion-tracking.js', (req, res) => {
     res.setHeader('Cache-Control', 'public, max-age=86400');
     fs.createReadStream(scriptPath).pipe(res);
   } else {
-    // Fallback for development environment where the .js file might not exist yet
+    // Fallback to serving raw TS file content
     res.setHeader('Content-Type', 'application/javascript');
-    res.sendFile(path.join(__dirname, '../utils/conversionTrackingScript.ts'));
+    const tsPath = path.join(__dirname, '../utils/conversionTrackingScript.ts');
+
+    // Read the file manually and serve its content
+    try {
+      const content = fs.readFileSync(tsPath, 'utf8');
+      // Remove TypeScript-specific code
+      const jsContent = content
+        .replace(/interface\s+\w+\s*\{[\s\S]*?\}/g, '')
+        .replace(/declare global[\s\S]*?\}/g, '')
+        .replace(/export\s*\{\};?/, '')
+        .replace(/:\s*\w+(\[\])?\s*=/g, ' =')
+        .replace(/:\s*\w+(\[\])?\s*\)/g, ')')
+        .replace(/<.*?>/g, '');
+
+      res.send(jsContent);
+    } catch (err) {
+      console.error('Error serving conversion tracking script:', err);
+      res.status(500).send('// Error loading conversion tracking script');
+    }
   }
 });
 
