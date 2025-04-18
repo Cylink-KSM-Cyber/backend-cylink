@@ -655,6 +655,15 @@ interface TotalClicksAnalyticsResponse {
 }
 
 /**
+ * Summary data interface for click analytics
+ */
+interface ClicksSummary {
+  total_clicks?: number;
+  total_urls?: number;
+  avg_clicks_per_url?: number;
+}
+
+/**
  * Parse and validate date parameters for analytics
  *
  * @param startDateString Optional start date string
@@ -771,8 +780,8 @@ const determineComparisonPeriod = (
  * @returns Comparison metrics
  */
 const calculateComparisonMetrics = (
-  current: any,
-  previous: any,
+  current: ClicksSummary,
+  previous: ClicksSummary,
   activeUrlsCount: number,
   previousActiveUrlsCount: number,
 ) => {
