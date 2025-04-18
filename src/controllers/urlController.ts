@@ -155,10 +155,18 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
 
     // Return the response in the requested format
     return sendResponse(res, 200, 'Successfully retrieved all URLs', paginatedUrls, pagination);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('URL error: Failed to retrieve URLs:', errorMessage);
-    return sendResponse(res, 500, 'Failed to retrieve URLs', []);
+  } catch (error: unknown) {
+    // Handle specific error types
+    if (error instanceof TypeError) {
+      logger.error('URL error: Type error while retrieving URLs:', error.message);
+      return sendResponse(res, 400, 'Invalid data format');
+    } else if (error instanceof Error) {
+      logger.error('URL error: Failed to retrieve URLs:', error.message);
+      return sendResponse(res, 500, 'Failed to retrieve URLs', []);
+    } else {
+      logger.error('URL error: Unknown error while retrieving URLs:', String(error));
+      return sendResponse(res, 500, 'Internal server error');
+    }
   }
 };
 
@@ -172,7 +180,11 @@ function isValidUrl(url: string): boolean {
   try {
     const parsedUrl = new URL(url);
     return ['http:', 'https:'].includes(parsedUrl.protocol);
-  } catch (error) {
+  } catch (error: unknown) {
+    // URL constructor throws TypeError for invalid URLs
+    if (error instanceof TypeError) {
+      logger.debug('Invalid URL format:', url);
+    }
     return false;
   }
 }
@@ -228,14 +240,29 @@ exports.createAnonymousUrl = async (req: Request, res: Response): Promise<Respon
       // Handle custom code already taken error
       if (error instanceof Error && error.message === 'This custom short code is already taken') {
         return sendResponse(res, 409, 'Custom code already in use');
+      } else if (error instanceof TypeError) {
+        logger.error('URL error: Type error while creating anonymous URL:', error.message);
+        return sendResponse(res, 400, 'Invalid data format');
+      } else if (error instanceof Error) {
+        logger.error('URL error: Failed to create anonymous URL:', error.message);
+        return sendResponse(res, 500, 'Internal Server Error');
+      } else {
+        logger.error('URL error: Unknown error while creating anonymous URL:', String(error));
+        return sendResponse(res, 500, 'Internal server error');
       }
-
-      throw error; // Re-throw for generic error handling
     }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('URL error: Failed to create shortened URL:', errorMessage);
-    return sendResponse(res, 500, 'Internal Server Error');
+  } catch (error: unknown) {
+    // Handle specific error types
+    if (error instanceof TypeError) {
+      logger.error('URL error: Type error while creating shortened URL:', error.message);
+      return sendResponse(res, 400, 'Invalid data format');
+    } else if (error instanceof Error) {
+      logger.error('URL error: Failed to create shortened URL:', error.message);
+      return sendResponse(res, 500, 'Internal Server Error');
+    } else {
+      logger.error('URL error: Unknown error while creating shortened URL:', String(error));
+      return sendResponse(res, 500, 'Internal server error');
+    }
   }
 };
 
@@ -293,15 +320,22 @@ exports.createAuthenticatedUrl = async (req: Request, res: Response): Promise<Re
       );
 
       return sendResponse(res, 201, 'Successfully created shortened URL', response);
-    } catch (error) {
+    } catch (error: unknown) {
       // Handle custom code already taken error
       if (error instanceof Error && error.message === 'This custom short code is already taken') {
         return sendResponse(res, 409, 'Custom code already in use');
+      } else if (error instanceof TypeError) {
+        logger.error('URL error: Type error while creating authenticated URL:', error.message);
+        return sendResponse(res, 400, 'Invalid data format');
+      } else if (error instanceof Error) {
+        logger.error('URL error: Failed to create authenticated URL:', error.message);
+        return sendResponse(res, 500, 'Internal Server Error');
+      } else {
+        logger.error('URL error: Unknown error while creating authenticated URL:', String(error));
+        return sendResponse(res, 500, 'Internal server error');
       }
-
-      throw error; // Re-throw for generic error handling
     }
-  } catch (error) {
+  } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error('URL error: Failed to create shortened URL:', errorMessage);
     return sendResponse(res, 500, 'Internal Server Error');
@@ -400,10 +434,17 @@ exports.getUrlDetails = async (req: Request, res: Response): Promise<Response> =
     );
 
     return sendResponse(res, 200, 'Successfully retrieved URL', response);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('URL error: Failed to retrieve URL details:', errorMessage);
-    return sendResponse(res, 500, 'Internal Server Error');
+  } catch (error: unknown) {
+    if (error instanceof TypeError) {
+      logger.error('URL error: Type error while retrieving URL details:', error.message);
+      return sendResponse(res, 400, 'Invalid request format');
+    } else if (error instanceof Error) {
+      logger.error('URL error: Failed to retrieve URL details:', error.message);
+      return sendResponse(res, 500, 'Internal Server Error');
+    } else {
+      logger.error('URL error: Unknown error while retrieving URL details:', String(error));
+      return sendResponse(res, 500, 'Internal server error');
+    }
   }
 };
 
@@ -458,10 +499,17 @@ exports.deleteUrl = async (req: Request, res: Response): Promise<Response> => {
     logger.info(`Successfully deleted URL with ID ${urlId}`);
 
     return sendResponse(res, 200, 'Successfully deleted URL', response);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('URL error: Failed to delete URL:', errorMessage);
-    return sendResponse(res, 500, 'Internal Server Error');
+  } catch (error: unknown) {
+    if (error instanceof TypeError) {
+      logger.error('URL error: Type error while deleting URL:', error.message);
+      return sendResponse(res, 400, 'Invalid request format');
+    } else if (error instanceof Error) {
+      logger.error('URL error: Failed to delete URL:', error.message);
+      return sendResponse(res, 500, 'Internal Server Error');
+    } else {
+      logger.error('URL error: Unknown error while deleting URL:', String(error));
+      return sendResponse(res, 500, 'Internal server error');
+    }
   }
 };
 
@@ -529,15 +577,19 @@ exports.getUrlAnalytics = async (req: Request, res: Response): Promise<Response>
     logger.info(`Successfully retrieved analytics for URL ID ${urlId}`);
 
     return sendResponse(res, 200, 'Successfully retrieved URL analytics', analytics);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('URL error: Failed to retrieve URL analytics:', errorMessage);
-
+  } catch (error: unknown) {
     if (error instanceof Error && error.message === 'URL not found') {
       return sendResponse(res, 404, 'URL not found');
+    } else if (error instanceof TypeError) {
+      logger.error('URL error: Type error while retrieving analytics:', error.message);
+      return sendResponse(res, 400, 'Invalid request format');
+    } else if (error instanceof Error) {
+      logger.error('URL error: Failed to retrieve URL analytics:', error.message);
+      return sendResponse(res, 500, 'Internal Server Error');
+    } else {
+      logger.error('URL error: Unknown error while retrieving analytics:', String(error));
+      return sendResponse(res, 500, 'Internal server error');
     }
-
-    return sendResponse(res, 500, 'Internal Server Error');
   }
 };
 
@@ -826,9 +878,16 @@ exports.getTotalClicksAnalytics = async (req: Request, res: Response): Promise<R
     logger.info(`Successfully retrieved total clicks analytics for user ${userId}`);
 
     return sendResponse(res, 200, 'Successfully retrieved total clicks analytics', responseData);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('URL error: Failed to retrieve total clicks analytics:', errorMessage);
-    return sendResponse(res, 500, 'Failed to retrieve total clicks analytics');
+  } catch (error: unknown) {
+    if (error instanceof TypeError) {
+      logger.error('URL error: Type error while retrieving total clicks analytics:', error.message);
+      return sendResponse(res, 400, 'Invalid request format');
+    } else if (error instanceof Error) {
+      logger.error('URL error: Failed to retrieve total clicks analytics:', error.message);
+      return sendResponse(res, 500, 'Failed to retrieve total clicks analytics');
+    } else {
+      logger.error('URL error: Unknown error while retrieving total clicks:', String(error));
+      return sendResponse(res, 500, 'Internal server error');
+    }
   }
 };
