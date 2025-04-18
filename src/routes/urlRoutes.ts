@@ -1,7 +1,7 @@
 const router = require('express').Router();
 
-const urlController = require('../controllers/urlController');
 const { getQrCodeByUrlId } = require('../controllers/qrCodeController');
+const urlController = require('../controllers/urlController');
 const { accessToken } = require('../middlewares/authMiddleware');
 const validate = require('../utils/validator');
 const fields = require('../validators/urlValidator');
