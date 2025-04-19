@@ -3,6 +3,7 @@ import * as http from 'http';
 
 const urlService = require('../services/urlService');
 const logger = require('../utils/logger');
+const conversionGoalModel = require('../models/conversionGoalModel');
 
 /**
  * Redirect Middleware
@@ -151,6 +152,19 @@ module.exports = async (req: ExtendedRequest, res: Response, next: NextFunction)
 
       logger.info(`Redirecting ${shortCode} to ${originalUrl} (${redirectType})`);
 
+      // Check if there's an associated conversion goal for this URL
+      let goalId = null;
+      try {
+        const goals = await conversionGoalModel.getGoalsByUrlId(urlId);
+        if (goals.length > 0) {
+          // If there are multiple goals, use the first one
+          goalId = goals[0].id;
+          logger.info(`Found conversion goal ID ${goalId} for URL ID ${urlId}`);
+        }
+      } catch (error) {
+        logger.error(`Error getting goals for URL: ${error}`);
+      }
+
       // Add UTM parameters to the original URL for tracking
       let redirectUrl = originalUrl;
       if (req.clickInfo?.trackingId) {
@@ -158,14 +172,15 @@ module.exports = async (req: ExtendedRequest, res: Response, next: NextFunction)
         const separator = redirectUrl.includes('?') ? '&' : '?';
         redirectUrl = `${redirectUrl}${separator}utm_source=cylink&utm_medium=shortlink&utm_campaign=conversion&utm_content=${req.clickInfo.trackingId}`;
 
-        // Auto-track conversion
-        // This will send a conversion event automatically
-        // Use setTimeout to make this non-blocking
-        setTimeout(() => {
-          autoTrackConversion(req.clickInfo!.trackingId!, 1).catch(err =>
-            logger.error(`Error in auto-tracking conversion: ${err}`),
-          );
-        }, 100);
+        // Auto-track conversion if we have a goal ID
+        if (goalId) {
+          // Use setTimeout to make this non-blocking
+          setTimeout(() => {
+            autoTrackConversion(req.clickInfo!.trackingId!, goalId).catch(err =>
+              logger.error(`Error in auto-tracking conversion: ${err}`),
+            );
+          }, 100);
+        }
       }
 
       // Redirect to the original URL

@@ -11,6 +11,7 @@ const clickModel = require('../models/clickModel');
 const urlModel = require('../models/urlModel');
 const logger = require('../utils/logger');
 const shortCodeUtil = require('../utils/shortCode');
+const conversionGoalModel = require('../models/conversionGoalModel');
 
 /**
  * URL creation options interface
@@ -24,6 +25,7 @@ interface CreateUrlOptions {
   isPasswordProtected?: boolean;
   password?: string;
   redirectType?: string;
+  goalId?: number;
 }
 
 /**
@@ -42,6 +44,7 @@ exports.createShortenedUrl = async (options: CreateUrlOptions) => {
     isPasswordProtected = false,
     password,
     redirectType = '302',
+    goalId,
   } = options;
 
   // Generate or use custom short code
@@ -79,7 +82,30 @@ exports.createShortenedUrl = async (options: CreateUrlOptions) => {
     redirect_type: redirectType,
   };
 
-  return await urlModel.createUrl(urlData);
+  // Create the URL first
+  const newUrl = await urlModel.createUrl(urlData);
+
+  // If goalId is provided, associate it with the URL
+  if (goalId && newUrl.id) {
+    try {
+      // Check if the goal exists first
+      const goal = await conversionGoalModel.getGoalById(goalId);
+      if (goal) {
+        await conversionGoalModel.associateGoalWithUrl({
+          url_id: newUrl.id,
+          goal_id: goalId,
+        });
+        logger.info(`Associated goal ID ${goalId} with URL ID ${newUrl.id}`);
+      } else {
+        logger.warn(`Goal ID ${goalId} not found, URL created without goal association`);
+      }
+    } catch (error) {
+      logger.error(`Error associating goal with URL: ${error}`);
+      // Don't fail the URL creation if goal association fails
+    }
+  }
+
+  return newUrl;
 };
 
 /**
