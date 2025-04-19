@@ -4,6 +4,7 @@ const authRoutes = require('../routes/authRoutes');
 const publicUrlRoutes = require('../routes/publicUrlRoutes');
 const urlRoutes = require('../routes/urlRoutes');
 const qrCodeRoutes = require('../routes/qrCodeRoutes');
+const conversionRoutes = require('../routes/conversionRoutes');
 
 /**
  * Main router
@@ -23,5 +24,8 @@ router.use('/public/urls', publicUrlRoutes);
 
 // QR code generation routes
 router.use('/qr-codes', qrCodeRoutes);
+
+// Conversion tracking routes
+router.use('/', conversionRoutes);
 
 module.exports = router;

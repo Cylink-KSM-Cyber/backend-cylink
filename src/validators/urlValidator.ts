@@ -34,6 +34,7 @@ module.exports = {
     { name: 'custom_code', type: 'string', required: false },
     { name: 'title', type: 'string', required: false },
     { name: 'expiry_date', type: 'string', required: false },
+    { name: 'goal_id', type: 'number', required: false },
   ],
 
   /**

@@ -75,4 +75,49 @@ module.exports = {
     created_at: 'TIMESTAMP WITH TIME ZONE DEFAULT NOW()',
     updated_at: 'TIMESTAMP WITH TIME ZONE',
   },
+
+  /**
+   * Conversion Goals table for storing different conversion objectives
+   *
+   * Defines various goals that can be tracked for URLs
+   */
+  conversion_goals: {
+    id: 'SERIAL PRIMARY KEY',
+    user_id: 'INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE',
+    name: 'VARCHAR(255) NOT NULL',
+    description: 'TEXT',
+    created_at: 'TIMESTAMP WITH TIME ZONE DEFAULT NOW()',
+    updated_at: 'TIMESTAMP WITH TIME ZONE',
+  },
+
+  /**
+   * URL Conversion Goals table for associating goals with URLs
+   *
+   * Links conversion goals to specific URLs
+   */
+  url_conversion_goals: {
+    id: 'SERIAL PRIMARY KEY',
+    url_id: 'INTEGER NOT NULL REFERENCES urls(id) ON DELETE CASCADE',
+    goal_id: 'INTEGER NOT NULL REFERENCES conversion_goals(id) ON DELETE CASCADE',
+    created_at: 'TIMESTAMP WITH TIME ZONE DEFAULT NOW()',
+    unique: ['url_id', 'goal_id'],
+  },
+
+  /**
+   * Conversions table for tracking successful conversions
+   *
+   * Records when users complete desired actions after clicking URLs
+   */
+  conversions: {
+    id: 'SERIAL PRIMARY KEY',
+    click_id: 'INTEGER REFERENCES clicks(id) ON DELETE SET NULL',
+    url_id: 'INTEGER NOT NULL REFERENCES urls(id) ON DELETE CASCADE',
+    goal_id: 'INTEGER REFERENCES conversion_goals(id) ON DELETE SET NULL',
+    conversion_value: 'DECIMAL(10, 2)',
+    converted_at: 'TIMESTAMP WITH TIME ZONE DEFAULT NOW()',
+    user_agent: 'TEXT',
+    ip_address: 'VARCHAR(45)',
+    referrer: 'TEXT',
+    custom_data: 'JSONB',
+  },
 };

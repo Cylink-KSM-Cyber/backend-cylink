@@ -16,7 +16,9 @@
     "db:seed:urls": "ts-node -r tsconfig-paths/register src/database/seed.ts urls",
     "db:seed:qrcodes": "ts-node -r tsconfig-paths/register src/database/seed.ts qrcodes",
     "db:seed:clicks": "ts-node -r tsconfig-paths/register src/database/seed.ts clicks",
-    "db:seed:all": "npm run db:seed:admin && npm run db:seed:urls && npm run db:seed:qrcodes && npm run db:seed:clicks",
+    "db:seed:goals": "ts-node -r tsconfig-paths/register src/database/seed.ts goals",
+    "db:seed:conversions": "ts-node -r tsconfig-paths/register src/database/seed.ts conversions",
+    "db:seed:all": "npm run db:seed:admin && npm run db:seed:urls && npm run db:seed:qrcodes && npm run db:seed:clicks && npm run db:seed:goals && npm run db:seed:conversions",
     "lint": "eslint \"**/*.{js,ts}\"",
     "lint:fix": "eslint \"**/*.{js,ts}\" --fix"
   },

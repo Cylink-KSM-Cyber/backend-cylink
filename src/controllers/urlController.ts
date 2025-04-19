@@ -198,7 +198,7 @@ function isValidUrl(url: string): boolean {
  */
 exports.createAnonymousUrl = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const { original_url, custom_code, title, expiry_date } = req.body;
+    const { original_url, custom_code, title, expiry_date, goal_id } = req.body;
 
     // Validate the URL
     if (!isValidUrl(original_url)) {
@@ -211,6 +211,7 @@ exports.createAnonymousUrl = async (req: Request, res: Response): Promise<Respon
       customShortCode: custom_code,
       title,
       expiryDate: expiry_date ? new Date(expiry_date) : undefined,
+      goalId: goal_id ? parseInt(goal_id) : undefined,
     };
 
     try {
@@ -231,6 +232,7 @@ exports.createAnonymousUrl = async (req: Request, res: Response): Promise<Respon
         created_at: new Date(newUrl.created_at).toISOString(),
         expiry_date: newUrl.expiry_date ? new Date(newUrl.expiry_date).toISOString() : null,
         is_active: newUrl.is_active,
+        goal_id: goal_id ? parseInt(goal_id) : null,
       };
 
       logger.info(`Successfully created anonymous shortened URL: ${shortUrl}`);
@@ -279,7 +281,7 @@ exports.createAuthenticatedUrl = async (req: Request, res: Response): Promise<Re
     const userId = req.body.id;
 
     // Extract request data
-    const { original_url, custom_code, title, expiry_date } = req.body;
+    const { original_url, custom_code, title, expiry_date, goal_id } = req.body;
 
     // Validate the URL
     if (!isValidUrl(original_url)) {
@@ -293,6 +295,7 @@ exports.createAuthenticatedUrl = async (req: Request, res: Response): Promise<Re
       customShortCode: custom_code,
       title,
       expiryDate: expiry_date ? new Date(expiry_date) : undefined,
+      goalId: goal_id ? parseInt(goal_id) : undefined,
     };
 
     try {
@@ -313,6 +316,7 @@ exports.createAuthenticatedUrl = async (req: Request, res: Response): Promise<Re
         created_at: new Date(newUrl.created_at).toISOString(),
         expiry_date: newUrl.expiry_date ? new Date(newUrl.expiry_date).toISOString() : null,
         is_active: newUrl.is_active,
+        goal_id: goal_id ? parseInt(goal_id) : null,
       };
 
       logger.info(

@@ -9,6 +9,8 @@ import { AdminSeeder } from './adminSeeder';
 import { UrlSeeder } from './urlSeeder';
 import { QrCodeSeeder } from './qrCodeSeeder';
 import { ClickSeeder } from './clickSeeder';
+import { ConversionGoalSeeder } from './conversionGoalSeeder';
+import { ConversionSeeder } from './conversionSeeder';
 
 /**
  * Registers all available seeders
@@ -19,6 +21,8 @@ const getRegisteredSeeders = () => [
   { name: 'urls', seeder: UrlSeeder },
   { name: 'qrcodes', seeder: QrCodeSeeder },
   { name: 'clicks', seeder: ClickSeeder },
+  { name: 'goals', seeder: ConversionGoalSeeder },
+  { name: 'conversions', seeder: ConversionSeeder },
 ];
 
 /**
