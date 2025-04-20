@@ -129,3 +129,90 @@ This API documentation provides numerous benefits for both internal developers a
 
 - `POST /api/v1/qr-codes` - Generate a new QR code
 - `GET /api/v1/qr-codes/:id` - Get a specific QR code by ID
+
+## URLs
+
+### Get All URLs
+
+Retrieves all URLs for the authenticated user.
+
+**Endpoint:** `GET /api/v1/urls`
+
+**Authentication:** Required (Bearer Token)
+
+**Parameters:**
+
+| Parameter | Type    | Required | Default    | Description                                             |
+| --------- | ------- | -------- | ---------- | ------------------------------------------------------- |
+| search    | string  | No       | -          | Text to search in original URLs or short codes          |
+| page      | integer | No       | 1          | Page number for pagination                              |
+| limit     | integer | No       | 10         | Number of items per page                                |
+| sortBy    | string  | No       | created_at | Field to sort by (created_at, clicks, title, relevance) |
+| sortOrder | string  | No       | desc       | Sort order (asc, desc)                                  |
+
+**Response:**
+
+```json
+{
+  "status": 200,
+  "message": "URLs retrieved successfully",
+  "data": [
+    {
+      "id": 123,
+      "original_url": "https://example.com/very-long-url-path",
+      "short_code": "abc123",
+      "short_url": "https://cylink.id/abc123",
+      "title": "Example URL",
+      "clicks": 42,
+      "created_at": "2023-04-10T12:00:00Z",
+      "expiry_date": "2023-05-10T00:00:00Z",
+      "is_active": true,
+      "matches": {
+        "original_url": ["<em>example</em>.com"],
+        "short_code": null,
+        "title": null
+      }
+    }
+    // More URLs...
+  ],
+  "pagination": {
+    "total": 24,
+    "page": 1,
+    "limit": 10,
+    "total_pages": 3
+  },
+  "search_info": {
+    "term": "example",
+    "fields_searched": ["original_url", "short_code", "title"],
+    "total_matches": 24
+  }
+}
+```
+
+#### Search Functionality
+
+The URL endpoint supports a powerful search feature that allows users to find URLs by matching terms in the original URL, short code, or title.
+
+**Search Features:**
+
+- Case-insensitive searching
+- Partial matching (finds terms anywhere in the text)
+- Results ordered by relevance when using the 'relevance' sort option
+- Highlighted matches in the response with HTML `<em>` tags
+- Search performance optimized with database indexes
+- Minimum search term length: 2 characters
+
+**Example Searches:**
+
+- `?search=example` - Find URLs containing "example" in any field
+- `?search=example&sortBy=relevance` - Find URLs with "example" sorted by relevance
+- `?search=blog&sortBy=clicks&sortOrder=desc` - Find URLs with "blog" sorted by most clicks
+
+**Error Responses:**
+
+```json
+{
+  "status": 400,
+  "message": "Search term must be at least 2 characters long"
+}
+```

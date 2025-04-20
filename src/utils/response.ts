@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { SearchInfo } from '../interfaces/URL';
 
 /**
  * Response Utility
@@ -26,7 +27,8 @@ interface ApiResponse<T> {
   status: number;
   message: string;
   data?: T;
-  pagination?: Pagination;
+  pagination?: Pagination | any;
+  search_info?: SearchInfo;
 }
 
 /**
@@ -37,6 +39,7 @@ interface ApiResponse<T> {
  * @param {string} message - Response message
  * @param {T} data - Response data
  * @param {Pagination} pagination - Pagination information
+ * @param {SearchInfo} searchInfo - Search information
  * @returns {Response} Express response with formatted JSON
  */
 export function sendResponse<T>(
@@ -45,6 +48,7 @@ export function sendResponse<T>(
   message: string,
   data: T | null = null,
   pagination: Pagination | null = null,
+  searchInfo: SearchInfo | null = null,
 ): Response {
   const response: ApiResponse<T> = {
     status: statusCode,
@@ -57,6 +61,10 @@ export function sendResponse<T>(
 
   if (pagination !== null) {
     response.pagination = pagination;
+  }
+
+  if (searchInfo !== null) {
+    response.search_info = searchInfo;
   }
 
   return res.status(statusCode).json(response);

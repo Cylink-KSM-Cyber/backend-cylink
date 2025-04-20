@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { UrlWithSearchHighlights, SearchInfo } from '../interfaces/URL';
 
 const clickModel = require('../models/clickModel');
 const urlModel = require('../models/urlModel');
@@ -73,12 +74,159 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
       return sendResponse(res, 401, 'Unauthorized: No user ID');
     }
 
-    // Parse query parameters for pagination and sorting
+    // Parse query parameters for pagination, sorting, and search
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const sortBy = (req.query.sortBy as string) || 'created_at';
     const sortOrder = (req.query.sortOrder as string) || 'desc';
+    const searchTerm = (req.query.search as string) || '';
 
+    // Validate page and limit
+    if (page < 1) {
+      return sendResponse(res, 400, 'Invalid page number, must be greater than 0');
+    }
+
+    if (limit < 1 || limit > 100) {
+      return sendResponse(res, 400, 'Invalid limit, must be between 1 and 100');
+    }
+
+    // If search term is provided, use the search functionality
+    if (searchTerm && searchTerm.length > 0) {
+      // Minimum search term length validation
+      if (searchTerm.length < 2) {
+        return sendResponse(res, 400, 'Search term must be at least 2 characters long');
+      }
+
+      try {
+        // Measure response time for performance monitoring
+        const startTime = Date.now();
+
+        // Search URLs
+        const { results, total, highlights } = await urlModel.searchUrls(
+          userId,
+          searchTerm,
+          page,
+          limit,
+          sortBy,
+          sortOrder,
+        );
+
+        // Calculate response time
+        const responseTime = Date.now() - startTime;
+
+        // Log the search completion
+        logger.info(
+          `Search for "${searchTerm}" completed for user ${userId} in ${responseTime}ms with ${total} results`,
+        );
+
+        // If no URLs found, return 200 status with empty array and appropriate message
+        if (!results || results.length === 0) {
+          // Construct search info metadata
+          const searchInfo: SearchInfo = {
+            term: searchTerm,
+            fields_searched: ['original_url', 'short_code', 'title'],
+            total_matches: 0,
+          };
+
+          // Construct pagination object
+          const pagination: PaginationData = {
+            total: 0,
+            page,
+            limit,
+            total_pages: 0,
+          };
+
+          return sendResponse(
+            res,
+            200,
+            `No URLs found matching "${searchTerm}"`,
+            [],
+            pagination,
+            searchInfo,
+          );
+        }
+
+        // For each URL, get the click count and format the response
+        const urlsWithDetails = await Promise.all(
+          results.map(async (url: UrlEntity) => {
+            const clickCount = await clickModel.getClickCountByUrlId(url.id);
+
+            // Format expiry_date if it exists
+            const expiryDate = url.expiry_date ? new Date(url.expiry_date).toISOString() : null;
+
+            // Generate the full short URL
+            const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
+            const shortUrl = baseUrl + url.short_code;
+
+            // Create URL with clicks data
+            const urlWithClicks: UrlWithSearchHighlights = {
+              id: url.id,
+              original_url: url.original_url,
+              short_code: url.short_code,
+              short_url: shortUrl,
+              title: url.title ?? null,
+              clicks: clickCount,
+              created_at: new Date(url.created_at).toISOString(),
+              expiry_date: expiryDate,
+              is_active: url.is_active,
+              matches: highlights[url.id] || null,
+            };
+
+            return urlWithClicks;
+          }),
+        );
+
+        // Calculate pagination data
+        const totalPages = Math.ceil(total / limit);
+
+        // Construct pagination object
+        const pagination: PaginationData = {
+          total,
+          page,
+          limit,
+          total_pages: totalPages,
+        };
+
+        // Construct search info metadata
+        const searchInfo: SearchInfo = {
+          term: searchTerm,
+          fields_searched: ['original_url', 'short_code', 'title'],
+          total_matches: total,
+        };
+
+        logger.info(
+          `Search for "${searchTerm}" returned ${urlsWithDetails.length} URLs for user ${userId} in ${responseTime}ms`,
+        );
+
+        // Return the response with search results
+        return sendResponse(
+          res,
+          200,
+          'URLs retrieved successfully',
+          urlsWithDetails,
+          pagination,
+          searchInfo,
+        );
+      } catch (searchError) {
+        logger.error('Search error:', searchError);
+
+        // Check if this is a database-related error
+        if (searchError instanceof Error) {
+          // Log the specific error for debugging purposes
+          logger.error(`Database search error: ${searchError.message}`);
+
+          // For expected database issues, provide a cleaner message
+          if (searchError.message.includes('relation') || searchError.message.includes('column')) {
+            return sendResponse(res, 500, 'Database configuration error. Please contact support.');
+          }
+        }
+
+        // For other unexpected errors during search
+        return sendResponse(res, 500, 'An error occurred while searching URLs. Please try again.');
+      }
+    }
+
+    // If no search term, use the regular getAllUrls functionality
     // Calculate offset for pagination
     const offset = (page - 1) * limit;
 

@@ -1,4 +1,5 @@
-const pool = require("../config/database");
+const pool = require('../config/database');
+const { UrlCreateData, UrlUpdateData } = require('../interfaces/URL');
 
 /**
  * URL Model
@@ -25,36 +26,13 @@ const pool = require("../config/database");
  * @property {Date|null} deleted_at - When the URL was soft deleted (if applicable)
  */
 
-interface UrlData {
-  user_id?: number;
-  original_url: string;
-  short_code: string;
-  title?: string;
-  expiry_date?: Date;
-  is_active?: boolean;
-  has_password?: boolean;
-  password_hash?: string;
-  redirect_type?: string;
-}
-
-interface UrlUpdateData {
-  original_url?: string;
-  short_code?: string;
-  title?: string;
-  expiry_date?: Date;
-  is_active?: boolean;
-  has_password?: boolean;
-  password_hash?: string;
-  redirect_type?: string;
-}
-
 /**
  * Create a new shortened URL
  *
- * @param {UrlData} urlData - The URL data
+ * @param {typeof UrlCreateData} urlData - The URL data
  * @returns {Promise<any>} The created URL object
  */
-exports.createUrl = async (urlData: UrlData) => {
+exports.createUrl = async (urlData: typeof UrlCreateData) => {
   const {
     user_id,
     original_url,
@@ -64,7 +42,7 @@ exports.createUrl = async (urlData: UrlData) => {
     is_active = true,
     has_password = false,
     password_hash,
-    redirect_type = "302",
+    redirect_type = '302',
   } = urlData;
 
   const result = await pool.query(
@@ -82,7 +60,7 @@ exports.createUrl = async (urlData: UrlData) => {
       has_password,
       password_hash,
       redirect_type,
-    ]
+    ],
   );
 
   return result.rows[0];
@@ -96,8 +74,8 @@ exports.createUrl = async (urlData: UrlData) => {
  */
 exports.getUrlByShortCode = async (shortCode: string) => {
   const result = await pool.query(
-    "SELECT * FROM urls WHERE short_code = $1 AND is_active = TRUE AND deleted_at IS NULL",
-    [shortCode]
+    'SELECT * FROM urls WHERE short_code = $1 AND is_active = TRUE AND deleted_at IS NULL',
+    [shortCode],
   );
 
   return result.rows[0] || null;
@@ -111,21 +89,224 @@ exports.getUrlByShortCode = async (shortCode: string) => {
  */
 exports.getUrlsByUser = async (userId: number) => {
   const result = await pool.query(
-    "SELECT * FROM urls WHERE user_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC",
-    [userId]
+    'SELECT * FROM urls WHERE user_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC',
+    [userId],
   );
 
   return result.rows;
 };
 
 /**
+ * URL search highlights interface
+ */
+interface UrlHighlights {
+  [key: string]: {
+    original_url: string[] | null;
+    short_code: string[] | null;
+    title: string[] | null;
+  };
+}
+
+/**
+ * Search URLs by original_url, short_code, or title for a specific user
+ *
+ * @param {number} userId - The user ID
+ * @param {string} searchTerm - The search term to look for
+ * @param {number} page - Page number for pagination
+ * @param {number} limit - Number of results per page
+ * @param {string} sortBy - Field to sort by
+ * @param {string} sortOrder - Sort order (asc or desc)
+ * @returns {Promise<{results: any[], total: number, highlights: UrlHighlights}>} Search results, total count, and highlights
+ */
+exports.searchUrls = async (
+  userId: number,
+  searchTerm: string,
+  page: number = 1,
+  limit: number = 10,
+  sortBy: string = 'relevance',
+  sortOrder: string = 'desc',
+) => {
+  try {
+    // Sanitize the search term to prevent SQL injection
+    const sanitizedTerm = searchTerm.replace(/[%_\\]/g, '\\$&');
+
+    // Create the LIKE pattern with case-insensitive search
+    const likePattern = `%${sanitizedTerm}%`;
+
+    // Base query for search
+    const baseQuery = `
+      FROM urls
+      WHERE user_id = $1
+        AND deleted_at IS NULL
+        AND (
+          LOWER(original_url) LIKE LOWER($2) OR
+          LOWER(short_code) LIKE LOWER($2) OR
+          (title IS NOT NULL AND LOWER(title) LIKE LOWER($2))
+        )
+    `;
+
+    // Count query to get total results
+    const countQuery = `SELECT COUNT(*) ${baseQuery}`;
+
+    // Build the search query with different sorting options
+    let searchQuery = `
+      SELECT id, original_url, short_code, title, expiry_date, is_active, created_at, updated_at
+      ${baseQuery}
+    `;
+
+    // Apply sorting based on sortBy parameter
+    if (sortBy === 'relevance') {
+      // Use string literals instead of parameters for the CASE expression to avoid type issues
+      // We've already sanitized the term to prevent SQL injection
+      searchQuery += `
+        ORDER BY
+          CASE
+            WHEN LOWER(short_code) = LOWER('${sanitizedTerm}') THEN 0
+            WHEN LOWER(original_url) = LOWER('${sanitizedTerm}') THEN 1
+            WHEN LOWER(title) = LOWER('${sanitizedTerm}') THEN 2
+            WHEN LOWER(short_code) LIKE LOWER('${sanitizedTerm}%') THEN 3
+            WHEN LOWER(original_url) LIKE LOWER('${sanitizedTerm}%') THEN 4
+            WHEN LOWER(title) LIKE LOWER('${sanitizedTerm}%') THEN 5
+            ELSE 6
+          END ${sortOrder === 'asc' ? 'ASC' : 'DESC'},
+          created_at DESC
+      `;
+    } else {
+      // Apply other sorting options
+      const validColumns: Record<string, string> = {
+        created_at: 'created_at',
+        title: 'title',
+      };
+
+      const column = validColumns[sortBy] || 'created_at';
+      searchQuery += `ORDER BY ${column} ${sortOrder === 'asc' ? 'ASC' : 'DESC'}`;
+    }
+
+    // Apply pagination
+    searchQuery += ` LIMIT $3 OFFSET $4`;
+
+    // Execute count query
+    const countResult = await pool.query(countQuery, [userId, likePattern]);
+    const total = parseInt(countResult.rows[0].count, 10);
+
+    // If no results found, return empty array with zero total
+    if (total === 0) {
+      return {
+        results: [],
+        total: 0,
+        highlights: {},
+      };
+    }
+
+    // Execute search query
+    const offset = (page - 1) * limit;
+
+    // Now we only need 4 parameters: userId, likePattern, limit, offset
+    const searchResult = await pool.query(searchQuery, [userId, likePattern, limit, offset]);
+
+    // Generate highlights for matched content
+    const highlights: UrlHighlights = {};
+
+    searchResult.rows.forEach((url: any) => {
+      highlights[url.id] = {
+        original_url: highlightMatches(url.original_url, sanitizedTerm),
+        short_code: highlightMatches(url.short_code, sanitizedTerm),
+        title: url.title ? highlightMatches(url.title, sanitizedTerm) : null,
+      };
+    });
+
+    return {
+      results: searchResult.rows,
+      total,
+      highlights,
+    };
+  } catch (error) {
+    // Log and rethrow with better context
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`Error searching URLs with term "${searchTerm}": ${errorMessage}`);
+
+    // Check for specific database errors and provide more context
+    if (error instanceof Error) {
+      // Connection errors
+      if (errorMessage.includes('connect')) {
+        throw new Error(`Database connection error: ${errorMessage}`);
+      }
+
+      // Query syntax/column errors
+      if (
+        errorMessage.includes('column') ||
+        errorMessage.includes('parameter') ||
+        errorMessage.includes('data type')
+      ) {
+        throw new Error(`Database query error: ${errorMessage}`);
+      }
+
+      // Other database errors
+      if (errorMessage.includes('database') || errorMessage.includes('sql')) {
+        throw new Error(`Database error: ${errorMessage}`);
+      }
+    }
+
+    // Rethrow the original error with better context
+    throw new Error(`Failed to search URLs: ${errorMessage}`);
+  }
+};
+
+/**
+ * Helper function to generate highlights for matched text
+ *
+ * @param {string} text - The text to search in
+ * @param {string} term - The search term to highlight
+ * @returns {string[]} Array of highlighted matches or null if no matches
+ */
+function highlightMatches(text: string, term: string): string[] | null {
+  if (!text) return null;
+
+  const matches = [];
+  const lowerText = text.toLowerCase();
+  const lowerTerm = term.toLowerCase();
+
+  let startPos = 0;
+  let foundPos;
+
+  // Find all occurrences of the term in the text
+  while ((foundPos = lowerText.indexOf(lowerTerm, startPos)) !== -1) {
+    // Get some context around the match (10 chars before and after)
+    const contextStart = Math.max(0, foundPos - 10);
+    const contextEnd = Math.min(text.length, foundPos + term.length + 10);
+
+    // Extract the context and add HTML emphasis tags for highlighting
+    let match = text.substring(contextStart, contextEnd);
+
+    // Find the actual match in the extracted context
+    const matchStartInContext = foundPos - contextStart;
+    const matchEndInContext = matchStartInContext + term.length;
+
+    // Insert the highlighting tags
+    match =
+      match.substring(0, matchStartInContext) +
+      '<em>' +
+      match.substring(matchStartInContext, matchEndInContext) +
+      '</em>' +
+      match.substring(matchEndInContext);
+
+    matches.push(match);
+
+    // Move to position after this match
+    startPos = foundPos + term.length;
+  }
+
+  return matches.length > 0 ? matches : null;
+}
+
+/**
  * Update an existing URL
  *
  * @param {number} id - The URL ID to update
- * @param {UrlUpdateData} updateData - The fields to update
+ * @param {typeof UrlUpdateData} updateData - The fields to update
  * @returns {Promise<any|null>} The updated URL or null if not found
  */
-exports.updateUrl = async (id: number, updateData: UrlUpdateData) => {
+exports.updateUrl = async (id: number, updateData: typeof UrlUpdateData) => {
   // Build dynamic update query
   const setClause = [];
   const values = [];
@@ -144,10 +325,8 @@ exports.updateUrl = async (id: number, updateData: UrlUpdateData) => {
   values.push(id);
 
   const result = await pool.query(
-    `UPDATE urls SET ${setClause.join(
-      ", "
-    )} WHERE id = $${paramCounter} RETURNING *`,
-    values
+    `UPDATE urls SET ${setClause.join(', ')} WHERE id = $${paramCounter} RETURNING *`,
+    values,
   );
 
   return result.rows[0] || null;
@@ -161,8 +340,8 @@ exports.updateUrl = async (id: number, updateData: UrlUpdateData) => {
  */
 exports.deleteUrl = async (id: number) => {
   const result = await pool.query(
-    "UPDATE urls SET deleted_at = NOW(), is_active = FALSE WHERE id = $1 RETURNING id",
-    [id]
+    'UPDATE urls SET deleted_at = NOW(), is_active = FALSE WHERE id = $1 RETURNING id',
+    [id],
   );
 
   return result.rowCount > 0;
@@ -175,9 +354,7 @@ exports.deleteUrl = async (id: number) => {
  * @returns {Promise<boolean>} Whether the short code exists
  */
 exports.shortCodeExists = async (shortCode: string) => {
-  const result = await pool.query("SELECT 1 FROM urls WHERE short_code = $1", [
-    shortCode,
-  ]);
+  const result = await pool.query('SELECT 1 FROM urls WHERE short_code = $1', [shortCode]);
 
   return result.rowCount > 0;
 };
@@ -190,10 +367,10 @@ exports.shortCodeExists = async (shortCode: string) => {
  * @returns {Promise<any|null>} The URL object or null if not found
  */
 exports.getUrlById = async (id: number, includeDeleted = false) => {
-  let query = "SELECT * FROM urls WHERE id = $1";
+  let query = 'SELECT * FROM urls WHERE id = $1';
 
   if (!includeDeleted) {
-    query += " AND deleted_at IS NULL";
+    query += ' AND deleted_at IS NULL';
   }
 
   const result = await pool.query(query, [id]);

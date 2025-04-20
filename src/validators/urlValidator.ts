@@ -16,7 +16,7 @@ module.exports = {
       name: 'sortBy',
       type: 'string',
       required: false,
-      enum: ['created_at', 'clicks', 'title'],
+      enum: ['created_at', 'clicks', 'title', 'relevance'],
     },
     {
       name: 'sortOrder',
@@ -24,6 +24,7 @@ module.exports = {
       required: false,
       enum: ['asc', 'desc'],
     },
+    { name: 'search', type: 'string', required: false },
   ],
 
   /**
