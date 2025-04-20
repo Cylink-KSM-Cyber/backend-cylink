@@ -6,11 +6,10 @@
  */
 
 import { Request, Response } from 'express';
-
+import logger from '../utils/logger';
 import { User } from '../collections/userCollection';
 
 const authService = require('../services/authService');
-const logger = require('../utils/logger');
 const { sendResponse } = require('../utils/response');
 
 /**

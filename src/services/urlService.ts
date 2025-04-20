@@ -6,10 +6,10 @@
  */
 
 const bcrypt = require('bcrypt');
+import logger from '../utils/logger';
 
 const clickModel = require('../models/clickModel');
 const urlModel = require('../models/urlModel');
-const logger = require('../utils/logger');
 const shortCodeUtil = require('../utils/shortCode');
 const conversionGoalModel = require('../models/conversionGoalModel');
 const pool = require('../config/database');

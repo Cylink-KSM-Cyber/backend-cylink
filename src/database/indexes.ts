@@ -15,6 +15,17 @@ exports.createIndexes = (): string => {
   // Indexes for URLs table
   query += 'CREATE INDEX IF NOT EXISTS idx_urls_short_code ON urls(short_code);\n';
   query += 'CREATE INDEX IF NOT EXISTS idx_urls_user_id ON urls(user_id);\n';
+  query += 'CREATE INDEX IF NOT EXISTS idx_urls_created_at ON urls(created_at);\n';
+  query += 'CREATE INDEX IF NOT EXISTS idx_urls_expiry_date ON urls(expiry_date);\n';
+  query += 'CREATE INDEX IF NOT EXISTS idx_urls_deleted_at ON urls(deleted_at);\n';
+  query += 'CREATE INDEX IF NOT EXISTS idx_urls_is_active ON urls(is_active);\n';
+  query +=
+    'CREATE INDEX IF NOT EXISTS idx_urls_is_active_deleted_at ON urls(is_active, deleted_at);\n';
+  query +=
+    'CREATE INDEX IF NOT EXISTS idx_urls_user_id_is_active_deleted_at ON urls(user_id, is_active, deleted_at);\n';
+  query += 'CREATE INDEX IF NOT EXISTS idx_urls_lower_title ON urls(LOWER(title));\n';
+  query += 'CREATE INDEX IF NOT EXISTS idx_urls_lower_short_code ON urls(LOWER(short_code));\n';
+  query += 'CREATE INDEX IF NOT EXISTS idx_urls_lower_original_url ON urls(LOWER(original_url));\n';
 
   // Text search indexes for the URLs table
   query += 'CREATE INDEX IF NOT EXISTS idx_urls_original_url ON urls(original_url);\n';
@@ -40,8 +51,9 @@ exports.createIndexes = (): string => {
   query +=
     'CREATE INDEX IF NOT EXISTS idx_clicks_url_id_clicked_at ON clicks(url_id, clicked_at);\n';
   // Add index for analytics with additional columns to avoid table lookups
-  query +=
-    'CREATE INDEX IF NOT EXISTS idx_clicks_analytics ON clicks(url_id, clicked_at) INCLUDE (country, browser, device_type);\n';
+  query += 'CREATE INDEX IF NOT EXISTS idx_clicks_country ON clicks(country);\n';
+  query += 'CREATE INDEX IF NOT EXISTS idx_clicks_device_type ON clicks(device_type);\n';
+  query += 'CREATE INDEX IF NOT EXISTS idx_clicks_browser ON clicks(browser);\n';
 
   // Indexes for QR Codes table
   query += 'CREATE INDEX IF NOT EXISTS idx_qr_codes_url_id ON qr_codes(url_id);\n';
@@ -67,6 +79,14 @@ exports.createIndexes = (): string => {
   query +=
     'CREATE INDEX IF NOT EXISTS idx_conversions_url_date ON conversions(url_id, converted_at);\n';
 
+  // Indexes for Impressions table
+  query += 'CREATE INDEX IF NOT EXISTS idx_impressions_url_id ON impressions(url_id);\n';
+  query += 'CREATE INDEX IF NOT EXISTS idx_impressions_timestamp ON impressions(timestamp);\n';
+  query += 'CREATE INDEX IF NOT EXISTS idx_impressions_unique ON impressions(is_unique);\n';
+  query +=
+    'CREATE INDEX IF NOT EXISTS idx_impressions_url_id_timestamp ON impressions(url_id, timestamp);\n';
+  query += 'CREATE INDEX IF NOT EXISTS idx_impressions_source ON impressions(source);\n';
+
   return query;
 };
 
@@ -81,6 +101,15 @@ exports.dropIndexes = (): string => {
   // Drop indexes for URLs table
   query += 'DROP INDEX IF EXISTS idx_urls_short_code;\n';
   query += 'DROP INDEX IF EXISTS idx_urls_user_id;\n';
+  query += 'DROP INDEX IF EXISTS idx_urls_created_at;\n';
+  query += 'DROP INDEX IF EXISTS idx_urls_expiry_date;\n';
+  query += 'DROP INDEX IF EXISTS idx_urls_deleted_at;\n';
+  query += 'DROP INDEX IF EXISTS idx_urls_is_active;\n';
+  query += 'DROP INDEX IF EXISTS idx_urls_is_active_deleted_at;\n';
+  query += 'DROP INDEX IF EXISTS idx_urls_user_id_is_active_deleted_at;\n';
+  query += 'DROP INDEX IF EXISTS idx_urls_lower_title;\n';
+  query += 'DROP INDEX IF EXISTS idx_urls_lower_short_code;\n';
+  query += 'DROP INDEX IF EXISTS idx_urls_lower_original_url;\n';
   query += 'DROP INDEX IF EXISTS idx_urls_original_url;\n';
   query += 'DROP INDEX IF EXISTS idx_urls_title;\n';
   query += 'DROP INDEX IF EXISTS idx_urls_original_url_lower;\n';
@@ -94,7 +123,9 @@ exports.dropIndexes = (): string => {
   query += 'DROP INDEX IF EXISTS idx_clicks_url_id;\n';
   query += 'DROP INDEX IF EXISTS idx_clicks_clicked_at;\n';
   query += 'DROP INDEX IF EXISTS idx_clicks_url_id_clicked_at;\n';
-  query += 'DROP INDEX IF EXISTS idx_clicks_analytics;\n';
+  query += 'DROP INDEX IF EXISTS idx_clicks_country;\n';
+  query += 'DROP INDEX IF EXISTS idx_clicks_device_type;\n';
+  query += 'DROP INDEX IF EXISTS idx_clicks_browser;\n';
 
   // Drop indexes for QR Codes table
   query += 'DROP INDEX IF EXISTS idx_qr_codes_url_id;\n';
@@ -113,6 +144,13 @@ exports.dropIndexes = (): string => {
   query += 'DROP INDEX IF EXISTS idx_conversions_converted_at;\n';
   query += 'DROP INDEX IF EXISTS idx_conversions_url_goal;\n';
   query += 'DROP INDEX IF EXISTS idx_conversions_url_date;\n';
+
+  // Drop indexes for Impressions table
+  query += 'DROP INDEX IF EXISTS idx_impressions_url_id;\n';
+  query += 'DROP INDEX IF EXISTS idx_impressions_timestamp;\n';
+  query += 'DROP INDEX IF EXISTS idx_impressions_unique;\n';
+  query += 'DROP INDEX IF EXISTS idx_impressions_url_id_timestamp;\n';
+  query += 'DROP INDEX IF EXISTS idx_impressions_source;\n';
 
   return query;
 };

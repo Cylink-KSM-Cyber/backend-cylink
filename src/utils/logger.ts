@@ -1,67 +1,79 @@
 /**
  * Logger Utility
  *
- * Provides logging functionality with environment-based control
+ * Provides standardized logging functionality for the application
  * @module utils/logger
  */
 
-/**
- * Flag to enable/disable logging based on environment variable
- */
-const logEnabled = (process.env.ENABLE_LOG || 'false') === 'true';
+// Winston logger requires types to be installed
+// Run: npm install --save-dev @types/winston
+import * as winston from 'winston';
+import * as fs from 'fs';
+import * as path from 'path';
 
-/**
- * Log function types matching console methods
- */
-type LogLevel = 'log' | 'info' | 'error' | 'warn' | 'debug';
+// Define log format
+const logFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.errors({ stack: true }),
+  winston.format.splat(),
+  winston.format.printf(({ timestamp, level, message, stack }: any) => {
+    return `[${timestamp}] ${level.toUpperCase()}: ${message} ${stack || ''}`;
+  }),
+);
 
-/**
- * Generic log function that delegates to the appropriate console method
- * @param {LogLevel} level - The logging level to use
- * @param {unknown[]} args - Arguments to pass to the logging function
- */
-const log = (level: LogLevel, ...args: unknown[]): void => {
-  if (logEnabled) {
-    /* eslint-disable no-console */
-    console[level](...args);
-    /* eslint-enable no-console */
-  }
+// Get the log directory from environment or use default
+const LOG_DIR = process.env.LOG_DIR || 'logs';
+const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
+
+// Create the logger with console and file transports
+const logger = winston.createLogger({
+  level: LOG_LEVEL,
+  format: logFormat,
+  transports: [
+    // Console transport
+    new winston.transports.Console({
+      format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
+      handleExceptions: true,
+    }),
+    // File transport for errors
+    new winston.transports.File({
+      filename: path.join(LOG_DIR, 'error.log'),
+      level: 'error',
+      handleExceptions: true,
+      maxsize: 5242880, // 5MB
+      maxFiles: 5,
+    }),
+    // File transport for all logs
+    new winston.transports.File({
+      filename: path.join(LOG_DIR, 'combined.log'),
+      handleExceptions: true,
+      maxsize: 5242880, // 5MB
+      maxFiles: 5,
+    }),
+  ],
+  exitOnError: false, // Don't exit on handled exceptions
+});
+
+// Create log directory if it doesn't exist
+if (!fs.existsSync(LOG_DIR)) {
+  fs.mkdirSync(LOG_DIR);
+}
+
+// Add request logging method for API requests
+interface Logger extends winston.Logger {
+  request?: (req: any, res: any, message: string) => void;
+}
+
+const customLogger: Logger = logger;
+
+// Add request logging method
+customLogger.request = (req, res, message) => {
+  const { method, url, ip, headers } = req;
+  const userAgent = headers['user-agent'];
+  const statusCode = res.statusCode;
+  const responseTime = res.get('X-Response-Time') || '';
+
+  logger.info(`${method} ${url} ${statusCode} ${responseTime} - ${ip} - ${userAgent} - ${message}`);
 };
 
-/**
- * Log a message at the 'log' level
- * @param {unknown[]} args - Arguments to log
- */
-const logMessage = (...args: unknown[]): void => log('log', ...args);
-
-/**
- * Log a message at the 'info' level
- * @param {unknown[]} args - Arguments to log
- */
-const infoMessage = (...args: unknown[]): void => log('info', ...args);
-
-/**
- * Log a message at the 'error' level
- * @param {unknown[]} args - Arguments to log
- */
-const errorMessage = (...args: unknown[]): void => log('error', ...args);
-
-/**
- * Log a message at the 'warn' level
- * @param {unknown[]} args - Arguments to log
- */
-const warnMessage = (...args: unknown[]): void => log('warn', ...args);
-
-/**
- * Log a message at the 'debug' level
- * @param {unknown[]} args - Arguments to log
- */
-const debugMessage = (...args: unknown[]): void => log('debug', ...args);
-
-export = {
-  log: logMessage,
-  info: infoMessage,
-  error: errorMessage,
-  warn: warnMessage,
-  debug: debugMessage,
-};
+export default customLogger;

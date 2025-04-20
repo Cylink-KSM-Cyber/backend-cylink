@@ -1,10 +1,10 @@
 import { QrCode, QrCodeCreateData, QrCodeUpdateData } from '../interfaces/QrCode';
 import { generateQrCodePng, generateQrCodeSvg, mapQrCodeToOptions } from '../utils/qrCodeGenerator';
 import { getQrCodeColorOptions, QrCodeColorOptions } from '../config/qrCodeColors';
+import logger from '../utils/logger';
 
 const urlModel = require('../models/urlModel');
 const qrCodeModel = require('../models/qrCodeModel');
-const logger = require('../utils/logger');
 
 /**
  * QR Code Service

@@ -10,8 +10,7 @@ import {
   QrCodeFormat,
   getQrCodeColors,
 } from '../services/qrCodeService';
-
-const logger = require('../utils/logger');
+import logger from '../utils/logger';
 const { sendResponse } = require('../utils/response');
 
 /**

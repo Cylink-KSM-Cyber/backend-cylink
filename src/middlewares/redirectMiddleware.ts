@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import * as http from 'http';
+import logger from '../utils/logger';
 
 const urlService = require('../services/urlService');
-const logger = require('../utils/logger');
 const conversionGoalModel = require('../models/conversionGoalModel');
+const impressionModel = require('../models/impressionModel');
 
 /**
  * Redirect Middleware
@@ -151,6 +152,49 @@ module.exports = async (req: ExtendedRequest, res: Response, next: NextFunction)
       const redirectType = url?.redirect_type === '301' ? 301 : 302;
 
       logger.info(`Redirecting ${shortCode} to ${originalUrl} (${redirectType})`);
+
+      // Track impression untuk URL ini
+      try {
+        // Cek apakah ini adalah impression unik (belum dilihat dalam 30 menit terakhir)
+        const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        const userAgent = req.headers['user-agent'] || '';
+        const referrer = req.headers.referer || req.headers.referrer || '';
+        let source = '';
+
+        // Extract source from referrer if available
+        if (referrer && typeof referrer === 'string') {
+          try {
+            const url = new URL(referrer);
+            source = url.hostname;
+          } catch (error) {
+            // Invalid URL, use referrer as is
+            source = referrer;
+          }
+        }
+
+        // Check if this IP has viewed this URL recently
+        const isUnique = !(await impressionModel.hasRecentImpression(urlId, ipAddress));
+
+        // Record impression asynchronously (don't wait for it to complete)
+        impressionModel
+          .recordImpression({
+            url_id: urlId,
+            ip_address: ipAddress,
+            user_agent: userAgent as string,
+            referrer: typeof referrer === 'string' ? referrer : '',
+            is_unique: isUnique,
+            source,
+          })
+          .then(() => {
+            logger.info(`Recorded impression for URL ${urlId}`);
+          })
+          .catch((error: Error) => {
+            logger.error(`Failed to record impression for URL ${urlId}: ${error.message}`);
+          });
+      } catch (impressionError) {
+        logger.error(`Error tracking impression: ${impressionError}`);
+        // Continue with redirection even if impression tracking fails
+      }
 
       // Check if there's an associated conversion goal for this URL
       let goalId = null;
