@@ -59,6 +59,23 @@ module.exports = {
   },
 
   /**
+   * Impressions table for tracking URL views
+   *
+   * Stores data about each time a URL is displayed to users
+   * used for calculating Click-Through Rate (CTR)
+   */
+  impressions: {
+    id: 'SERIAL PRIMARY KEY',
+    url_id: 'INTEGER NOT NULL REFERENCES urls(id) ON DELETE CASCADE',
+    timestamp: 'TIMESTAMP WITH TIME ZONE DEFAULT NOW()',
+    ip_address: 'VARCHAR(45)',
+    user_agent: 'TEXT',
+    referrer: 'TEXT',
+    is_unique: 'BOOLEAN DEFAULT false',
+    source: 'VARCHAR(100)',
+  },
+
+  /**
    * QR Codes table for storing QR code configurations
    *
    * Contains customization options for QR codes linked to URLs
