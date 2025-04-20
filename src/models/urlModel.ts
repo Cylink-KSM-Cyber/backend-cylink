@@ -188,6 +188,15 @@ exports.searchUrls = async (
   const countResult = await pool.query(countQuery, [userId, likePattern]);
   const total = parseInt(countResult.rows[0].count, 10);
 
+  // If no results found, return empty array with zero total
+  if (total === 0) {
+    return {
+      results: [],
+      total: 0,
+      highlights: {},
+    };
+  }
+
   // Execute search query
   const offset = (page - 1) * limit;
   const searchResult = await pool.query(searchQuery, [

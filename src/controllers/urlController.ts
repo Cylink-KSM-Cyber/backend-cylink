@@ -114,9 +114,36 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
         // Calculate response time
         const responseTime = Date.now() - startTime;
 
-        // If no URLs found, return 204 status
+        // Log the search completion
+        logger.info(
+          `Search for "${searchTerm}" completed for user ${userId} in ${responseTime}ms with ${total} results`,
+        );
+
+        // If no URLs found, return 200 status with empty array and appropriate message
         if (!results || results.length === 0) {
-          return sendResponse(res, 204, `No URLs found matching "${searchTerm}"`);
+          // Construct search info metadata
+          const searchInfo: SearchInfo = {
+            term: searchTerm,
+            fields_searched: ['original_url', 'short_code', 'title'],
+            total_matches: 0,
+          };
+
+          // Construct pagination object
+          const pagination: PaginationData = {
+            total: 0,
+            page,
+            limit,
+            total_pages: 0,
+          };
+
+          return sendResponse(
+            res,
+            200,
+            `No URLs found matching "${searchTerm}"`,
+            [],
+            pagination,
+            searchInfo,
+          );
         }
 
         // For each URL, get the click count and format the response
@@ -182,7 +209,20 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
         );
       } catch (searchError) {
         logger.error('Search error:', searchError);
-        return sendResponse(res, 500, 'Failed to search URLs');
+
+        // Check if this is a database-related error
+        if (searchError instanceof Error) {
+          // Log the specific error for debugging purposes
+          logger.error(`Database search error: ${searchError.message}`);
+
+          // For expected database issues, provide a cleaner message
+          if (searchError.message.includes('relation') || searchError.message.includes('column')) {
+            return sendResponse(res, 500, 'Database configuration error. Please contact support.');
+          }
+        }
+
+        // For other unexpected errors during search
+        return sendResponse(res, 500, 'An error occurred while searching URLs. Please try again.');
       }
     }
 
