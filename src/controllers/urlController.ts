@@ -1147,6 +1147,7 @@ exports.getUrlsWithStatusFilter = async (req: Request, res: Response): Promise<R
     const sortBy = (req.query.sortBy as string) || 'created_at';
     const sortOrder = (req.query.sortOrder as string) || 'desc';
     const status = (req.query.status as string) || 'all';
+    const searchTerm = (req.query.search as string) || '';
 
     // Validate page and limit
     if (page < 1) {
@@ -1165,6 +1166,81 @@ exports.getUrlsWithStatusFilter = async (req: Request, res: Response): Promise<R
       ]);
     }
 
+    // If search term is provided and valid, use both search and status filtering
+    if (searchTerm && searchTerm.length > 0) {
+      // Minimum search term length validation
+      if (searchTerm.length < 2) {
+        return sendResponse(res, 400, 'Search term must be at least 2 characters long');
+      }
+
+      // Measure response time for performance monitoring
+      const startTime = Date.now();
+
+      try {
+        // Call updated service function that handles both search and status filtering
+        const { urls, pagination, filter_info, search_info } =
+          await urlService.getUrlsWithStatusAndSearch(userId, {
+            status,
+            search: searchTerm,
+            page,
+            limit,
+            sortBy,
+            sortOrder,
+          });
+
+        // Calculate response time
+        const responseTime = Date.now() - startTime;
+
+        // Log the completion
+        logger.info(
+          `URLs filtered by status '${status}' and search term '${searchTerm}' for user ${userId} in ${responseTime}ms with ${urls.length} results`,
+        );
+
+        // If no URLs found, return 200 status with empty array and appropriate message
+        if (!urls || urls.length === 0) {
+          return sendResponse(
+            res,
+            200,
+            `No URLs match the specified filter and search term "${searchTerm}"`,
+            [],
+            pagination,
+            search_info,
+            null,
+            filter_info,
+          );
+        }
+
+        // Return the response with filtered and searched URLs
+        return sendResponse(
+          res,
+          200,
+          'URLs filtered and searched successfully',
+          urls,
+          pagination,
+          search_info,
+          null,
+          filter_info,
+        );
+      } catch (searchError) {
+        logger.error('Search error:', searchError);
+
+        // Check if this is a database-related error
+        if (searchError instanceof Error) {
+          // Log the specific error for debugging purposes
+          logger.error(`Database search error: ${searchError.message}`);
+
+          // For expected database issues, provide a cleaner message
+          if (searchError.message.includes('relation') || searchError.message.includes('column')) {
+            return sendResponse(res, 500, 'Database configuration error. Please contact support.');
+          }
+        }
+
+        // For other unexpected errors during search
+        return sendResponse(res, 500, 'An error occurred while searching URLs. Please try again.');
+      }
+    }
+
+    // If no search term, just use status filtering
     // Measure response time for performance monitoring
     const startTime = Date.now();
 

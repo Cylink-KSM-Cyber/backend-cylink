@@ -72,7 +72,7 @@ const fields = require('../validators/urlValidator');
  * @swagger
  * /api/v1/urls:
  *   get:
- *     summary: Get all URLs for authenticated user
+ *     summary: Get all URLs for authenticated user with optional filtering by status and search
  *     tags: [URLs]
  *     security:
  *       - BearerAuth: []
@@ -88,7 +88,7 @@ const fields = require('../validators/urlValidator');
  *         name: search
  *         schema:
  *           type: string
- *         description: Text to search in original URLs or short codes (minimum 2 characters)
+ *         description: Text to search in original URLs, short codes, or titles (minimum 2 characters)
  *       - in: query
  *         name: page
  *         schema:
@@ -117,7 +117,7 @@ const fields = require('../validators/urlValidator');
  *         description: Sort order
  *     responses:
  *       200:
- *         description: A list of URLs with pagination and filtering information
+ *         description: A list of URLs with pagination, filtering, and search information
  *         content:
  *           application/json:
  *             schema:
@@ -144,6 +144,25 @@ const fields = require('../validators/urlValidator');
  *                             type: integer
  *                             example: 30
  *                             nullable: true
+ *                           matches:
+ *                             type: object
+ *                             properties:
+ *                               original_url:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                                 example: ["<em>example</em>.com"]
+ *                                 nullable: true
+ *                               short_code:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                                 nullable: true
+ *                               title:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                                 nullable: true
  *                 pagination:
  *                   type: object
  *                   properties:
@@ -171,6 +190,20 @@ const fields = require('../validators/urlValidator');
  *                     total_all:
  *                       type: integer
  *                       example: 35
+ *                 search_info:
+ *                   type: object
+ *                   properties:
+ *                     term:
+ *                       type: string
+ *                       example: "example"
+ *                     fields_searched:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       example: ["original_url", "short_code", "title"]
+ *                     total_matches:
+ *                       type: integer
+ *                       example: 24
  *       204:
  *         description: No URLs found
  *       400:

@@ -132,7 +132,7 @@ This API documentation provides numerous benefits for both internal developers a
 
 ## URLs API Endpoints
 
-### Get All URLs for an Authenticated User
+### Get URLs with Filtering and Search
 
 ```
 GET /api/v1/urls
@@ -142,12 +142,12 @@ GET /api/v1/urls
 
 **Query Parameters**:
 
+- `status` (optional): Filter by URL status - 'all', 'active', 'inactive', 'expired', 'expiring-soon' (default: 'all')
 - `search` (optional): Search term to filter results
 - `page` (optional): Page number for pagination (default: 1)
 - `limit` (optional): Number of items per page (default: 10)
 - `sortBy` (optional): Field to sort by - 'created_at', 'clicks', 'title', 'relevance' (default: 'created_at')
 - `sortOrder` (optional): Order of sorting - 'asc', 'desc' (default: 'desc')
-- `status` (optional): Filter by URL status - 'all', 'active', 'inactive', 'expired', 'expiring-soon' (default: 'all')
 
 **Response**:
 
@@ -186,7 +186,7 @@ GET /api/v1/urls
 }
 ```
 
-When filtering by `status`:
+**Status Filtering Options**:
 
 - `all`: Returns all URLs (default)
 - `active`: Only returns URLs that are currently active (not expired and is_active=true)
@@ -194,12 +194,49 @@ When filtering by `status`:
 - `expired`: Only returns URLs that have passed their expiry date
 - `expiring-soon`: Only returns URLs that will expire within the next 7 days
 
-If no URLs match the specified filter:
+**Combined Search and Status Filtering**:
+You can combine the `status` and `search` parameters to find URLs that match both criteria. For example:
+
+```
+GET /api/v1/urls?status=active&search=example
+```
+
+This will return only active URLs that contain "example" in their original URL, short code, or title.
+
+When both search and status filtering are used, the response will include both `filter_info` and `search_info`:
 
 ```json
 {
   "status": 200,
-  "message": "No URLs match the specified filter",
+  "message": "URLs filtered and searched successfully",
+  "data": [
+    // Filtered and searched URLs...
+  ],
+  "pagination": {
+    "total": 5,
+    "page": 1,
+    "limit": 10,
+    "total_pages": 1
+  },
+  "filter_info": {
+    "status": "active",
+    "total_matching": 5,
+    "total_all": 35
+  },
+  "search_info": {
+    "term": "example",
+    "fields_searched": ["original_url", "short_code", "title"],
+    "total_matches": 8
+  }
+}
+```
+
+If no URLs match the specified filter and search:
+
+```json
+{
+  "status": 200,
+  "message": "No URLs match the specified filter and search term \"example\"",
   "data": [],
   "pagination": {
     "total": 0,
@@ -211,6 +248,11 @@ If no URLs match the specified filter:
     "status": "expired",
     "total_matching": 0,
     "total_all": 35
+  },
+  "search_info": {
+    "term": "example",
+    "fields_searched": ["original_url", "short_code", "title"],
+    "total_matches": 8
   }
 }
 ```
