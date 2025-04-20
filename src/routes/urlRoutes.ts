@@ -78,6 +78,13 @@ const fields = require('../validators/urlValidator');
  *       - BearerAuth: []
  *     parameters:
  *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [all, active, inactive, expired, expiring-soon]
+ *           default: all
+ *         description: Filter URLs by their status
+ *       - in: query
  *         name: search
  *         schema:
  *           type: string
@@ -110,7 +117,7 @@ const fields = require('../validators/urlValidator');
  *         description: Sort order
  *     responses:
  *       200:
- *         description: A list of URLs with pagination
+ *         description: A list of URLs with pagination and filtering information
  *         content:
  *           application/json:
  *             schema:
@@ -121,7 +128,7 @@ const fields = require('../validators/urlValidator');
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: Successfully retrieved all URLs
+ *                   example: URLs filtered successfully
  *                 data:
  *                   type: array
  *                   items:
@@ -129,31 +136,20 @@ const fields = require('../validators/urlValidator');
  *                       - $ref: '#/components/schemas/Url'
  *                       - type: object
  *                         properties:
- *                           matches:
- *                             type: object
- *                             properties:
- *                               original_url:
- *                                 type: array
- *                                 items:
- *                                   type: string
- *                                 example: ["<em>example</em>.com"]
- *                                 nullable: true
- *                               short_code:
- *                                 type: array
- *                                 items:
- *                                   type: string
- *                                 nullable: true
- *                               title:
- *                                 type: array
- *                                 items:
- *                                   type: string
- *                                 nullable: true
+ *                           status:
+ *                             type: string
+ *                             enum: [active, inactive, expired, expiring-soon]
+ *                             example: active
+ *                           days_until_expiry:
+ *                             type: integer
+ *                             example: 30
+ *                             nullable: true
  *                 pagination:
  *                   type: object
  *                   properties:
  *                     total:
  *                       type: integer
- *                       example: 57
+ *                       example: 24
  *                     page:
  *                       type: integer
  *                       example: 1
@@ -162,25 +158,23 @@ const fields = require('../validators/urlValidator');
  *                       example: 10
  *                     total_pages:
  *                       type: integer
- *                       example: 6
- *                 search_info:
+ *                       example: 3
+ *                 filter_info:
  *                   type: object
  *                   properties:
- *                     term:
+ *                     status:
  *                       type: string
- *                       example: "example"
- *                     fields_searched:
- *                       type: array
- *                       items:
- *                         type: string
- *                       example: ["original_url", "short_code", "title"]
- *                     total_matches:
+ *                       example: "active"
+ *                     total_matching:
  *                       type: integer
  *                       example: 24
+ *                     total_all:
+ *                       type: integer
+ *                       example: 35
  *       204:
  *         description: No URLs found
  *       400:
- *         description: Invalid search parameters
+ *         description: Invalid parameters
  *         content:
  *           application/json:
  *             schema:
@@ -191,7 +185,12 @@ const fields = require('../validators/urlValidator');
  *                   example: 400
  *                 message:
  *                   type: string
- *                   example: "Search term must be at least 2 characters long"
+ *                   example: "Invalid status parameter"
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["Status must be one of: all, active, inactive, expired, expiring-soon"]
  *       401:
  *         description: Unauthorized, authentication required
  *       500:
@@ -201,7 +200,7 @@ router.get(
   '/',
   accessToken,
   validate({ query: fields.getUrls, preserveBodyProps: true }),
-  urlController.getAllUrls,
+  urlController.getUrlsWithStatusFilter,
 );
 
 /**

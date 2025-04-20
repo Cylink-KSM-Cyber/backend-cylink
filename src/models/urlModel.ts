@@ -377,3 +377,105 @@ exports.getUrlById = async (id: number, includeDeleted = false) => {
 
   return result.rows[0] || null;
 };
+
+/**
+ * Interface for URL filtering and pagination options
+ */
+interface UrlFilterOptions {
+  status?: 'all' | 'active' | 'inactive' | 'expired' | 'expiring-soon';
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+/**
+ * Get all URLs created by a specific user with optional status filtering
+ *
+ * @param {number} userId - The user ID
+ * @param {UrlFilterOptions} options - Query options including pagination, sorting, and filtering
+ * @param {string} [options.status='all'] - Filter by URL status (all, active, inactive, expired, expiring-soon)
+ * @param {number} [options.page=1] - Page number for pagination
+ * @param {number} [options.limit=10] - Number of items per page
+ * @param {string} [options.sortBy='created_at'] - Field to sort by
+ * @param {string} [options.sortOrder='desc'] - Sort order (asc or desc)
+ * @returns {Promise<{urls: any[], total: number, total_all: number}>} URLs, total matching count, and total overall count
+ */
+exports.getUrlsByUserWithFilters = async (userId: number, options: UrlFilterOptions = {}) => {
+  const {
+    status = 'all',
+    page = 1,
+    limit = 10,
+    sortBy = 'created_at',
+    sortOrder = 'desc',
+  } = options;
+
+  // Calculate offset for pagination
+  const offset = (page - 1) * limit;
+
+  // Base where clause: user_id and not deleted
+  let whereClause = 'user_id = $1 AND deleted_at IS NULL';
+  const params: (number | string)[] = [userId];
+  let paramIndex = 2; // Start from $2 since $1 is userId
+
+  // Add status filtering
+  if (status !== 'all') {
+    if (status === 'active') {
+      // Active URLs: not expired and is_active = true
+      whereClause += ` AND is_active = TRUE AND (expiry_date IS NULL OR expiry_date > NOW())`;
+    } else if (status === 'inactive') {
+      // Inactive URLs: is_active = false
+      whereClause += ` AND is_active = FALSE`;
+    } else if (status === 'expired') {
+      // Expired URLs: expiry_date < current date
+      whereClause += ` AND expiry_date IS NOT NULL AND expiry_date < NOW()`;
+    } else if (status === 'expiring-soon') {
+      // Expiring soon: expires within the next 7 days, not yet expired
+      whereClause += ` AND expiry_date IS NOT NULL AND expiry_date > NOW() AND expiry_date < NOW() + INTERVAL '7 days'`;
+    }
+  }
+
+  // Get total count of all URLs for the user
+  const totalAllQuery = `SELECT COUNT(*) FROM urls WHERE user_id = $1 AND deleted_at IS NULL`;
+  const totalAllResult = await pool.query(totalAllQuery, [userId]);
+  const totalAll = parseInt(totalAllResult.rows[0].count, 10);
+
+  // Get total count of filtered URLs
+  const totalQuery = `SELECT COUNT(*) FROM urls WHERE ${whereClause}`;
+  const totalResult = await pool.query(totalQuery, params);
+  const total = parseInt(totalResult.rows[0].count, 10);
+
+  // Determine sort column and order
+  const validColumns: Record<string, string> = {
+    created_at: 'created_at',
+    title: 'title',
+    clicks: 'clicks', // Will need to handle this separately
+  };
+
+  let orderClause = '';
+  if (sortBy === 'clicks') {
+    // This is a placeholder that will be handled by application logic since clicks are not in the urls table
+    orderClause = `ORDER BY created_at ${sortOrder === 'asc' ? 'ASC' : 'DESC'}`;
+  } else {
+    const column = validColumns[sortBy] || 'created_at';
+    orderClause = `ORDER BY ${column} ${sortOrder === 'asc' ? 'ASC' : 'DESC'}`;
+  }
+
+  // Get filtered URLs with pagination
+  const urlsQuery = `
+    SELECT * FROM urls 
+    WHERE ${whereClause}
+    ${orderClause}
+    LIMIT $${paramIndex++} OFFSET $${paramIndex++}
+  `;
+
+  params.push(limit, offset);
+
+  const urlsResult = await pool.query(urlsQuery, params);
+
+  return {
+    urls: urlsResult.rows,
+    total,
+    total_all: totalAll,
+  };
+};

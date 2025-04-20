@@ -1124,3 +1124,102 @@ exports.getTotalClicksAnalytics = async (req: Request, res: Response): Promise<R
     }
   }
 };
+
+/**
+ * Get URLs for an authenticated user with status filtering
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Response with filtered URLs or error
+ */
+exports.getUrlsWithStatusFilter = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    // Get user ID from authentication token
+    const userId = req.body.id;
+
+    if (!userId) {
+      return sendResponse(res, 401, 'Unauthorized: No user ID');
+    }
+
+    // Parse query parameters for filtering, pagination, and sorting
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const sortBy = (req.query.sortBy as string) || 'created_at';
+    const sortOrder = (req.query.sortOrder as string) || 'desc';
+    const status = (req.query.status as string) || 'all';
+
+    // Validate page and limit
+    if (page < 1) {
+      return sendResponse(res, 400, 'Invalid page number, must be greater than 0');
+    }
+
+    if (limit < 1 || limit > 100) {
+      return sendResponse(res, 400, 'Invalid limit, must be between 1 and 100');
+    }
+
+    // Validate status parameter
+    const validStatuses = ['all', 'active', 'inactive', 'expired', 'expiring-soon'];
+    if (!validStatuses.includes(status)) {
+      return sendResponse(res, 400, 'Invalid status parameter', null, null, null, [
+        `Status must be one of: ${validStatuses.join(', ')}`,
+      ]);
+    }
+
+    // Measure response time for performance monitoring
+    const startTime = Date.now();
+
+    // Get URLs with status filtering
+    const { urls, pagination, filter_info } = await urlService.getUrlsWithStatusFilter(userId, {
+      status,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    });
+
+    // Calculate response time
+    const responseTime = Date.now() - startTime;
+
+    // Log the filtering completion
+    logger.info(
+      `URLs filtered by status '${status}' for user ${userId} in ${responseTime}ms with ${urls.length} results`,
+    );
+
+    // If no URLs found, return 200 status with empty array and appropriate message
+    if (!urls || urls.length === 0) {
+      return sendResponse(
+        res,
+        200,
+        'No URLs match the specified filter',
+        [],
+        pagination,
+        null,
+        null,
+        filter_info,
+      );
+    }
+
+    // Return the response with filtered URLs
+    return sendResponse(
+      res,
+      200,
+      'URLs filtered successfully',
+      urls,
+      pagination,
+      null,
+      null,
+      filter_info,
+    );
+  } catch (error) {
+    // Handle expected validation errors
+    if (error instanceof Error && error.message.includes('Invalid status parameter')) {
+      return sendResponse(res, 400, 'Invalid status parameter', null, null, null, [
+        'Status must be one of: all, active, inactive, expired, expiring-soon',
+      ]);
+    }
+
+    // Log and return unexpected errors
+    logger.error('Error filtering URLs by status:', error);
+    return sendResponse(res, 500, 'An error occurred while filtering URLs');
+  }
+};
