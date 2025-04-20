@@ -332,3 +332,18 @@ TSError: ⨯ Unable to compile TypeScript:
     at Module.load (node:internal/modules/cjs/loader:1289:32)
     at Function._load (node:internal/modules/cjs/loader:1108:12)
     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+[2025-04-20 11:13:41] INFO: User 1 retrieved CTR statistics for URL 1 
+[2025-04-20 11:13:53] INFO: User 1 retrieved CTR statistics for URL 12 
+[2025-04-20 11:14:03] INFO: User 1 retrieved CTR leaderboard 
+[2025-04-20 11:14:20] INFO: User 1 retrieved CTR leaderboard 
+[2025-04-20 11:14:33] INFO: User 1 retrieved CTR statistics for URL 123 
+[2025-04-20 11:14:50] INFO: User 1 retrieved CTR leaderboard 
+[2025-04-20 11:15:03] INFO: Associated goal ID 4 with URL ID 101 
+[2025-04-20 11:15:03] INFO: Successfully created authenticated shortened URL: http://localhost:5000/cyberupnvj for user 1 
+[2025-04-20 11:15:32] INFO: Redirecting cyberupnvj to https://www.instagram.com/cyberupnvj/ (302) 
+[2025-04-20 11:15:32] INFO: Found conversion goal ID 4 for URL ID 101 
+[2025-04-20 11:15:32] INFO: Conversion tracked successfully: ID=61, tracking_id=c_eyJjbGlja0lkIjoxNTEsInVybElkIjoxMDF9_eefb6bb973 
+[2025-04-20 11:21:12] INFO: Redirecting cyberupnvj to https://www.instagram.com/cyberupnvj/ (302) 
+[2025-04-20 11:21:12] INFO: Recorded impression for URL 101 
+[2025-04-20 11:21:12] INFO: Found conversion goal ID 4 for URL ID 101 
+[2025-04-20 11:21:12] INFO: Conversion tracked successfully: ID=62, tracking_id=c_eyJjbGlja0lkIjoxNTIsInVybElkIjoxMDF9_f3fe0125c2 
