@@ -837,6 +837,87 @@ router.get('/:url_id/qr-code', accessToken, getQrCodeByUrlId);
  *     responses:
  *       200:
  *         description: URL CTR statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: URL CTR statistics retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     overall:
+ *                       type: object
+ *                       properties:
+ *                         total_impressions:
+ *                           type: string
+ *                           example: "115"
+ *                         total_clicks:
+ *                           type: string
+ *                           example: "43"
+ *                         ctr:
+ *                           type: string
+ *                           example: "37.39"
+ *                         unique_impressions:
+ *                           type: string
+ *                           example: "78"
+ *                         unique_ctr:
+ *                           type: string
+ *                           example: "55.13"
+ *                         analysis_period:
+ *                           type: object
+ *                           properties:
+ *                             start_date:
+ *                               type: string
+ *                               format: date
+ *                               example: "2025-03-21"
+ *                             end_date:
+ *                               type: string
+ *                               format: date
+ *                               example: "2025-04-20"
+ *                             days:
+ *                               type: integer
+ *                               example: 30
+ *                     top_performing_days:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           date:
+ *                             type: string
+ *                             format: date
+ *                             example: "2025-04-09"
+ *                           impressions:
+ *                             type: string
+ *                             example: "5"
+ *                           clicks:
+ *                             type: string
+ *                             example: "4"
+ *                           ctr:
+ *                             type: string
+ *                             example: "80.00"
+ *                     ctr_by_source:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           source:
+ *                             type: string
+ *                             example: "direct"
+ *                           impressions:
+ *                             type: string
+ *                             example: "11"
+ *                           clicks:
+ *                             type: string
+ *                             example: "13"
+ *                           ctr:
+ *                             type: string
+ *                             example: "118.18"
  *       400:
  *         description: Invalid URL ID
  *       401:

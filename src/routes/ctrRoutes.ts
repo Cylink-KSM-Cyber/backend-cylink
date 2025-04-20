@@ -66,7 +66,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
  *               type: object
  *               properties:
  *                 status:
- *                   type: number
+ *                   type: integer
  *                   example: 200
  *                 message:
  *                   type: string
@@ -76,19 +76,71 @@ const authMiddleware = require('../middlewares/authMiddleware');
  *                   properties:
  *                     overall:
  *                       type: object
- *                       description: Overall CTR statistics
- *                     comparison:
- *                       type: object
- *                       description: Comparison with previous period
- *                     time_series:
- *                       type: object
- *                       description: Time series data
+ *                       properties:
+ *                         total_impressions:
+ *                           type: string
+ *                           example: "115"
+ *                         total_clicks:
+ *                           type: string
+ *                           example: "43"
+ *                         ctr:
+ *                           type: string
+ *                           example: "37.39"
+ *                         unique_impressions:
+ *                           type: string
+ *                           example: "78"
+ *                         unique_ctr:
+ *                           type: string
+ *                           example: "55.13"
+ *                         analysis_period:
+ *                           type: object
+ *                           properties:
+ *                             start_date:
+ *                               type: string
+ *                               format: date
+ *                               example: "2025-03-21"
+ *                             end_date:
+ *                               type: string
+ *                               format: date
+ *                               example: "2025-04-20"
+ *                             days:
+ *                               type: integer
+ *                               example: 30
  *                     top_performing_days:
  *                       type: array
- *                       description: Top performing days
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           date:
+ *                             type: string
+ *                             format: date
+ *                             example: "2025-04-09"
+ *                           impressions:
+ *                             type: string
+ *                             example: "5"
+ *                           clicks:
+ *                             type: string
+ *                             example: "4"
+ *                           ctr:
+ *                             type: string
+ *                             example: "80.00"
  *                     ctr_by_source:
  *                       type: array
- *                       description: CTR statistics by source
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           source:
+ *                             type: string
+ *                             example: "direct"
+ *                           impressions:
+ *                             type: string
+ *                             example: "11"
+ *                           clicks:
+ *                             type: string
+ *                             example: "13"
+ *                           ctr:
+ *                             type: string
+ *                             example: "118.18"
  *       401:
  *         description: Unauthorized - missing or invalid token
  *       500:
@@ -242,7 +294,7 @@ router.get('/stats', authMiddleware.accessToken, ctrController.getOverallCTRStat
  *               type: object
  *               properties:
  *                 status:
- *                   type: number
+ *                   type: integer
  *                   example: 200
  *                 message:
  *                   type: string
@@ -256,9 +308,11 @@ router.get('/stats', authMiddleware.accessToken, ctrController.getOverallCTRStat
  *                         start_date:
  *                           type: string
  *                           format: date
+ *                           example: "2025-03-21"
  *                         end_date:
  *                           type: string
  *                           format: date
+ *                           example: "2025-04-20"
  *                     urls:
  *                       type: array
  *                       items:
@@ -266,18 +320,25 @@ router.get('/stats', authMiddleware.accessToken, ctrController.getOverallCTRStat
  *                         properties:
  *                           id:
  *                             type: integer
+ *                             example: 123
  *                           short_code:
  *                             type: string
+ *                             example: "abc123"
  *                           title:
  *                             type: string
+ *                             example: "Example Website"
  *                           impressions:
- *                             type: integer
+ *                             type: string
+ *                             example: "115"
  *                           clicks:
- *                             type: integer
+ *                             type: string
+ *                             example: "43"
  *                           ctr:
- *                             type: number
+ *                             type: string
+ *                             example: "37.39"
  *                           rank:
  *                             type: integer
+ *                             example: 1
  *       401:
  *         description: Unauthorized - missing or invalid token
  *       500:

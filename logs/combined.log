@@ -347,3 +347,10 @@ TSError: ⨯ Unable to compile TypeScript:
 [2025-04-20 11:21:12] INFO: Recorded impression for URL 101 
 [2025-04-20 11:21:12] INFO: Found conversion goal ID 4 for URL ID 101 
 [2025-04-20 11:21:12] INFO: Conversion tracked successfully: ID=62, tracking_id=c_eyJjbGlja0lkIjoxNTIsInVybElkIjoxMDF9_f3fe0125c2 
+[2025-04-20 12:58:15] INFO: URL not found or inactive for short code: favicon.ico 
+[2025-04-20 12:58:15] INFO: URL not found for short code: favicon.ico 
+[2025-04-20 13:01:53] INFO: Successfully logged in for admin@cylink.id 
+[2025-04-20 13:02:12] INFO: User 1 retrieved overall CTR statistics 
+[2025-04-20 13:07:27] INFO: User 1 retrieved CTR statistics for URL 1 
+[2025-04-20 13:07:57] INFO: User 1 retrieved overall CTR statistics 
+[2025-04-20 13:08:23] INFO: User 1 retrieved overall CTR statistics 
