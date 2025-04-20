@@ -78,6 +78,11 @@ const fields = require('../validators/urlValidator');
  *       - BearerAuth: []
  *     parameters:
  *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Text to search in original URLs or short codes (minimum 2 characters)
+ *       - in: query
  *         name: page
  *         schema:
  *           type: integer
@@ -93,9 +98,9 @@ const fields = require('../validators/urlValidator');
  *         name: sortBy
  *         schema:
  *           type: string
- *           enum: [created_at, clicks, title]
+ *           enum: [created_at, clicks, title, relevance]
  *           default: created_at
- *         description: Field to sort by
+ *         description: Field to sort by (defaults to 'relevance' when search parameter is provided)
  *       - in: query
  *         name: sortOrder
  *         schema:
@@ -118,27 +123,75 @@ const fields = require('../validators/urlValidator');
  *                   type: string
  *                   example: Successfully retrieved all URLs
  *                 data:
+ *                   type: array
+ *                   items:
+ *                     allOf:
+ *                       - $ref: '#/components/schemas/Url'
+ *                       - type: object
+ *                         properties:
+ *                           matches:
+ *                             type: object
+ *                             properties:
+ *                               original_url:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                                 example: ["<em>example</em>.com"]
+ *                                 nullable: true
+ *                               short_code:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                                 nullable: true
+ *                               title:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                                 nullable: true
+ *                 pagination:
  *                   type: object
  *                   properties:
- *                     urls:
+ *                     total:
+ *                       type: integer
+ *                       example: 57
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     total_pages:
+ *                       type: integer
+ *                       example: 6
+ *                 search_info:
+ *                   type: object
+ *                   properties:
+ *                     term:
+ *                       type: string
+ *                       example: "example"
+ *                     fields_searched:
  *                       type: array
  *                       items:
- *                         $ref: '#/components/schemas/Url'
- *                     pagination:
- *                       type: object
- *                       properties:
- *                         total:
- *                           type: integer
- *                           example: 57
- *                         page:
- *                           type: integer
- *                           example: 1
- *                         limit:
- *                           type: integer
- *                           example: 10
- *                         total_pages:
- *                           type: integer
- *                           example: 6
+ *                         type: string
+ *                       example: ["original_url", "short_code", "title"]
+ *                     total_matches:
+ *                       type: integer
+ *                       example: 24
+ *       204:
+ *         description: No URLs found
+ *       400:
+ *         description: Invalid search parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: "Search term must be at least 2 characters long"
  *       401:
  *         description: Unauthorized, authentication required
  *       500:

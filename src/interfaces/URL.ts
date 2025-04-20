@@ -1,0 +1,115 @@
+/**
+ * URL Interfaces
+ *
+ * Defines interfaces for URL-related operations and data structures
+ * @module interfaces/URL
+ */
+
+/**
+ * URL Database Entity interface
+ */
+export interface UrlEntity {
+  id: number;
+  user_id: number | null;
+  original_url: string;
+  short_code: string;
+  title: string | null;
+  expiry_date: Date | null;
+  is_active: boolean;
+  has_password: boolean;
+  password_hash: string | null;
+  redirect_type: string;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at: Date | null;
+}
+
+/**
+ * URL with click statistics interface
+ */
+export interface UrlWithClicks {
+  id: number;
+  original_url: string;
+  short_code: string;
+  short_url: string;
+  title: string | null;
+  clicks: number;
+  created_at: string;
+  expiry_date: string | null;
+  is_active: boolean;
+}
+
+/**
+ * Pagination interface
+ */
+export interface PaginationData {
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+/**
+ * URL Search Query Parameters interface
+ */
+export interface UrlSearchParams {
+  search?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: 'relevance' | 'created_at' | 'clicks' | 'title';
+  sortOrder?: 'asc' | 'desc';
+}
+
+/**
+ * Match highlights for search results
+ */
+export interface MatchHighlights {
+  original_url: string[] | null;
+  short_code: string[] | null;
+  title?: string[] | null;
+}
+
+/**
+ * URL with search highlights interface
+ */
+export interface UrlWithSearchHighlights extends UrlWithClicks {
+  matches?: MatchHighlights;
+}
+
+/**
+ * Search information for response metadata
+ */
+export interface SearchInfo {
+  term: string;
+  fields_searched: string[];
+  total_matches: number;
+}
+
+/**
+ * URL Create Data interface
+ */
+export interface UrlCreateData {
+  user_id?: number;
+  original_url: string;
+  short_code: string;
+  title?: string;
+  expiry_date?: Date;
+  is_active?: boolean;
+  has_password?: boolean;
+  password_hash?: string;
+  redirect_type?: string;
+}
+
+/**
+ * URL Update Data interface
+ */
+export interface UrlUpdateData {
+  original_url?: string;
+  short_code?: string;
+  title?: string;
+  expiry_date?: Date;
+  is_active?: boolean;
+  has_password?: boolean;
+  password_hash?: string;
+  redirect_type?: string;
+}
