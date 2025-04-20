@@ -126,103 +126,130 @@ exports.searchUrls = async (
   sortBy: string = 'relevance',
   sortOrder: string = 'desc',
 ) => {
-  // Sanitize the search term to prevent SQL injection
-  const sanitizedTerm = searchTerm.replace(/[%_\\]/g, '\\$&');
+  try {
+    // Sanitize the search term to prevent SQL injection
+    const sanitizedTerm = searchTerm.replace(/[%_\\]/g, '\\$&');
 
-  // Create the LIKE pattern with case-insensitive search
-  const likePattern = `%${sanitizedTerm}%`;
+    // Create the LIKE pattern with case-insensitive search
+    const likePattern = `%${sanitizedTerm}%`;
 
-  // Base query for search
-  const baseQuery = `
-    FROM urls
-    WHERE user_id = $1
-      AND deleted_at IS NULL
-      AND (
-        LOWER(original_url) LIKE LOWER($2) OR
-        LOWER(short_code) LIKE LOWER($2) OR
-        (title IS NOT NULL AND LOWER(title) LIKE LOWER($2))
-      )
-  `;
-
-  // Count query to get total results
-  const countQuery = `SELECT COUNT(*) ${baseQuery}`;
-
-  // Build the search query with different sorting options
-  let searchQuery = `
-    SELECT id, original_url, short_code, title, expiry_date, is_active, created_at, updated_at
-    ${baseQuery}
-  `;
-
-  // Apply sorting based on sortBy parameter
-  if (sortBy === 'relevance') {
-    // For relevance sorting, prioritize exact matches, then beginning matches, then contains matches
-    searchQuery += `
-      ORDER BY
-        CASE
-          WHEN LOWER(short_code) = LOWER($3) THEN 0
-          WHEN LOWER(original_url) = LOWER($3) THEN 1
-          WHEN LOWER(title) = LOWER($3) THEN 2
-          WHEN LOWER(short_code) LIKE LOWER($3 || '%') THEN 3
-          WHEN LOWER(original_url) LIKE LOWER($3 || '%') THEN 4
-          WHEN LOWER(title) LIKE LOWER($3 || '%') THEN 5
-          ELSE 6
-        END ${sortOrder === 'asc' ? 'ASC' : 'DESC'},
-        created_at DESC
+    // Base query for search
+    const baseQuery = `
+      FROM urls
+      WHERE user_id = $1
+        AND deleted_at IS NULL
+        AND (
+          LOWER(original_url) LIKE LOWER($2) OR
+          LOWER(short_code) LIKE LOWER($2) OR
+          (title IS NOT NULL AND LOWER(title) LIKE LOWER($2))
+        )
     `;
-  } else {
-    // Apply other sorting options
-    const validColumns: Record<string, string> = {
-      created_at: 'created_at',
-      title: 'title',
-      clicks: 'clicks',
-    };
 
-    const column = validColumns[sortBy] || 'created_at';
-    searchQuery += `ORDER BY ${column} ${sortOrder === 'asc' ? 'ASC' : 'DESC'}`;
-  }
+    // Count query to get total results
+    const countQuery = `SELECT COUNT(*) ${baseQuery}`;
 
-  // Apply pagination
-  searchQuery += ` LIMIT $4 OFFSET $5`;
+    // Build the search query with different sorting options
+    let searchQuery = `
+      SELECT id, original_url, short_code, title, expiry_date, is_active, created_at, updated_at
+      ${baseQuery}
+    `;
 
-  // Execute count query
-  const countResult = await pool.query(countQuery, [userId, likePattern]);
-  const total = parseInt(countResult.rows[0].count, 10);
+    // Apply sorting based on sortBy parameter
+    if (sortBy === 'relevance') {
+      // Use string literals instead of parameters for the CASE expression to avoid type issues
+      // We've already sanitized the term to prevent SQL injection
+      searchQuery += `
+        ORDER BY
+          CASE
+            WHEN LOWER(short_code) = LOWER('${sanitizedTerm}') THEN 0
+            WHEN LOWER(original_url) = LOWER('${sanitizedTerm}') THEN 1
+            WHEN LOWER(title) = LOWER('${sanitizedTerm}') THEN 2
+            WHEN LOWER(short_code) LIKE LOWER('${sanitizedTerm}%') THEN 3
+            WHEN LOWER(original_url) LIKE LOWER('${sanitizedTerm}%') THEN 4
+            WHEN LOWER(title) LIKE LOWER('${sanitizedTerm}%') THEN 5
+            ELSE 6
+          END ${sortOrder === 'asc' ? 'ASC' : 'DESC'},
+          created_at DESC
+      `;
+    } else {
+      // Apply other sorting options
+      const validColumns: Record<string, string> = {
+        created_at: 'created_at',
+        title: 'title',
+      };
 
-  // If no results found, return empty array with zero total
-  if (total === 0) {
+      const column = validColumns[sortBy] || 'created_at';
+      searchQuery += `ORDER BY ${column} ${sortOrder === 'asc' ? 'ASC' : 'DESC'}`;
+    }
+
+    // Apply pagination
+    searchQuery += ` LIMIT $3 OFFSET $4`;
+
+    // Execute count query
+    const countResult = await pool.query(countQuery, [userId, likePattern]);
+    const total = parseInt(countResult.rows[0].count, 10);
+
+    // If no results found, return empty array with zero total
+    if (total === 0) {
+      return {
+        results: [],
+        total: 0,
+        highlights: {},
+      };
+    }
+
+    // Execute search query
+    const offset = (page - 1) * limit;
+
+    // Now we only need 4 parameters: userId, likePattern, limit, offset
+    const searchResult = await pool.query(searchQuery, [userId, likePattern, limit, offset]);
+
+    // Generate highlights for matched content
+    const highlights: UrlHighlights = {};
+
+    searchResult.rows.forEach((url: any) => {
+      highlights[url.id] = {
+        original_url: highlightMatches(url.original_url, sanitizedTerm),
+        short_code: highlightMatches(url.short_code, sanitizedTerm),
+        title: url.title ? highlightMatches(url.title, sanitizedTerm) : null,
+      };
+    });
+
     return {
-      results: [],
-      total: 0,
-      highlights: {},
+      results: searchResult.rows,
+      total,
+      highlights,
     };
+  } catch (error) {
+    // Log and rethrow with better context
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`Error searching URLs with term "${searchTerm}": ${errorMessage}`);
+
+    // Check for specific database errors and provide more context
+    if (error instanceof Error) {
+      // Connection errors
+      if (errorMessage.includes('connect')) {
+        throw new Error(`Database connection error: ${errorMessage}`);
+      }
+
+      // Query syntax/column errors
+      if (
+        errorMessage.includes('column') ||
+        errorMessage.includes('parameter') ||
+        errorMessage.includes('data type')
+      ) {
+        throw new Error(`Database query error: ${errorMessage}`);
+      }
+
+      // Other database errors
+      if (errorMessage.includes('database') || errorMessage.includes('sql')) {
+        throw new Error(`Database error: ${errorMessage}`);
+      }
+    }
+
+    // Rethrow the original error with better context
+    throw new Error(`Failed to search URLs: ${errorMessage}`);
   }
-
-  // Execute search query
-  const offset = (page - 1) * limit;
-  const searchResult = await pool.query(searchQuery, [
-    userId,
-    likePattern,
-    sanitizedTerm,
-    limit,
-    offset,
-  ]);
-
-  // Generate highlights for matched content
-  const highlights: UrlHighlights = {};
-
-  searchResult.rows.forEach((url: any) => {
-    highlights[url.id] = {
-      original_url: highlightMatches(url.original_url, sanitizedTerm),
-      short_code: highlightMatches(url.short_code, sanitizedTerm),
-      title: url.title ? highlightMatches(url.title, sanitizedTerm) : null,
-    };
-  });
-
-  return {
-    results: searchResult.rows,
-    total,
-    highlights,
-  };
 };
 
 /**
