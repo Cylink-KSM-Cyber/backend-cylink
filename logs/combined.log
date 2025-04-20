@@ -224,3 +224,70 @@ TSError: ⨯ Unable to compile TypeScript:
     at Module.load (node:internal/modules/cjs/loader:1289:32)
     at Function._load (node:internal/modules/cjs/loader:1108:12)
     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+[2025-04-20 11:03:50] INFO: Successfully logged in for admin@cylink.id 
+[2025-04-20 11:06:11] ERROR: uncaughtException: argument handler must be a function
+TypeError: argument handler must be a function
+    at Function.use (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\router\index.js:392:13)
+    at Object.<anonymous> (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\src\routes\index.ts:33:8)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24) TypeError: argument handler must be a function
+    at Function.use (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\router\index.js:392:13)
+    at Object.<anonymous> (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\src\routes\index.ts:33:8)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+[2025-04-20 11:06:47] ERROR: uncaughtException: argument handler must be a function
+TypeError: argument handler must be a function
+    at Function.use (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\router\index.js:392:13)
+    at Object.<anonymous> (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\src\routes\index.ts:33:8)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24) TypeError: argument handler must be a function
+    at Function.use (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\router\index.js:392:13)
+    at Object.<anonymous> (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\src\routes\index.ts:33:8)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+[2025-04-20 11:08:37] ERROR: uncaughtException: argument handler must be a function
+TypeError: argument handler must be a function
+    at Function.use (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\router\index.js:392:13)
+    at Object.<anonymous> (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\src\routes\index.ts:33:8)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24) TypeError: argument handler must be a function
+    at Function.use (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\router\index.js:392:13)
+    at Object.<anonymous> (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\src\routes\index.ts:33:8)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)

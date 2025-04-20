@@ -285,4 +285,4 @@ router.get('/stats', authMiddleware.accessToken, ctrController.getOverallCTRStat
  */
 router.get('/leaderboard', authMiddleware.accessToken, ctrController.getCTRLeaderboard as any);
 
-export default router;
+module.exports = router;
