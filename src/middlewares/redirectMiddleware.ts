@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import * as http from 'http';
+import logger from '../utils/logger';
 
 const urlService = require('../services/urlService');
-const logger = require('../utils/logger');
 const conversionGoalModel = require('../models/conversionGoalModel');
 
 /**

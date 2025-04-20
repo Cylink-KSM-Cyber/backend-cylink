@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-const impressionModel = require('../models/impressionModel');
 import logger from '../utils/logger';
+const impressionModel = require('../models/impressionModel');
 
 /**
  * Interface for request with URL data

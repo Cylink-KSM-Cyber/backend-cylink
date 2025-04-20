@@ -12,6 +12,7 @@ import {
   ConversionGoalCreate,
   UrlGoalAssociation,
 } from '../interfaces/Conversion';
+import logger from '../utils/logger';
 
 // Extend Express Request to include user property
 interface Request extends ExpressRequest {
@@ -25,7 +26,6 @@ interface Request extends ExpressRequest {
 const conversionModel = require('../models/conversionModel');
 const conversionGoalModel = require('../models/conversionGoalModel');
 const urlModel = require('../models/urlModel');
-const logger = require('../utils/logger');
 
 /**
  * Create a new conversion goal
