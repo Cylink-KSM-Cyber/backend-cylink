@@ -290,3 +290,40 @@ TypeError: argument handler must be a function
     at Function._load (node:internal/modules/cjs/loader:1108:12)
     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
     at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+[2025-04-20 11:12:53] ERROR: uncaughtException: ⨯ Unable to compile TypeScript:
+[96msrc/routes/urlRoutes.ts[0m:[93m849[0m:[93m41[0m - [91merror[0m[90m TS2304: [0mCannot find name 'getUrlCTRStats'.
+
+[7m849[0m router.get('/:url_id/ctr', accessToken, getUrlCTRStats);
+[7m   [0m [91m                                        ~~~~~~~~~~~~~~[0m
+
+TSError: ⨯ Unable to compile TypeScript:
+[96msrc/routes/urlRoutes.ts[0m:[93m849[0m:[93m41[0m - [91merror[0m[90m TS2304: [0mCannot find name 'getUrlCTRStats'.
+
+[7m849[0m router.get('/:url_id/ctr', accessToken, getUrlCTRStats);
+[7m   [0m [91m                                        ~~~~~~~~~~~~~~[0m
+
+    at createTSError (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14) TSError: ⨯ Unable to compile TypeScript:
+[96msrc/routes/urlRoutes.ts[0m:[93m849[0m:[93m41[0m - [91merror[0m[90m TS2304: [0mCannot find name 'getUrlCTRStats'.
+
+[7m849[0m router.get('/:url_id/ctr', accessToken, getUrlCTRStats);
+[7m   [0m [91m                                        ~~~~~~~~~~~~~~[0m
+
+    at createTSError (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)

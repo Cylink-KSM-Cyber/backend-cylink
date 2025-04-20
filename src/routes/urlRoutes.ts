@@ -2,6 +2,7 @@ const router = require('express').Router();
 
 const { getQrCodeByUrlId } = require('../controllers/qrCodeController');
 const urlController = require('../controllers/urlController');
+const ctrController = require('../controllers/ctrController');
 const { accessToken } = require('../middlewares/authMiddleware');
 const validate = require('../utils/validator');
 const fields = require('../validators/urlValidator');
@@ -792,5 +793,59 @@ router.get(
  * }
  */
 router.get('/:url_id/qr-code', accessToken, getQrCodeByUrlId);
+
+/**
+ * @swagger
+ * /api/v1/urls/{url_id}/ctr:
+ *   get:
+ *     summary: Get CTR statistics for a specific URL
+ *     description: Retrieves Click-Through Rate (CTR) statistics for a specific URL
+ *     tags: [URLs, CTR]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: url_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the URL to get statistics for
+ *       - in: query
+ *         name: start_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date for the analysis period (format- YYYY-MM-DD, default- 30 days ago)
+ *       - in: query
+ *         name: end_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date for the analysis period (format- YYYY-MM-DD, default- today)
+ *       - in: query
+ *         name: comparison
+ *         schema:
+ *           type: string
+ *           enum: [7, 14, 30, 90, custom]
+ *         description: Comparison period in days (default- 30)
+ *       - in: query
+ *         name: group_by
+ *         schema:
+ *           type: string
+ *           enum: [day, week, month]
+ *         description: How to group the time series data (default- day)
+ *     responses:
+ *       200:
+ *         description: URL CTR statistics retrieved successfully
+ *       400:
+ *         description: Invalid URL ID
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *       404:
+ *         description: URL not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/:url_id/ctr', accessToken, ctrController.getUrlCTRStats);
 
 module.exports = router;

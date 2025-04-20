@@ -402,3 +402,10 @@ export const getCTRLeaderboard = async (req: RequestWithUser, res: Response): Pr
     });
   }
 };
+
+// Add at the end of the file
+module.exports = {
+  getOverallCTRStats,
+  getUrlCTRStats,
+  getCTRLeaderboard,
+};
