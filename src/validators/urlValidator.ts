@@ -9,23 +9,42 @@ module.exports = {
   /**
    * Validation rules for GET /urls endpoint
    */
-  getUrls: [
-    { name: 'page', type: 'number', required: false },
-    { name: 'limit', type: 'number', required: false },
-    {
-      name: 'sortBy',
-      type: 'string',
-      required: false,
-      enum: ['created_at', 'clicks', 'title', 'relevance'],
+  getUrls: {
+    query: {
+      search: {
+        type: 'string',
+        optional: true,
+      },
+      page: {
+        type: 'number',
+        optional: true,
+        integer: true,
+        positive: true,
+      },
+      limit: {
+        type: 'number',
+        optional: true,
+        integer: true,
+        min: 1,
+        max: 100,
+      },
+      sortBy: {
+        type: 'string',
+        optional: true,
+        enum: ['created_at', 'clicks', 'title', 'relevance'],
+      },
+      sortOrder: {
+        type: 'string',
+        optional: true,
+        enum: ['asc', 'desc'],
+      },
+      status: {
+        type: 'string',
+        optional: true,
+        enum: ['all', 'active', 'inactive', 'expired', 'expiring-soon'],
+      },
     },
-    {
-      name: 'sortOrder',
-      type: 'string',
-      required: false,
-      enum: ['asc', 'desc'],
-    },
-    { name: 'search', type: 'string', required: false },
-  ],
+  },
 
   /**
    * Validation rules for creating a shortened URL
@@ -101,5 +120,16 @@ module.exports = {
       type: 'integer',
       optional: true,
     },
+  },
+
+  /**
+   * Validates the URL status filter parameter
+   *
+   * @param {string} status - The status parameter to validate
+   * @returns {boolean} Whether the status is valid
+   */
+  isValidStatusFilter: (status: string): boolean => {
+    const validStatusFilters = ['all', 'active', 'inactive', 'expired', 'expiring-soon'];
+    return validStatusFilters.includes(status);
   },
 };

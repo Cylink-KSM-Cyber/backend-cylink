@@ -130,48 +130,45 @@ This API documentation provides numerous benefits for both internal developers a
 - `POST /api/v1/qr-codes` - Generate a new QR code
 - `GET /api/v1/qr-codes/:id` - Get a specific QR code by ID
 
-## URLs
+## URLs API Endpoints
 
-### Get All URLs
+### Get URLs with Filtering and Search
 
-Retrieves all URLs for the authenticated user.
+```
+GET /api/v1/urls
+```
 
-**Endpoint:** `GET /api/v1/urls`
+**Authentication Required**: Yes (Bearer Token)
 
-**Authentication:** Required (Bearer Token)
+**Query Parameters**:
 
-**Parameters:**
+- `status` (optional): Filter by URL status - 'all', 'active', 'inactive', 'expired', 'expiring-soon' (default: 'all')
+- `search` (optional): Search term to filter results
+- `page` (optional): Page number for pagination (default: 1)
+- `limit` (optional): Number of items per page (default: 10)
+- `sortBy` (optional): Field to sort by - 'created_at', 'clicks', 'title', 'relevance' (default: 'created_at')
+- `sortOrder` (optional): Order of sorting - 'asc', 'desc' (default: 'desc')
 
-| Parameter | Type    | Required | Default    | Description                                             |
-| --------- | ------- | -------- | ---------- | ------------------------------------------------------- |
-| search    | string  | No       | -          | Text to search in original URLs or short codes          |
-| page      | integer | No       | 1          | Page number for pagination                              |
-| limit     | integer | No       | 10         | Number of items per page                                |
-| sortBy    | string  | No       | created_at | Field to sort by (created_at, clicks, title, relevance) |
-| sortOrder | string  | No       | desc       | Sort order (asc, desc)                                  |
-
-**Response:**
+**Response**:
 
 ```json
 {
   "status": 200,
-  "message": "URLs retrieved successfully",
+  "message": "URLs filtered successfully",
   "data": [
     {
       "id": 123,
-      "original_url": "https://example.com/very-long-url-path",
+      "original_url": "https://example.com/path",
       "short_code": "abc123",
       "short_url": "https://cylink.id/abc123",
       "title": "Example URL",
       "clicks": 42,
-      "created_at": "2023-04-10T12:00:00Z",
-      "expiry_date": "2023-05-10T00:00:00Z",
+      "created_at": "2025-04-10T12:00:00Z",
+      "updated_at": "2025-04-11T09:30:00Z",
+      "expiry_date": "2025-05-10T00:00:00Z",
       "is_active": true,
-      "matches": {
-        "original_url": ["<em>example</em>.com"],
-        "short_code": null,
-        "title": null
-      }
+      "status": "active",
+      "days_until_expiry": 30
     }
     // More URLs...
   ],
@@ -181,38 +178,96 @@ Retrieves all URLs for the authenticated user.
     "limit": 10,
     "total_pages": 3
   },
-  "search_info": {
-    "term": "example",
-    "fields_searched": ["original_url", "short_code", "title"],
-    "total_matches": 24
+  "filter_info": {
+    "status": "active",
+    "total_matching": 24,
+    "total_all": 35
   }
 }
 ```
 
-#### Search Functionality
+**Status Filtering Options**:
 
-The URL endpoint supports a powerful search feature that allows users to find URLs by matching terms in the original URL, short code, or title.
+- `all`: Returns all URLs (default)
+- `active`: Only returns URLs that are currently active (not expired and is_active=true)
+- `inactive`: Only returns URLs that are manually set to inactive (is_active=false)
+- `expired`: Only returns URLs that have passed their expiry date
+- `expiring-soon`: Only returns URLs that will expire within the next 7 days
 
-**Search Features:**
+**Combined Search and Status Filtering**:
+You can combine the `status` and `search` parameters to find URLs that match both criteria. For example:
 
-- Case-insensitive searching
-- Partial matching (finds terms anywhere in the text)
-- Results ordered by relevance when using the 'relevance' sort option
-- Highlighted matches in the response with HTML `<em>` tags
-- Search performance optimized with database indexes
-- Minimum search term length: 2 characters
+```
+GET /api/v1/urls?status=active&search=example
+```
 
-**Example Searches:**
+This will return only active URLs that contain "example" in their original URL, short code, or title.
 
-- `?search=example` - Find URLs containing "example" in any field
-- `?search=example&sortBy=relevance` - Find URLs with "example" sorted by relevance
-- `?search=blog&sortBy=clicks&sortOrder=desc` - Find URLs with "blog" sorted by most clicks
+When both search and status filtering are used, the response will include both `filter_info` and `search_info`:
 
-**Error Responses:**
+```json
+{
+  "status": 200,
+  "message": "URLs filtered and searched successfully",
+  "data": [
+    // Filtered and searched URLs...
+  ],
+  "pagination": {
+    "total": 5,
+    "page": 1,
+    "limit": 10,
+    "total_pages": 1
+  },
+  "filter_info": {
+    "status": "active",
+    "total_matching": 5,
+    "total_all": 35
+  },
+  "search_info": {
+    "term": "example",
+    "fields_searched": ["original_url", "short_code", "title"],
+    "total_matches": 8
+  }
+}
+```
+
+If no URLs match the specified filter and search:
+
+```json
+{
+  "status": 200,
+  "message": "No URLs match the specified filter and search term \"example\"",
+  "data": [],
+  "pagination": {
+    "total": 0,
+    "page": 1,
+    "limit": 10,
+    "total_pages": 0
+  },
+  "filter_info": {
+    "status": "expired",
+    "total_matching": 0,
+    "total_all": 35
+  },
+  "search_info": {
+    "term": "example",
+    "fields_searched": ["original_url", "short_code", "title"],
+    "total_matches": 8
+  }
+}
+```
+
+**Error Responses**:
+
+- 400: Invalid parameters (e.g., invalid status value)
 
 ```json
 {
   "status": 400,
-  "message": "Search term must be at least 2 characters long"
+  "message": "Invalid status parameter",
+  "errors": ["Status must be one of: all, active, inactive, expired, expiring-soon"]
 }
 ```
+
+- 401: Unauthorized (invalid or missing token)
+- 500: Server error

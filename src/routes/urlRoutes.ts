@@ -72,16 +72,23 @@ const fields = require('../validators/urlValidator');
  * @swagger
  * /api/v1/urls:
  *   get:
- *     summary: Get all URLs for authenticated user
+ *     summary: Get all URLs for authenticated user with optional filtering by status and search
  *     tags: [URLs]
  *     security:
  *       - BearerAuth: []
  *     parameters:
  *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [all, active, inactive, expired, expiring-soon]
+ *           default: all
+ *         description: Filter URLs by their status
+ *       - in: query
  *         name: search
  *         schema:
  *           type: string
- *         description: Text to search in original URLs or short codes (minimum 2 characters)
+ *         description: Text to search in original URLs, short codes, or titles (minimum 2 characters)
  *       - in: query
  *         name: page
  *         schema:
@@ -110,7 +117,7 @@ const fields = require('../validators/urlValidator');
  *         description: Sort order
  *     responses:
  *       200:
- *         description: A list of URLs with pagination
+ *         description: A list of URLs with pagination, filtering, and search information
  *         content:
  *           application/json:
  *             schema:
@@ -121,7 +128,7 @@ const fields = require('../validators/urlValidator');
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: Successfully retrieved all URLs
+ *                   example: URLs filtered successfully
  *                 data:
  *                   type: array
  *                   items:
@@ -129,6 +136,14 @@ const fields = require('../validators/urlValidator');
  *                       - $ref: '#/components/schemas/Url'
  *                       - type: object
  *                         properties:
+ *                           status:
+ *                             type: string
+ *                             enum: [active, inactive, expired, expiring-soon]
+ *                             example: active
+ *                           days_until_expiry:
+ *                             type: integer
+ *                             example: 30
+ *                             nullable: true
  *                           matches:
  *                             type: object
  *                             properties:
@@ -153,7 +168,7 @@ const fields = require('../validators/urlValidator');
  *                   properties:
  *                     total:
  *                       type: integer
- *                       example: 57
+ *                       example: 24
  *                     page:
  *                       type: integer
  *                       example: 1
@@ -162,7 +177,19 @@ const fields = require('../validators/urlValidator');
  *                       example: 10
  *                     total_pages:
  *                       type: integer
- *                       example: 6
+ *                       example: 3
+ *                 filter_info:
+ *                   type: object
+ *                   properties:
+ *                     status:
+ *                       type: string
+ *                       example: "active"
+ *                     total_matching:
+ *                       type: integer
+ *                       example: 24
+ *                     total_all:
+ *                       type: integer
+ *                       example: 35
  *                 search_info:
  *                   type: object
  *                   properties:
@@ -180,7 +207,7 @@ const fields = require('../validators/urlValidator');
  *       204:
  *         description: No URLs found
  *       400:
- *         description: Invalid search parameters
+ *         description: Invalid parameters
  *         content:
  *           application/json:
  *             schema:
@@ -191,7 +218,12 @@ const fields = require('../validators/urlValidator');
  *                   example: 400
  *                 message:
  *                   type: string
- *                   example: "Search term must be at least 2 characters long"
+ *                   example: "Invalid status parameter"
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["Status must be one of: all, active, inactive, expired, expiring-soon"]
  *       401:
  *         description: Unauthorized, authentication required
  *       500:
@@ -201,7 +233,7 @@ router.get(
   '/',
   accessToken,
   validate({ query: fields.getUrls, preserveBodyProps: true }),
-  urlController.getAllUrls,
+  urlController.getUrlsWithStatusFilter,
 );
 
 /**

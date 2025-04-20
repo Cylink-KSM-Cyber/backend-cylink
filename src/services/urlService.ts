@@ -12,6 +12,7 @@ const urlModel = require('../models/urlModel');
 const logger = require('../utils/logger');
 const shortCodeUtil = require('../utils/shortCode');
 const conversionGoalModel = require('../models/conversionGoalModel');
+const pool = require('../config/database');
 
 /**
  * URL creation options interface
@@ -26,6 +27,18 @@ interface CreateUrlOptions {
   password?: string;
   redirectType?: string;
   goalId?: number;
+}
+
+/**
+ * URL filter and pagination options interface
+ */
+interface UrlFilterOptions {
+  status?: 'all' | 'active' | 'inactive' | 'expired' | 'expiring-soon';
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  search?: string;
 }
 
 /**
@@ -334,4 +347,317 @@ exports.getUrlAnalyticsWithFilters = async (urlId: number, options: any = {}) =>
     device_stats: formattedDeviceStats,
     country_stats: formattedCountryStats,
   };
+};
+
+/**
+ * Gets URLs with optional filtering by status
+ *
+ * @param {number} userId - The user ID
+ * @param {UrlFilterOptions} options - Filter and pagination options
+ * @returns {Promise<{urls: any[], pagination: any, filter_info: any}>} URLs with pagination and filter info
+ */
+exports.getUrlsWithStatusFilter = async (userId: number, options: UrlFilterOptions) => {
+  const {
+    status = 'all',
+    page = 1,
+    limit = 10,
+    sortBy = 'created_at',
+    sortOrder = 'desc',
+  } = options;
+
+  // Validate status parameter
+  const validStatuses = ['all', 'active', 'inactive', 'expired', 'expiring-soon'];
+  if (!validStatuses.includes(status)) {
+    throw new Error(`Invalid status parameter. Must be one of: ${validStatuses.join(', ')}`);
+  }
+
+  // Get URLs with filter
+  const { urls, total, total_all } = await urlModel.getUrlsByUserWithFilters(userId, {
+    status,
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+  });
+
+  // For each URL, get the click count and calculate status and days until expiry
+  const processedUrls = await Promise.all(
+    urls.map(async (url: any) => {
+      const clickCount = await clickModel.getClickCountByUrlId(url.id);
+
+      // Format expiry_date if it exists
+      const expiryDate = url.expiry_date ? new Date(url.expiry_date) : null;
+      const expiryDateISO = expiryDate ? expiryDate.toISOString() : null;
+
+      // Generate the full short URL
+      const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
+      const shortUrl = baseUrl + url.short_code;
+
+      // Calculate URL status and days until expiry
+      let urlStatus: 'active' | 'inactive' | 'expired' | 'expiring-soon';
+      let daysUntilExpiry: number | null = null;
+
+      const now = new Date();
+
+      if (!url.is_active) {
+        urlStatus = 'inactive';
+      } else if (expiryDate && expiryDate < now) {
+        urlStatus = 'expired';
+      } else if (expiryDate) {
+        // Calculate days until expiry
+        const diffTime = expiryDate.getTime() - now.getTime();
+        daysUntilExpiry = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (daysUntilExpiry <= 7) {
+          urlStatus = 'expiring-soon';
+        } else {
+          urlStatus = 'active';
+        }
+      } else {
+        urlStatus = 'active';
+      }
+
+      // Create URL with status data
+      return {
+        id: url.id,
+        original_url: url.original_url,
+        short_code: url.short_code,
+        short_url: shortUrl,
+        title: url.title ?? null,
+        clicks: clickCount,
+        created_at: new Date(url.created_at).toISOString(),
+        expiry_date: expiryDateISO,
+        is_active: url.is_active,
+        status: urlStatus,
+        days_until_expiry: daysUntilExpiry,
+      };
+    }),
+  );
+
+  // Calculate pagination data
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+
+  // Prepare response objects
+  const pagination = {
+    total,
+    page,
+    limit,
+    total_pages: totalPages,
+  };
+
+  const filterInfo = {
+    status,
+    total_matching: total,
+    total_all,
+  };
+
+  return {
+    urls: processedUrls,
+    pagination,
+    filter_info: filterInfo,
+  };
+};
+
+/**
+ * Gets URLs with combined status filtering and search functionality
+ *
+ * @param {number} userId - The user ID
+ * @param {UrlFilterOptions} options - Filter and pagination options including search
+ * @returns {Promise<{urls: any[], pagination: any, filter_info: any, search_info: any}>} URLs with pagination, filter and search info
+ */
+exports.getUrlsWithStatusAndSearch = async (userId: number, options: UrlFilterOptions) => {
+  const {
+    status = 'all',
+    search = '',
+    page = 1,
+    limit = 10,
+    sortBy = 'created_at',
+    sortOrder = 'desc',
+  } = options;
+
+  // Validate status parameter
+  const validStatuses = ['all', 'active', 'inactive', 'expired', 'expiring-soon'];
+  if (!validStatuses.includes(status)) {
+    throw new Error(`Invalid status parameter. Must be one of: ${validStatuses.join(', ')}`);
+  }
+
+  // Validate search parameter
+  if (search && search.length < 2) {
+    throw new Error('Search term must be at least 2 characters long');
+  }
+
+  try {
+    // Perform search first to get matching URLs
+    const {
+      results,
+      total: searchTotal,
+      highlights,
+    } = await urlModel.searchUrls(
+      userId,
+      search,
+      1, // Get all results first, then we'll filter and paginate
+      1000, // High limit to get more results for filtering
+      sortBy,
+      sortOrder,
+    );
+
+    // Count all URLs for the user (unfiltered)
+    const totalAllQuery = `SELECT COUNT(*) FROM urls WHERE user_id = $1 AND deleted_at IS NULL`;
+    const totalAllResult = await pool.query(totalAllQuery, [userId]);
+    const totalAll = parseInt(totalAllResult.rows[0].count, 10);
+
+    // If no search results, return empty with proper metadata
+    if (!results || results.length === 0) {
+      const pagination = {
+        total: 0,
+        page,
+        limit,
+        total_pages: 0,
+      };
+
+      const filterInfo = {
+        status,
+        total_matching: 0,
+        total_all: totalAll,
+      };
+
+      const searchInfo = {
+        term: search,
+        fields_searched: ['original_url', 'short_code', 'title'],
+        total_matches: 0,
+      };
+
+      return {
+        urls: [],
+        pagination,
+        filter_info: filterInfo,
+        search_info: searchInfo,
+      };
+    }
+
+    // Now filter the search results by status
+    let filteredResults = [...results];
+    const now = new Date();
+
+    if (status !== 'all') {
+      filteredResults = results.filter((url: any) => {
+        const expiryDate = url.expiry_date ? new Date(url.expiry_date) : null;
+
+        if (status === 'active') {
+          // Active URLs: not expired and is_active = true
+          return url.is_active && (!expiryDate || expiryDate > now);
+        } else if (status === 'inactive') {
+          // Inactive URLs: is_active = false
+          return !url.is_active;
+        } else if (status === 'expired') {
+          // Expired URLs: expiry_date < current date
+          return expiryDate && expiryDate < now;
+        } else if (status === 'expiring-soon') {
+          // Expiring soon: expires within the next 7 days, not yet expired
+          if (!expiryDate || expiryDate <= now) {
+            return false;
+          }
+          const diffTime = expiryDate.getTime() - now.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays <= 7;
+        }
+        return true;
+      });
+    }
+
+    // Apply pagination to filtered results
+    const totalFiltered = filteredResults.length;
+    const startIndex = (page - 1) * limit;
+    const endIndex = Math.min(startIndex + limit, totalFiltered);
+    const paginatedResults = filteredResults.slice(startIndex, endIndex);
+
+    // For each URL, get the click count and calculate status and days until expiry
+    const processedUrls = await Promise.all(
+      paginatedResults.map(async url => {
+        const clickCount = await clickModel.getClickCountByUrlId(url.id);
+
+        // Format expiry_date if it exists
+        const expiryDate = url.expiry_date ? new Date(url.expiry_date) : null;
+        const expiryDateISO = expiryDate ? expiryDate.toISOString() : null;
+
+        // Generate the full short URL
+        const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
+        const shortUrl = baseUrl + url.short_code;
+
+        // Calculate URL status and days until expiry
+        let urlStatus: 'active' | 'inactive' | 'expired' | 'expiring-soon';
+        let daysUntilExpiry: number | null = null;
+
+        if (!url.is_active) {
+          urlStatus = 'inactive';
+        } else if (expiryDate && expiryDate < now) {
+          urlStatus = 'expired';
+        } else if (expiryDate) {
+          // Calculate days until expiry
+          const diffTime = expiryDate.getTime() - now.getTime();
+          daysUntilExpiry = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+          if (daysUntilExpiry <= 7) {
+            urlStatus = 'expiring-soon';
+          } else {
+            urlStatus = 'active';
+          }
+        } else {
+          urlStatus = 'active';
+        }
+
+        // Create URL with status data and search highlights
+        return {
+          id: url.id,
+          original_url: url.original_url,
+          short_code: url.short_code,
+          short_url: shortUrl,
+          title: url.title ?? null,
+          clicks: clickCount,
+          created_at: new Date(url.created_at).toISOString(),
+          expiry_date: expiryDateISO,
+          is_active: url.is_active,
+          status: urlStatus,
+          days_until_expiry: daysUntilExpiry,
+          matches: highlights[url.id] || null,
+        };
+      }),
+    );
+
+    // Calculate pagination data
+    const totalPages = Math.max(1, Math.ceil(totalFiltered / limit));
+
+    // Prepare response objects
+    const pagination = {
+      total: totalFiltered,
+      page,
+      limit,
+      total_pages: totalPages,
+    };
+
+    const filterInfo = {
+      status,
+      total_matching: totalFiltered,
+      total_all: totalAll,
+    };
+
+    const searchInfo = {
+      term: search,
+      fields_searched: ['original_url', 'short_code', 'title'],
+      total_matches: searchTotal,
+    };
+
+    return {
+      urls: processedUrls,
+      pagination,
+      filter_info: filterInfo,
+      search_info: searchInfo,
+    };
+  } catch (error) {
+    // Re-throw with better context
+    if (error instanceof Error) {
+      throw new Error(`Error filtering and searching URLs: ${error.message}`);
+    }
+    throw error;
+  }
 };

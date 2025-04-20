@@ -40,6 +40,19 @@ export interface UrlWithClicks {
 }
 
 /**
+ * URL with click statistics and calculated status interface
+ */
+export interface UrlWithStatus extends UrlWithClicks {
+  status: UrlStatus;
+  days_until_expiry?: number | null;
+}
+
+/**
+ * Available URL Status types
+ */
+export type UrlStatus = 'active' | 'inactive' | 'expired' | 'expiring-soon';
+
+/**
  * Pagination interface
  */
 export interface PaginationData {
@@ -58,6 +71,21 @@ export interface UrlSearchParams {
   limit?: number;
   sortBy?: 'relevance' | 'created_at' | 'clicks' | 'title';
   sortOrder?: 'asc' | 'desc';
+  status?: UrlStatusFilterType;
+}
+
+/**
+ * URL Status Filter Types
+ */
+export type UrlStatusFilterType = 'all' | UrlStatus;
+
+/**
+ * Filter information for response metadata
+ */
+export interface FilterInfo {
+  status: UrlStatusFilterType;
+  total_matching: number;
+  total_all: number;
 }
 
 /**
