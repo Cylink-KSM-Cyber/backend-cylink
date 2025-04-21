@@ -430,3 +430,12 @@ TSError: ⨯ Unable to compile TypeScript:
 [2025-04-22 06:25:44] INFO: URLs filtered by status 'all' for user 1 in 239ms with 10 results (sorting by clicks desc) 
 [2025-04-22 06:25:48] INFO: URLs filtered by status 'all' for user 1 in 291ms with 100 results (sorting by clicks desc) 
 [2025-04-22 06:25:54] INFO: URLs filtered by status 'all' for user 1 in 283ms with 100 results (sorting by created_at desc) 
+[2025-04-22 06:33:45] ERROR: URL error: Failed to create authenticated URL: 
+[2025-04-22 06:33:52] ERROR: URL error: Failed to create authenticated URL: 
+[2025-04-22 06:33:53] ERROR: URL error: Failed to create authenticated URL: 
+[2025-04-22 06:33:57] INFO: Successfully created authenticated shortened URL: http://localhost:5000/iniig for user 1 
+[2025-04-22 06:34:14] INFO: Redirecting iniig to https://www.instagram.com/cyberupnvj/ (302) 
+[2025-04-22 06:34:14] INFO: Recorded impression for URL 106 
+[2025-04-22 06:34:30] INFO: Successfully created authenticated shortened URL: http://localhost:5000/leadsUpn for user 1 
+[2025-04-22 06:34:41] INFO: Redirecting leadsUpn to https://leads.upnvj.ac.id/ (302) 
+[2025-04-22 06:34:41] INFO: Recorded impression for URL 107 

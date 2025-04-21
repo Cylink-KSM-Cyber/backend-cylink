@@ -369,3 +369,6 @@ TSError: ⨯ Unable to compile TypeScript:
 [2025-04-22 06:25:43] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
     at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
     at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:33:45] ERROR: URL error: Failed to create authenticated URL: 
+[2025-04-22 06:33:52] ERROR: URL error: Failed to create authenticated URL: 
+[2025-04-22 06:33:53] ERROR: URL error: Failed to create authenticated URL: 
