@@ -1193,7 +1193,7 @@ exports.getUrlsWithStatusFilter = async (req: Request, res: Response): Promise<R
 
         // Log the completion
         logger.info(
-          `URLs filtered by status '${status}' and search term '${searchTerm}' for user ${userId} in ${responseTime}ms with ${urls.length} results`,
+          `URLs filtered by status '${status}' and search term '${searchTerm}' for user ${userId} in ${responseTime}ms with ${urls.length} results (sorting by ${sortBy} ${sortOrder})`,
         );
 
         // If no URLs found, return 200 status with empty array and appropriate message
@@ -1258,7 +1258,7 @@ exports.getUrlsWithStatusFilter = async (req: Request, res: Response): Promise<R
 
     // Log the filtering completion
     logger.info(
-      `URLs filtered by status '${status}' for user ${userId} in ${responseTime}ms with ${urls.length} results`,
+      `URLs filtered by status '${status}' for user ${userId} in ${responseTime}ms with ${urls.length} results (sorting by ${sortBy} ${sortOrder})`,
     );
 
     // If no URLs found, return 200 status with empty array and appropriate message

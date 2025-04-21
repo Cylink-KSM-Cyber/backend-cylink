@@ -354,3 +354,79 @@ TSError: ⨯ Unable to compile TypeScript:
 [2025-04-20 13:07:27] INFO: User 1 retrieved CTR statistics for URL 1 
 [2025-04-20 13:07:57] INFO: User 1 retrieved overall CTR statistics 
 [2025-04-20 13:08:23] INFO: User 1 retrieved overall CTR statistics 
+[2025-04-20 19:35:14] INFO: Successfully logged in for admin@cylink.id 
+[2025-04-20 21:06:12] INFO: Successfully logged in for admin@cylink.id 
+[2025-04-20 21:06:29] INFO: URLs filtered by status 'all' for user 1 in 674ms with 100 results 
+[2025-04-20 21:06:36] INFO: URLs filtered by status 'all' for user 1 in 86ms with 10 results 
+[2025-04-20 21:06:41] INFO: URLs filtered by status 'all' for user 1 in 90ms with 10 results 
+[2025-04-20 21:06:44] INFO: URLs filtered by status 'all' for user 1 in 94ms with 10 results 
+[2025-04-20 21:06:55] INFO: URLs filtered by status 'all' for user 1 in 640ms with 100 results 
+[2025-04-20 21:06:58] INFO: URLs filtered by status 'all' for user 1 in 332ms with 100 results 
+[2025-04-22 06:11:04] INFO: URL not found or inactive for short code: favicon.ico 
+[2025-04-22 06:11:04] INFO: URL not found for short code: favicon.ico 
+[2025-04-22 06:11:06] INFO: Successfully logged in for admin@cylink.id 
+[2025-04-22 06:11:14] INFO: URLs filtered by status 'all' for user 1 in 437ms with 100 results 
+[2025-04-22 06:11:41] INFO: URLs filtered by status 'all' for user 1 in 599ms with 100 results 
+[2025-04-22 06:11:55] INFO: URLs filtered by status 'all' for user 1 in 394ms with 10 results 
+[2025-04-22 06:12:06] INFO: URLs filtered by status 'all' for user 1 in 385ms with 10 results 
+[2025-04-22 06:12:17] INFO: URLs filtered by status 'all' for user 1 in 385ms with 10 results 
+[2025-04-22 06:12:22] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:12:30] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:12:31] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:12:31] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:12:32] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:12:33] INFO: URLs filtered by status 'all' for user 1 in 383ms with 10 results 
+[2025-04-22 06:12:55] INFO: URLs filtered by status 'inactive' for user 1 in 387ms with 10 results 
+[2025-04-22 06:14:03] INFO: URLs filtered by status 'all' for user 1 in 388ms with 10 results 
+[2025-04-22 06:15:00] INFO: URLs filtered by status 'all' and search term 'google' for user 1 in 383ms with 10 results 
+[2025-04-22 06:19:53] INFO: URLs filtered by status 'all' for user 1 in 623ms with 10 results (sorting by clicks desc) 
+[2025-04-22 06:20:02] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:03] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:04] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:04] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:04] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:05] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:06] INFO: URLs filtered by status 'all' for user 1 in 434ms with 100 results (sorting by clicks desc) 
+[2025-04-22 06:20:18] INFO: URLs filtered by status 'all' for user 1 in 574ms with 100 results (sorting by title desc) 
+[2025-04-22 06:20:55] INFO: URLs filtered by status 'all' for user 1 in 410ms with 10 results (sorting by title desc) 
+[2025-04-22 06:21:04] INFO: URLs filtered by status 'all' for user 1 in 101ms with 10 results (sorting by relevance desc) 
+[2025-04-22 06:21:13] INFO: URLs filtered by status 'all' and search term 'google' for user 1 in 105ms with 10 results (sorting by relevance desc) 
+[2025-04-22 06:21:30] INFO: URLs filtered by status 'all' for user 1 in 398ms with 10 results (sorting by title desc) 
+[2025-04-22 06:21:47] INFO: URLs filtered by status 'all' for user 1 in 547ms with 100 results (sorting by created_at desc) 
+[2025-04-22 06:22:43] INFO: URLs filtered by status 'all' for user 1 in 572ms with 100 results (sorting by title desc) 
+[2025-04-22 06:23:42] INFO: URLs filtered by status 'all' for user 1 in 383ms with 10 results (sorting by title desc) 
+[2025-04-22 06:25:36] INFO: URLs filtered by status 'all' for user 1 in 1545ms with 10 results (sorting by title desc) 
+[2025-04-22 06:25:42] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:25:43] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:25:43] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:25:44] INFO: URLs filtered by status 'all' for user 1 in 239ms with 10 results (sorting by clicks desc) 
+[2025-04-22 06:25:48] INFO: URLs filtered by status 'all' for user 1 in 291ms with 100 results (sorting by clicks desc) 
+[2025-04-22 06:25:54] INFO: URLs filtered by status 'all' for user 1 in 283ms with 100 results (sorting by created_at desc) 

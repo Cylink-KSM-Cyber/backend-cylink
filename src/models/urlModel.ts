@@ -449,13 +449,19 @@ exports.getUrlsByUserWithFilters = async (userId: number, options: UrlFilterOpti
   const validColumns: Record<string, string> = {
     created_at: 'created_at',
     title: 'title',
-    clicks: 'clicks', // Will need to handle this separately
+    // Note: both clicks and title sorting are fully handled in application logic after querying
+    // Database-level sorting for title may not work correctly with null values or case sensitivity
   };
 
   let orderClause = '';
   if (sortBy === 'clicks') {
-    // This is a placeholder that will be handled by application logic since clicks are not in the urls table
+    // NOTE: Sorting by clicks cannot be done at the database level since clicks are in a separate table
+    // This sorting will be handled at the application level after fetching the data
     orderClause = `ORDER BY created_at ${sortOrder === 'asc' ? 'ASC' : 'DESC'}`;
+  } else if (sortBy === 'title') {
+    // NOTE: Title sorting is done at application level for consistent null handling and case sensitivity
+    // We'll sort at database level first but it will be overridden in the service layer
+    orderClause = `ORDER BY title ${sortOrder === 'asc' ? 'ASC' : 'DESC'} NULLS LAST`;
   } else {
     const column = validColumns[sortBy] || 'created_at';
     orderClause = `ORDER BY ${column} ${sortOrder === 'asc' ? 'ASC' : 'DESC'}`;
