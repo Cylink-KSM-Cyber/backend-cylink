@@ -63,9 +63,16 @@ const fieldValidationRules = (args: any) => {
 
         case 'signed_integer':
         case 'number':
-          validationChain = validationChain
-            .isInt()
-            .withMessage(`${field.name} is required and must be a signed integer.`);
+          if (isFieldOptional) {
+            validationChain = validationChain
+              .optional()
+              .isInt()
+              .withMessage(`${field.name} must be a signed integer.`);
+          } else {
+            validationChain = validationChain
+              .isInt()
+              .withMessage(`${field.name} is required and must be a signed integer.`);
+          }
           break;
 
         case 'string':
@@ -122,7 +129,12 @@ const fieldValidationRules = (args: any) => {
       }
 
       // Handle optional fields
-      if (isFieldOptional && field.type !== 'image') {
+      if (
+        isFieldOptional &&
+        field.type !== 'image' &&
+        field.type !== 'number' &&
+        field.type !== 'signed_integer'
+      ) {
         validationChain = validationChain.optional();
       }
 
@@ -216,10 +228,13 @@ const fieldValidationRules = (args: any) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       const formattedErrors = errors.array().reduce((acc: any, error: any) => {
-        if (acc[error.param]) {
-          acc[error.param].push(error.msg);
+        // Make sure we have a valid parameter name, defaulting to the parameter path if needed
+        const paramName = error.param || (error.path ? error.path : 'parameter');
+
+        if (acc[paramName]) {
+          acc[paramName].push(error.msg);
         } else {
-          acc[error.param] = [error.msg];
+          acc[paramName] = [error.msg];
         }
         return acc;
       }, {});

@@ -93,6 +93,10 @@ const fields = require('../validators/urlValidator');
  *       500:
  *         description: Internal server error
  */
-router.post('/', validate({ fields: fields.createUrl }), urlController.createAnonymousUrl);
+router.post(
+  '/',
+  validate({ fields: fields.createUrl, preserveBodyProps: true }),
+  urlController.createAnonymousUrl,
+);
 
 module.exports = router;
