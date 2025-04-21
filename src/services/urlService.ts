@@ -434,6 +434,27 @@ exports.getUrlsWithStatusFilter = async (userId: number, options: UrlFilterOptio
     }),
   );
 
+  // Apply sorting by clicks if requested (since this can't be done at the database level)
+  if (sortBy === 'clicks') {
+    processedUrls.sort((a, b) => {
+      if (sortOrder === 'desc') {
+        return b.clicks - a.clicks;
+      } else {
+        return a.clicks - b.clicks;
+      }
+    });
+  } else if (sortBy === 'title') {
+    // Sort alphabetically by title
+    processedUrls.sort((a, b) => {
+      // Handle null titles by treating them as empty strings
+      const titleA = a.title || '';
+      const titleB = b.title || '';
+
+      // Apply sort direction
+      return sortOrder === 'asc' ? titleA.localeCompare(titleB) : titleB.localeCompare(titleA);
+    });
+  }
+
   // Calculate pagination data
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
@@ -557,15 +578,49 @@ exports.getUrlsWithStatusAndSearch = async (userId: number, options: UrlFilterOp
           if (!expiryDate || expiryDate <= now) {
             return false;
           }
+          // Calculate days until expiry
           const diffTime = expiryDate.getTime() - now.getTime();
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          return diffDays <= 7;
+          const daysUntilExpiry = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return daysUntilExpiry <= 7;
         }
-        return true;
+        return false;
       });
     }
 
-    // Apply pagination to filtered results
+    // If we need to sort by clicks, we need to get click counts for all filtered URLs before pagination
+    if (sortBy === 'clicks') {
+      // Fetch click counts for all filtered results
+      const urlsWithClicks = await Promise.all(
+        filteredResults.map(async url => {
+          const clickCount = await clickModel.getClickCountByUrlId(url.id);
+          return { ...url, clicks: clickCount };
+        }),
+      );
+
+      // Sort by clicks before pagination
+      urlsWithClicks.sort((a, b) => {
+        if (sortOrder === 'desc') {
+          return b.clicks - a.clicks;
+        } else {
+          return a.clicks - b.clicks;
+        }
+      });
+
+      // Replace filteredResults with sorted results
+      filteredResults = urlsWithClicks;
+    } else if (sortBy === 'title') {
+      // Sort alphabetically by title before pagination
+      filteredResults.sort((a, b) => {
+        // Handle null titles by treating them as empty strings
+        const titleA = a.title || '';
+        const titleB = b.title || '';
+
+        // Apply sort direction
+        return sortOrder === 'asc' ? titleA.localeCompare(titleB) : titleB.localeCompare(titleA);
+      });
+    }
+
+    // Apply pagination to the filtered (and possibly sorted) results
     const totalFiltered = filteredResults.length;
     const startIndex = (page - 1) * limit;
     const endIndex = Math.min(startIndex + limit, totalFiltered);
@@ -574,7 +629,9 @@ exports.getUrlsWithStatusAndSearch = async (userId: number, options: UrlFilterOp
     // For each URL, get the click count and calculate status and days until expiry
     const processedUrls = await Promise.all(
       paginatedResults.map(async url => {
-        const clickCount = await clickModel.getClickCountByUrlId(url.id);
+        // If we've already fetched the clicks for sorting, use that value
+        const clickCount =
+          url.clicks !== undefined ? url.clicks : await clickModel.getClickCountByUrlId(url.id);
 
         // Format expiry_date if it exists
         const expiryDate = url.expiry_date ? new Date(url.expiry_date) : null;

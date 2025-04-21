@@ -327,3 +327,45 @@ TSError: ⨯ Unable to compile TypeScript:
     at Module.load (node:internal/modules/cjs/loader:1289:32)
     at Function._load (node:internal/modules/cjs/loader:1108:12)
     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+[2025-04-22 06:12:22] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:12:30] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:12:31] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:12:31] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:12:32] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:02] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:03] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:04] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:04] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:04] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:05] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:25:42] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:25:43] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:25:43] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
