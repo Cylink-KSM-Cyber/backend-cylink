@@ -216,6 +216,19 @@ const fieldValidationRules = (args: any) => {
           .withMessage(`${param.name} must be one of: ${param.enum.join(', ')}`);
       }
 
+      // Add custom validation if provided
+      if (param.customValidation && typeof param.customValidation === 'function') {
+        validationChain = validationChain.custom((value: any, { req }: any) => {
+          if (value === undefined) return true;
+
+          const errorMessage = param.customValidation(value, req.query);
+          if (errorMessage) {
+            throw new Error(errorMessage);
+          }
+          return true;
+        });
+      }
+
       validationRules.push(validationChain);
     });
   }

@@ -460,6 +460,21 @@ export const getQrCodesByUser = async (req: Request, res: Response): Promise<Res
     const includeLogo = req.query.includeLogo ? req.query.includeLogo === 'true' : undefined;
     const includeUrl = req.query.includeUrl ? req.query.includeUrl === 'true' : true;
 
+    // Additional validation at controller level
+    if (sortBy && !['created_at', 'url_id', 'color', 'include_logo', 'size'].includes(sortBy)) {
+      logger.warn(`Invalid sortBy parameter received: ${sortBy}`);
+      return sendResponse(
+        res,
+        400,
+        'Invalid sortBy parameter. Must be one of: created_at, url_id, color, include_logo, size',
+      );
+    }
+
+    if (sortOrder && !['asc', 'desc'].includes(sortOrder)) {
+      logger.warn(`Invalid sortOrder parameter received: ${sortOrder}`);
+      return sendResponse(res, 400, 'Invalid sortOrder parameter. Must be "asc" or "desc"');
+    }
+
     // Get QR codes from service
     const result = await getAllQrCodes(userId, {
       page,
@@ -487,6 +502,12 @@ export const getQrCodesByUser = async (req: Request, res: Response): Promise<Res
   } catch (error) {
     // Handle specific error conditions
     if (error instanceof Error) {
+      // Check for validation errors from the model or service
+      if (error.message.includes('Invalid sortBy') || error.message.includes('Invalid sortOrder')) {
+        logger.warn('Validation error in QR code retrieval:', error.message);
+        return sendResponse(res, 400, error.message);
+      }
+
       logger.error('Error retrieving QR codes:', error.message);
     } else {
       logger.error('Error retrieving QR codes:', error);

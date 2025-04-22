@@ -147,6 +147,7 @@ export const urlHasQrCodes = async (urlId: number): Promise<boolean> => {
  * @param {number} userId - The ID of the user
  * @param {QrCodeListQueryParams} queryParams - Query parameters for pagination, sorting, and filtering
  * @returns {Promise<{qrCodes: QrCode[], total: number}>} QR codes and total count
+ * @throws {Error} If invalid parameters are provided
  */
 export const getQrCodesByUser = async (
   userId: number,
@@ -172,8 +173,20 @@ export const getQrCodesByUser = async (
     size: 'qc.size',
   };
 
+  // Explicitly validate sortBy parameter
+  if (sortBy && !validSortColumns[sortBy]) {
+    const allowedValues = Object.keys(validSortColumns).join(', ');
+    throw new Error(`Invalid sortBy parameter. Must be one of: ${allowedValues}`);
+  }
+
   // Use the validated sort column or default to created_at
   const sortColumn = validSortColumns[sortBy] || 'qc.created_at';
+
+  // Validate sortOrder
+  if (sortOrder && sortOrder !== 'asc' && sortOrder !== 'desc') {
+    throw new Error('Invalid sortOrder parameter. Must be "asc" or "desc"');
+  }
+
   const offset = (page - 1) * limit;
 
   // Build the base query

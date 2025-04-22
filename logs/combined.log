@@ -480,3 +480,15 @@ TSError: ⨯ Unable to compile TypeScript:
 [2025-04-22 06:48:52] INFO: URLs filtered by status 'all' for user 1 in 285ms with 1 results (sorting by created_at desc) 
 [2025-04-22 06:48:52] INFO: URLs filtered by status 'all' for user 1 in 444ms with 10 results (sorting by created_at desc) 
 [2025-04-22 06:49:09] INFO: URLs filtered by status 'all' for user 1 in 384ms with 10 results (sorting by created_at desc) 
+[2025-04-22 07:06:22] INFO: Successfully retrieved QR codes for user ID: 1 
+[2025-04-22 07:06:30] INFO: Successfully retrieved QR codes for user ID: 1 
+[2025-04-22 07:06:38] INFO: Successfully retrieved QR codes for user ID: 1 
+[2025-04-22 07:06:53] INFO: Successfully retrieved QR codes for user ID: 1 
+[2025-04-22 07:07:09] INFO: Successfully retrieved QR codes for user ID: 1 
+[2025-04-22 07:07:17] INFO: Successfully retrieved QR codes for user ID: 1 
+[2025-04-22 07:07:29] INFO: Successfully retrieved QR codes for user ID: 1 
+[2025-04-22 07:07:36] INFO: Successfully retrieved QR codes for user ID: 1 
+[2025-04-22 07:07:48] INFO: Successfully retrieved QR codes for user ID: 1 
+[2025-04-22 07:07:57] INFO: Successfully retrieved QR codes for user ID: 1 
+[2025-04-22 07:08:31] INFO: Successfully retrieved QR codes for user ID: 1 
+[2025-04-22 07:08:47] INFO: Successfully retrieved QR codes for user ID: 1 

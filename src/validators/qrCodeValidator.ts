@@ -163,25 +163,13 @@ module.exports = {
       name: 'sortBy',
       type: 'string',
       required: false,
-      customValidation: (value: string) => {
-        const allowedValues = ['created_at', 'url_id', 'color', 'include_logo', 'size'];
-        if (value !== undefined && !allowedValues.includes(value)) {
-          return `sortBy must be one of: ${allowedValues.join(', ')}`;
-        }
-        return null;
-      },
+      enum: ['created_at', 'url_id', 'color', 'include_logo', 'size'],
     },
     {
       name: 'sortOrder',
       type: 'string',
       required: false,
-      customValidation: (value: string) => {
-        const allowedValues = ['asc', 'desc'];
-        if (value !== undefined && !allowedValues.includes(value)) {
-          return `sortOrder must be one of: ${allowedValues.join(', ')}`;
-        }
-        return null;
-      },
+      enum: ['asc', 'desc'],
     },
     {
       name: 'search',
