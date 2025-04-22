@@ -439,3 +439,44 @@ TSError: ⨯ Unable to compile TypeScript:
 [2025-04-22 06:34:30] INFO: Successfully created authenticated shortened URL: http://localhost:5000/leadsUpn for user 1 
 [2025-04-22 06:34:41] INFO: Redirecting leadsUpn to https://leads.upnvj.ac.id/ (302) 
 [2025-04-22 06:34:41] INFO: Recorded impression for URL 107 
+[2025-04-22 06:40:00] INFO: Successfully logged in for admin@cylink.id 
+[2025-04-22 06:40:04] INFO: URLs filtered by status 'all' for user 1 in 101ms with 1 results (sorting by created_at desc) 
+[2025-04-22 06:40:05] INFO: URLs filtered by status 'all' for user 1 in 78ms with 1 results (sorting by created_at desc) 
+[2025-04-22 06:40:05] INFO: Successfully retrieved total clicks analytics for user 1 
+[2025-04-22 06:40:05] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 06:40:05] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:40:05] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:40:09] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:40:09] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 06:40:09] INFO: Successfully retrieved total clicks analytics for user 1 
+[2025-04-22 06:40:09] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 06:40:09] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:40:09] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 06:40:10] INFO: URLs filtered by status 'all' for user 1 in 426ms with 1 results (sorting by created_at desc) 
+[2025-04-22 06:40:10] INFO: URLs filtered by status 'all' for user 1 in 289ms with 10 results (sorting by created_at desc) 
+[2025-04-22 06:40:26] INFO: Successfully retrieved total clicks analytics for user 1 
+[2025-04-22 06:40:26] INFO: URLs filtered by status 'all' for user 1 in 230ms with 1 results (sorting by created_at desc) 
+[2025-04-22 06:40:26] INFO: URLs filtered by status 'all' for user 1 in 403ms with 10 results (sorting by created_at desc) 
+[2025-04-22 06:42:02] INFO: URL not found or inactive for short code: favicon.ico 
+[2025-04-22 06:42:02] INFO: URL not found for short code: favicon.ico 
+[2025-04-22 06:47:43] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 06:47:43] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:47:43] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 06:47:43] INFO: Successfully retrieved total clicks analytics for user 1 
+[2025-04-22 06:47:43] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 06:47:43] INFO: URLs filtered by status 'all' for user 1 in 582ms with 1 results (sorting by created_at desc) 
+[2025-04-22 06:47:43] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 06:48:52] INFO: Successfully retrieved total clicks analytics for user 1 
+[2025-04-22 06:48:52] INFO: URLs filtered by status 'all' for user 1 in 285ms with 1 results (sorting by created_at desc) 
+[2025-04-22 06:48:52] INFO: URLs filtered by status 'all' for user 1 in 444ms with 10 results (sorting by created_at desc) 
+[2025-04-22 06:49:09] INFO: URLs filtered by status 'all' for user 1 in 384ms with 10 results (sorting by created_at desc) 

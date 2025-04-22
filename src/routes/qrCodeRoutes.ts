@@ -8,9 +8,11 @@ const {
   downloadQrCodeByIdController,
   downloadQrCodeByShortCodeController,
   getQrCodeColorOptions,
+  getQrCodesByUser,
 } = require('../controllers/qrCodeController');
 const validate = require('../utils/validator');
 const qrCodeValidator = require('../validators/qrCodeValidator');
+const { accessToken } = require('../middlewares/authMiddleware');
 
 /**
  * QR Code Routes
@@ -18,6 +20,150 @@ const qrCodeValidator = require('../validators/qrCodeValidator');
  * Defines API endpoints for QR code generation and management
  * @module routes/qrCodeRoutes
  */
+
+/**
+ * @swagger
+ * /api/v1/qr-codes:
+ *   get:
+ *     summary: Get all QR codes for the authenticated user
+ *     tags: [QR Codes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of items per page
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [created_at, url_id, color, include_logo, size]
+ *           default: created_at
+ *         description: Field to sort by
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Order of sorting
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term to filter results
+ *       - in: query
+ *         name: color
+ *         schema:
+ *           type: string
+ *           format: hex-color
+ *         description: Filter by specific color (hex code)
+ *       - in: query
+ *         name: includeLogo
+ *         schema:
+ *           type: boolean
+ *         description: Filter by whether logo is included
+ *       - in: query
+ *         name: includeUrl
+ *         schema:
+ *           type: boolean
+ *           default: true
+ *         description: Whether to include detailed URL data
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved QR codes
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: number
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: QR codes retrieved successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: number
+ *                       url_id:
+ *                         type: number
+ *                       short_code:
+ *                         type: string
+ *                       short_url:
+ *                         type: string
+ *                       qr_code_url:
+ *                         type: string
+ *                       png_url:
+ *                         type: string
+ *                       svg_url:
+ *                         type: string
+ *                       color:
+ *                         type: string
+ *                         format: hex-color
+ *                       background_color:
+ *                         type: string
+ *                         format: hex-color
+ *                       include_logo:
+ *                         type: boolean
+ *                       logo_size:
+ *                         type: number
+ *                       size:
+ *                         type: number
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *                       updated_at:
+ *                         type: string
+ *                         format: date-time
+ *                       url:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: number
+ *                           original_url:
+ *                             type: string
+ *                           title:
+ *                             type: string
+ *                           clicks:
+ *                             type: number
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: number
+ *                       example: 28
+ *                     page:
+ *                       type: number
+ *                       example: 1
+ *                     limit:
+ *                       type: number
+ *                       example: 10
+ *                     total_pages:
+ *                       type: number
+ *                       example: 3
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/', accessToken, validate({ query: qrCodeValidator.listQrCodes }), getQrCodesByUser);
 
 /**
  * @swagger

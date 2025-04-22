@@ -1,5 +1,10 @@
 const pool = require('../config/database');
-import { QrCode, QrCodeCreateData, QrCodeUpdateData } from '../interfaces/QrCode';
+import {
+  QrCode,
+  QrCodeCreateData,
+  QrCodeUpdateData,
+  QrCodeListQueryParams,
+} from '../interfaces/QrCode';
 
 /**
  * QR Code Model
@@ -134,4 +139,121 @@ export const urlHasQrCodes = async (urlId: number): Promise<boolean> => {
   const result = await pool.query('SELECT 1 FROM qr_codes WHERE url_id = $1 LIMIT 1', [urlId]);
 
   return result.rowCount > 0;
+};
+
+/**
+ * Get all QR codes for a specific user with pagination, sorting, and filtering
+ *
+ * @param {number} userId - The ID of the user
+ * @param {QrCodeListQueryParams} queryParams - Query parameters for pagination, sorting, and filtering
+ * @returns {Promise<{qrCodes: QrCode[], total: number}>} QR codes and total count
+ */
+export const getQrCodesByUser = async (
+  userId: number,
+  queryParams: QrCodeListQueryParams,
+): Promise<{ qrCodes: QrCode[]; total: number }> => {
+  const {
+    page = 1,
+    limit = 10,
+    sortBy = 'created_at',
+    sortOrder = 'desc',
+    search,
+    color,
+    includeLogo,
+    includeUrl = true,
+  } = queryParams;
+
+  // Validate and sanitize the sort column to prevent SQL injection
+  const validSortColumns: Record<string, string> = {
+    created_at: 'qc.created_at',
+    url_id: 'qc.url_id',
+    color: 'qc.color',
+    include_logo: 'qc.include_logo',
+    size: 'qc.size',
+  };
+
+  // Use the validated sort column or default to created_at
+  const sortColumn = validSortColumns[sortBy] || 'qc.created_at';
+  const offset = (page - 1) * limit;
+
+  // Build the base query
+  let baseQuery = `
+    FROM qr_codes qc
+    JOIN urls u ON qc.url_id = u.id
+    WHERE u.user_id = $1
+      AND u.deleted_at IS NULL
+  `;
+
+  const queryValues: any[] = [userId];
+  let paramIndex = 2;
+
+  // Add search functionality
+  if (search) {
+    baseQuery += ` AND (
+      u.original_url ILIKE $${paramIndex} OR 
+      u.short_code ILIKE $${paramIndex} OR
+      u.title ILIKE $${paramIndex}
+    )`;
+    queryValues.push(`%${search}%`);
+    paramIndex++;
+  }
+
+  // Add color filter
+  if (color) {
+    baseQuery += ` AND qc.color = $${paramIndex}`;
+    queryValues.push(color);
+    paramIndex++;
+  }
+
+  // Add include_logo filter
+  if (includeLogo !== undefined) {
+    baseQuery += ` AND qc.include_logo = $${paramIndex}`;
+    queryValues.push(includeLogo);
+    paramIndex++;
+  }
+
+  // Get total count
+  const countQuery = `SELECT COUNT(*) ${baseQuery}`;
+  const countResult = await pool.query(countQuery, queryValues);
+  const total = parseInt(countResult.rows[0].count, 10);
+
+  // Get paginated and sorted QR codes
+  let selectFields = 'qc.*';
+  if (includeUrl) {
+    selectFields +=
+      ', u.id as url_id, u.original_url, u.title, u.short_code, (SELECT COUNT(*) FROM clicks c WHERE c.url_id = u.id) as clicks';
+  }
+
+  const dataQuery = `
+    SELECT ${selectFields}
+    ${baseQuery}
+    ORDER BY ${sortColumn} ${sortOrder === 'asc' ? 'ASC' : 'DESC'}
+    LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+  `;
+
+  queryValues.push(limit, offset);
+  const dataResult = await pool.query(dataQuery, queryValues);
+
+  // Format the results
+  const qrCodes = dataResult.rows.map((row: any) => {
+    if (includeUrl) {
+      // If includeUrl is true, format the data to include URL information
+      const { original_url, title, clicks, short_code, ...qrCodeData } = row;
+
+      return {
+        ...qrCodeData,
+        short_code, // Include the short_code directly in the QR code object
+        url: {
+          id: row.url_id,
+          original_url,
+          title,
+          clicks: clicks || 0,
+          short_code,
+        },
+      };
+    }
+    return row;
+  });
+
+  return { qrCodes, total };
 };

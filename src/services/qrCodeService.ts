@@ -1,4 +1,10 @@
-import { QrCode, QrCodeCreateData, QrCodeUpdateData } from '../interfaces/QrCode';
+import {
+  QrCode,
+  QrCodeCreateData,
+  QrCodeUpdateData,
+  QrCodeListQueryParams,
+  QrCodeListResponse,
+} from '../interfaces/QrCode';
 import { generateQrCodePng, generateQrCodeSvg, mapQrCodeToOptions } from '../utils/qrCodeGenerator';
 import { getQrCodeColorOptions, QrCodeColorOptions } from '../config/qrCodeColors';
 import logger from '../utils/logger';
@@ -476,4 +482,49 @@ export const updateQrCode = async (id: number, updateData: any): Promise<QrCode 
  */
 export const deleteQrCode = async (id: number): Promise<boolean> => {
   return await qrCodeModel.deleteQrCode(id);
+};
+
+/**
+ * Gets all QR codes for a user with pagination, sorting, and filtering
+ *
+ * @param {number} userId - User ID to get QR codes for
+ * @param {QrCodeListQueryParams} queryParams - Query parameters for pagination, sorting, and filtering
+ * @returns {Promise<QrCodeListResponse>} List of QR codes with pagination information
+ */
+export const getAllQrCodes = async (
+  userId: number,
+  queryParams: QrCodeListQueryParams,
+): Promise<QrCodeListResponse> => {
+  try {
+    // Get QR codes from the database with filtering and pagination
+    const { qrCodes, total } = await qrCodeModel.getQrCodesByUser(userId, queryParams);
+
+    // Calculate pagination information
+    const page = queryParams.page || 1;
+    const limit = queryParams.limit || 10;
+    const totalPages = Math.ceil(total / limit);
+
+    // Format each QR code with appropriate URLs
+    const formattedQrCodes = qrCodes.map((qrCode: any) => {
+      // If the QR code already has short_code from the model query
+      if (qrCode.short_code) {
+        return formatQrCodeResponse(qrCode, qrCode.short_code);
+      }
+      return qrCode;
+    });
+
+    // Format the response
+    return {
+      data: formattedQrCodes,
+      pagination: {
+        total,
+        page,
+        limit,
+        total_pages: totalPages,
+      },
+    };
+  } catch (error) {
+    logger.error('Error retrieving QR codes for user:', error);
+    throw new Error('Failed to retrieve QR codes');
+  }
 };

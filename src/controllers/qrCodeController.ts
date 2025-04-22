@@ -9,6 +9,7 @@ import {
   downloadQrCodeByShortCode,
   QrCodeFormat,
   getQrCodeColors,
+  getAllQrCodes,
 } from '../services/qrCodeService';
 import logger from '../utils/logger';
 const { sendResponse } = require('../utils/response');
@@ -428,6 +429,69 @@ export const getQrCodeByShortCode = async (req: Request, res: Response): Promise
     return sendResponse(res, 200, 'Successfully retrieved QR code', qrCode);
   } catch (error) {
     logger.error('Error retrieving QR code:', error);
+    return sendResponse(res, 500, 'Internal Server Error');
+  }
+};
+
+/**
+ * Get all QR codes for the authenticated user with pagination, sorting, and filtering
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Response with QR codes or error
+ */
+export const getQrCodesByUser = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const userId = req.body.id; // User ID from auth middleware
+
+    // Parse query parameters
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+    const sortBy = req.query.sortBy as
+      | 'created_at'
+      | 'url_id'
+      | 'color'
+      | 'include_logo'
+      | 'size'
+      | undefined;
+    const sortOrder = req.query.sortOrder as 'asc' | 'desc';
+    const search = req.query.search as string;
+    const color = req.query.color as string;
+    const includeLogo = req.query.includeLogo ? req.query.includeLogo === 'true' : undefined;
+    const includeUrl = req.query.includeUrl ? req.query.includeUrl === 'true' : true;
+
+    // Get QR codes from service
+    const result = await getAllQrCodes(userId, {
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+      search,
+      color,
+      includeLogo,
+      includeUrl,
+    });
+
+    if (result.data.length === 0) {
+      return sendResponse(res, 200, 'No QR codes found', [], result.pagination);
+    }
+
+    logger.info(`Successfully retrieved QR codes for user ID: ${userId}`);
+    return sendResponse(
+      res,
+      200,
+      'QR codes retrieved successfully',
+      result.data,
+      result.pagination,
+    );
+  } catch (error) {
+    // Handle specific error conditions
+    if (error instanceof Error) {
+      logger.error('Error retrieving QR codes:', error.message);
+    } else {
+      logger.error('Error retrieving QR codes:', error);
+    }
+
     return sendResponse(res, 500, 'Internal Server Error');
   }
 };
