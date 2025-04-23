@@ -227,16 +227,17 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
     }
 
     // If no search term, use the regular getAllUrls functionality
-    // Calculate offset for pagination
-    const offset = (page - 1) * limit;
-
-    // Get all URLs for the user
+    // IMPORTANT: Don't apply offset/limit here - get ALL urls first to ensure accurate sorting
     const urls = await urlModel.getUrlsByUser(userId);
 
     // If no URLs found, return 204 status
     if (!urls || urls.length === 0) {
       return sendResponse(res, 204, 'No URLs are available', []);
     }
+
+    logger.info(
+      `Retrieved ${urls.length} total URLs for user ${userId} before processing clicks and sorting`,
+    );
 
     // For each URL, get the click count
     const urlsWithClicks = await Promise.all(
@@ -284,10 +285,21 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
       return sortOrder === 'asc' ? comparison : -comparison;
     });
 
-    // Apply pagination
+    // Log top URLs after sorting for debugging purposes
+    if (sortBy === 'clicks' && sortOrder === 'desc') {
+      const topUrls = sortedUrls.slice(0, 5).map(url => ({
+        id: url.id,
+        short_code: url.short_code,
+        clicks: url.clicks,
+      }));
+      logger.info(`Top 5 URLs by clicks: ${JSON.stringify(topUrls)}`);
+    }
+
+    // Only apply pagination AFTER sorting the complete list
+    const offset = (page - 1) * limit;
     const paginatedUrls = sortedUrls.slice(offset, offset + limit);
 
-    // Calculate pagination data
+    // Calculate pagination data based on total sorted results
     const totalUrls = sortedUrls.length;
     const totalPages = Math.ceil(totalUrls / limit);
 
