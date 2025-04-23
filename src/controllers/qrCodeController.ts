@@ -10,6 +10,7 @@ import {
   QrCodeFormat,
   getQrCodeColors,
   getAllQrCodes,
+  softDeleteQrCode,
 } from '../services/qrCodeService';
 import logger from '../utils/logger';
 const { sendResponse } = require('../utils/response');
@@ -511,6 +512,62 @@ export const getQrCodesByUser = async (req: Request, res: Response): Promise<Res
       logger.error('Error retrieving QR codes:', error.message);
     } else {
       logger.error('Error retrieving QR codes:', error);
+    }
+
+    return sendResponse(res, 500, 'Internal Server Error');
+  }
+};
+
+/**
+ * Delete a QR code (soft delete)
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Response with deletion confirmation or error
+ */
+export const deleteQrCodeById = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return sendResponse(res, 400, 'Invalid QR code ID');
+    }
+
+    // Get the authenticated user ID from the request
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      return sendResponse(res, 401, 'Unauthorized');
+    }
+
+    // Attempt to delete the QR code
+    const deletedQrCode = await softDeleteQrCode(id, userId);
+
+    if (!deletedQrCode) {
+      return sendResponse(res, 500, 'Failed to delete QR code');
+    }
+
+    logger.info(`Successfully deleted QR code with ID: ${id}`);
+    return sendResponse(res, 200, 'QR code deleted successfully', {
+      id: deletedQrCode.id,
+      deleted_at: deletedQrCode.deleted_at,
+    });
+  } catch (error) {
+    // Handle specific error conditions
+    if (error instanceof Error) {
+      if (error.message.includes('QR code not found')) {
+        return sendResponse(res, 404, 'QR code not found');
+      }
+
+      if (error.message.includes('Associated URL not found')) {
+        return sendResponse(res, 404, 'Associated URL not found');
+      }
+
+      if (error.message.includes('permission to delete')) {
+        return sendResponse(res, 403, 'You do not have permission to delete this QR code');
+      }
+
+      logger.error('QR code deletion error:', error.message);
+    } else {
+      logger.error('QR code deletion error:', error);
     }
 
     return sendResponse(res, 500, 'Internal Server Error');
