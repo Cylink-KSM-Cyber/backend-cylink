@@ -57,10 +57,15 @@ export const createQrCode = async (qrCodeData: QrCodeCreateData): Promise<QrCode
  * Get a QR code by its ID
  *
  * @param {number} id - The QR code ID to look up
+ * @param {boolean} includeDeleted - Whether to include soft-deleted QR codes
  * @returns {Promise<QrCode|null>} The QR code object or null if not found
  */
-export const getQrCodeById = async (id: number): Promise<QrCode | null> => {
-  const result = await pool.query('SELECT * FROM qr_codes WHERE id = $1', [id]);
+export const getQrCodeById = async (id: number, includeDeleted = false): Promise<QrCode | null> => {
+  const query = includeDeleted
+    ? 'SELECT * FROM qr_codes WHERE id = $1'
+    : 'SELECT * FROM qr_codes WHERE id = $1 AND deleted_at IS NULL';
+
+  const result = await pool.query(query, [id]);
   return result.rows[0] || null;
 };
 
@@ -68,14 +73,18 @@ export const getQrCodeById = async (id: number): Promise<QrCode | null> => {
  * Get all QR codes associated with a specific URL
  *
  * @param {number} urlId - The URL ID
+ * @param {boolean} includeDeleted - Whether to include soft-deleted QR codes
  * @returns {Promise<QrCode[]>} Array of QR code objects
  */
-export const getQrCodesByUrlId = async (urlId: number): Promise<QrCode[]> => {
-  const result = await pool.query(
-    'SELECT * FROM qr_codes WHERE url_id = $1 ORDER BY created_at DESC',
-    [urlId],
-  );
+export const getQrCodesByUrlId = async (
+  urlId: number,
+  includeDeleted = false,
+): Promise<QrCode[]> => {
+  const query = includeDeleted
+    ? 'SELECT * FROM qr_codes WHERE url_id = $1 ORDER BY created_at DESC'
+    : 'SELECT * FROM qr_codes WHERE url_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC';
 
+  const result = await pool.query(query, [urlId]);
   return result.rows;
 };
 
@@ -109,7 +118,7 @@ export const updateQrCode = async (
 
   const result = await pool.query(
     `UPDATE qr_codes SET ${setClause.join(', ')} 
-    WHERE id = $${paramCounter} 
+    WHERE id = $${paramCounter} AND deleted_at IS NULL
     RETURNING *`,
     values,
   );
@@ -118,14 +127,28 @@ export const updateQrCode = async (
 };
 
 /**
- * Delete a QR code by ID
+ * Soft delete a QR code by ID
  *
  * @param {number} id - The QR code ID to delete
+ * @returns {Promise<QrCode|null>} The deleted QR code with deleted_at timestamp or null if not found
+ */
+export const deleteQrCode = async (id: number): Promise<QrCode | null> => {
+  const result = await pool.query(
+    'UPDATE qr_codes SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL RETURNING *',
+    [id],
+  );
+
+  return result.rows[0] || null;
+};
+
+/**
+ * Hard delete a QR code by ID (for administrative purposes only)
+ *
+ * @param {number} id - The QR code ID to permanently delete
  * @returns {Promise<boolean>} Whether the deletion was successful
  */
-export const deleteQrCode = async (id: number): Promise<boolean> => {
+export const hardDeleteQrCode = async (id: number): Promise<boolean> => {
   const result = await pool.query('DELETE FROM qr_codes WHERE id = $1 RETURNING id', [id]);
-
   return result.rowCount > 0;
 };
 
@@ -133,11 +156,15 @@ export const deleteQrCode = async (id: number): Promise<boolean> => {
  * Check if a URL has any associated QR codes
  *
  * @param {number} urlId - The URL ID to check
+ * @param {boolean} includeDeleted - Whether to include soft-deleted QR codes
  * @returns {Promise<boolean>} Whether the URL has any QR codes
  */
-export const urlHasQrCodes = async (urlId: number): Promise<boolean> => {
-  const result = await pool.query('SELECT 1 FROM qr_codes WHERE url_id = $1 LIMIT 1', [urlId]);
+export const urlHasQrCodes = async (urlId: number, includeDeleted = false): Promise<boolean> => {
+  const query = includeDeleted
+    ? 'SELECT 1 FROM qr_codes WHERE url_id = $1 LIMIT 1'
+    : 'SELECT 1 FROM qr_codes WHERE url_id = $1 AND deleted_at IS NULL LIMIT 1';
 
+  const result = await pool.query(query, [urlId]);
   return result.rowCount > 0;
 };
 
@@ -146,12 +173,14 @@ export const urlHasQrCodes = async (urlId: number): Promise<boolean> => {
  *
  * @param {number} userId - The ID of the user
  * @param {QrCodeListQueryParams} queryParams - Query parameters for pagination, sorting, and filtering
+ * @param {boolean} includeDeleted - Whether to include soft-deleted QR codes
  * @returns {Promise<{qrCodes: QrCode[], total: number}>} QR codes and total count
  * @throws {Error} If invalid parameters are provided
  */
 export const getQrCodesByUser = async (
   userId: number,
   queryParams: QrCodeListQueryParams,
+  includeDeleted = false,
 ): Promise<{ qrCodes: QrCode[]; total: number }> => {
   const {
     page = 1,
@@ -196,6 +225,11 @@ export const getQrCodesByUser = async (
     WHERE u.user_id = $1
       AND u.deleted_at IS NULL
   `;
+
+  // Add condition to exclude deleted QR codes unless includeDeleted is true
+  if (!includeDeleted) {
+    baseQuery += ' AND qc.deleted_at IS NULL';
+  }
 
   const queryValues: any[] = [userId];
   let paramIndex = 2;
