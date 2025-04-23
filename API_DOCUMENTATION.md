@@ -130,6 +130,57 @@ This API documentation provides numerous benefits for both internal developers a
 - `POST /api/v1/qr-codes` - Generate a new QR code
 - `GET /api/v1/qr-codes/:id` - Get a specific QR code by ID
 
+### Delete QR Code
+
+Soft-deletes a QR code.
+
+**Request:**
+
+- Method: DELETE
+- Endpoint: `/api/v1/qr-codes/{id}`
+- Authorization: Bearer Token
+
+**Response:**
+
+- Success:
+
+  ```json
+  {
+    "status": 200,
+    "message": "QR code deleted successfully",
+    "data": {
+      "id": 45,
+      "deleted_at": "2023-04-18T15:30:00Z"
+    }
+  }
+  ```
+
+- Error (Not Found):
+
+  ```json
+  {
+    "status": 404,
+    "message": "QR code not found"
+  }
+  ```
+
+- Error (Unauthorized):
+
+  ```json
+  {
+    "status": 401,
+    "message": "Unauthorized"
+  }
+  ```
+
+- Error (Forbidden):
+  ```json
+  {
+    "status": 403,
+    "message": "You do not have permission to delete this QR code"
+  }
+  ```
+
 ## URLs API Endpoints
 
 ### Get URLs with Filtering and Search
