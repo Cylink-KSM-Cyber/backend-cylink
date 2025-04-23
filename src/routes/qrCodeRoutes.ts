@@ -9,6 +9,7 @@ const {
   downloadQrCodeByShortCodeController,
   getQrCodeColorOptions,
   getQrCodesByUser,
+  deleteQrCodeById,
 } = require('../controllers/qrCodeController');
 const validate = require('../utils/validator');
 const qrCodeValidator = require('../validators/qrCodeValidator');
@@ -450,5 +451,57 @@ router.get('/code/:shortCode', getQrCodeByShortCode);
  *         description: Internal server error
  */
 router.get('/:id', getQrCodeById);
+
+/**
+ * @swagger
+ * /api/v1/qr-codes/{id}:
+ *   delete:
+ *     summary: Delete a QR code (soft delete)
+ *     tags: [QR Codes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The QR code ID
+ *     responses:
+ *       200:
+ *         description: QR code deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: number
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: QR code deleted successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: number
+ *                       example: 45
+ *                     deleted_at:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2023-04-18T15:30:00Z
+ *       400:
+ *         description: Invalid QR code ID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: You do not have permission to delete this QR code
+ *       404:
+ *         description: QR code not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/:id', accessToken, deleteQrCodeById);
 
 module.exports = router;
