@@ -528,3 +528,51 @@ export const getAllQrCodes = async (
     throw new Error('Failed to retrieve QR codes');
   }
 };
+
+/**
+ * Soft deletes a QR code by its ID
+ *
+ * @param {number} id - QR code ID to delete
+ * @param {number} userId - User ID for authorization check
+ * @returns {Promise<QrCode|null>} The deleted QR code with deleted_at timestamp or null if not found/unauthorized
+ * @throws {Error} If QR code is not found or user is not authorized
+ */
+export const softDeleteQrCode = async (id: number, userId: number): Promise<QrCode | null> => {
+  // Get QR code from database
+  const qrCode = await qrCodeModel.getQrCodeById(id, true);
+  if (!qrCode) {
+    throw new Error('QR code not found');
+  }
+
+  // Get URL to check ownership
+  const url = await urlModel.getUrlById(qrCode.url_id);
+  if (!url) {
+    logger.error(`URL not found for QR code ID ${id} with URL ID ${qrCode.url_id}`);
+    throw new Error('Associated URL not found');
+  }
+
+  // Check if the user owns this QR code
+  if (url.user_id !== userId) {
+    logger.warn(`Unauthorized attempt to delete QR code ID ${id} by user ${userId}`);
+    throw new Error('You do not have permission to delete this QR code');
+  }
+
+  // Check if already deleted
+  if (qrCode.deleted_at) {
+    logger.info(`QR code ID ${id} is already deleted`);
+    return qrCode;
+  }
+
+  // Perform soft delete
+  const deletedQrCode = await qrCodeModel.deleteQrCode(id);
+
+  if (!deletedQrCode) {
+    logger.error(`Failed to delete QR code ID ${id}`);
+    throw new Error('Failed to delete QR code');
+  }
+
+  // Log the deletion for audit purposes
+  logger.info(`QR code ID ${id} soft-deleted by user ${userId}`);
+
+  return deletedQrCode;
+};
