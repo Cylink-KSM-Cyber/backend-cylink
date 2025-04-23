@@ -371,14 +371,35 @@ exports.getUrlsWithStatusFilter = async (userId: number, options: UrlFilterOptio
     throw new Error(`Invalid status parameter. Must be one of: ${validStatuses.join(', ')}`);
   }
 
-  // Get URLs with filter
-  const { urls, total, total_all } = await urlModel.getUrlsByUserWithFilters(userId, {
+  // If sorting by clicks, we need to get all URLs first before sorting
+  const modifiedOptions: UrlFilterOptions = {
     status,
+    sortBy: sortBy === 'clicks' ? 'created_at' : sortBy, // Default sort for database query if sorting by clicks
+    sortOrder,
     page,
     limit,
-    sortBy,
-    sortOrder,
-  });
+  };
+
+  // Skip pagination at database level if sorting by clicks
+  if (sortBy === 'clicks') {
+    // Get all URLs with filter (without pagination)
+    modifiedOptions.limit = 1000; // High limit to get all URLs
+    modifiedOptions.page = 1;
+  } else {
+    // Use requested pagination if not sorting by clicks
+    modifiedOptions.page = page;
+    modifiedOptions.limit = limit;
+  }
+
+  // Get URLs with filter
+  const { urls, total, total_all } = await urlModel.getUrlsByUserWithFilters(
+    userId,
+    modifiedOptions,
+  );
+
+  console.log(
+    `getUrlsWithStatusFilter - Retrieved ${urls.length} URLs with status ${status} before processing (total in database: ${total})`,
+  );
 
   // For each URL, get the click count and calculate status and days until expiry
   const processedUrls = await Promise.all(
@@ -443,6 +464,16 @@ exports.getUrlsWithStatusFilter = async (userId: number, options: UrlFilterOptio
         return a.clicks - b.clicks;
       }
     });
+
+    // Log top URLs after sorting by clicks for debugging
+    if (sortOrder === 'desc') {
+      const topUrls = processedUrls.slice(0, 5).map(url => ({
+        id: url.id,
+        short_code: url.short_code,
+        clicks: url.clicks,
+      }));
+      console.log(`getUrlsWithStatusFilter - Top 5 URLs by clicks: ${JSON.stringify(topUrls)}`);
+    }
   } else if (sortBy === 'title') {
     // Sort alphabetically by title
     processedUrls.sort((a, b) => {
@@ -453,6 +484,13 @@ exports.getUrlsWithStatusFilter = async (userId: number, options: UrlFilterOptio
       // Apply sort direction
       return sortOrder === 'asc' ? titleA.localeCompare(titleB) : titleB.localeCompare(titleA);
     });
+  }
+
+  // Apply pagination manually for clicks sorting
+  let paginatedUrls = processedUrls;
+  if (sortBy === 'clicks') {
+    const startIndex = (page - 1) * limit;
+    paginatedUrls = processedUrls.slice(startIndex, startIndex + limit);
   }
 
   // Calculate pagination data
@@ -473,7 +511,7 @@ exports.getUrlsWithStatusFilter = async (userId: number, options: UrlFilterOptio
   };
 
   return {
-    urls: processedUrls,
+    urls: paginatedUrls,
     pagination,
     filter_info: filterInfo,
   };
@@ -556,6 +594,10 @@ exports.getUrlsWithStatusAndSearch = async (userId: number, options: UrlFilterOp
       };
     }
 
+    console.log(
+      `getUrlsWithStatusAndSearch - Found ${results.length} URLs matching search "${search}"`,
+    );
+
     // Now filter the search results by status
     let filteredResults = [...results];
     const now = new Date();
@@ -587,6 +629,10 @@ exports.getUrlsWithStatusAndSearch = async (userId: number, options: UrlFilterOp
       });
     }
 
+    console.log(
+      `getUrlsWithStatusAndSearch - After status filter: ${filteredResults.length} URLs with status "${status}"`,
+    );
+
     // If we need to sort by clicks, we need to get click counts for all filtered URLs before pagination
     if (sortBy === 'clicks') {
       // Fetch click counts for all filtered results
@@ -605,6 +651,18 @@ exports.getUrlsWithStatusAndSearch = async (userId: number, options: UrlFilterOp
           return a.clicks - b.clicks;
         }
       });
+
+      // Log top URLs after sorting by clicks for debugging
+      if (sortOrder === 'desc') {
+        const topUrls = urlsWithClicks.slice(0, 5).map(url => ({
+          id: url.id,
+          short_code: url.short_code,
+          clicks: url.clicks,
+        }));
+        console.log(
+          `getUrlsWithStatusAndSearch - Top 5 URLs by clicks: ${JSON.stringify(topUrls)}`,
+        );
+      }
 
       // Replace filteredResults with sorted results
       filteredResults = urlsWithClicks;

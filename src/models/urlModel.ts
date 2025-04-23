@@ -82,10 +82,13 @@ exports.getUrlByShortCode = async (shortCode: string) => {
 };
 
 /**
- * Get all URLs created by a specific user
+ * Get all URLs for a specific user
+ * NOTE: This returns ALL URLs for a user without pagination.
+ * Pagination should be applied at the controller level AFTER processing and sorting,
+ * especially when sorting by metrics that are computed after the database query (like clicks).
  *
  * @param {number} userId - The user ID
- * @returns {Promise<any[]>} Array of URL objects
+ * @returns {Promise<any[]>} Array of URL records
  */
 exports.getUrlsByUser = async (userId: number) => {
   const result = await pool.query(
