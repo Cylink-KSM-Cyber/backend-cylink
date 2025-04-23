@@ -5191,3 +5191,9 @@ TSError: ⨯ Unable to compile TypeScript:
     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
 [2025-04-23 19:40:33] INFO: URLs filtered by status 'all' for user 1 in 639ms with 10 results (sorting by clicks desc) 
 [2025-04-23 19:41:53] INFO: URLs filtered by status 'all' for user 1 in 1754ms with 1 results (sorting by clicks desc) 
+[2025-04-23 19:55:23] INFO: URL not found or inactive for short code: favicon.ico 
+[2025-04-23 19:55:23] INFO: URL not found for short code: favicon.ico 
+[2025-04-23 19:58:14] INFO: Successfully logged in for admin@cylink.id 
+[2025-04-23 19:58:47] INFO: Successfully retrieved QR code with ID: 1 
+[2025-04-23 19:58:51] INFO: QR code ID 1 soft-deleted by user 1 
+[2025-04-23 19:58:51] INFO: Successfully deleted QR code with ID: 1 
