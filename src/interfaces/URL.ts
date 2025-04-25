@@ -141,3 +141,24 @@ export interface UrlUpdateData {
   password_hash?: string;
   redirect_type?: string;
 }
+
+/**
+ * Update URL Request interface
+ * Used for the PUT /api/v1/urls/:id endpoint
+ */
+export interface UpdateUrlRequest {
+  title?: string;
+  original_url?: string;
+  expiry_date?: string | null;
+  is_active?: boolean;
+}
+
+/**
+ * Update URL Response interface
+ */
+export interface UpdateUrlResponse {
+  status: number;
+  message: string;
+  data?: UrlWithClicks;
+  errors?: string[];
+}
