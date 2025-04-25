@@ -303,28 +303,36 @@ function highlightMatches(text: string, term: string): string[] | null {
 }
 
 /**
- * Update an existing URL
+ * Update a URL by ID
  *
  * @param {number} id - The URL ID to update
- * @param {typeof UrlUpdateData} updateData - The fields to update
- * @returns {Promise<any|null>} The updated URL or null if not found
+ * @param {UrlUpdateData} updateData - The data to update
+ * @returns {Promise<any>} The updated URL object
  */
 exports.updateUrl = async (id: number, updateData: typeof UrlUpdateData) => {
-  // Build dynamic update query
+  const keys = Object.keys(updateData).filter(
+    key => updateData[key as keyof typeof updateData] !== undefined,
+  );
+
+  if (keys.length === 0) {
+    return null;
+  }
+
   const setClause = [];
   const values = [];
   let paramCounter = 1;
 
-  Object.entries(updateData).forEach(([key, value]) => {
+  // Add each field to be updated to the SET clause
+  for (const key of keys) {
     setClause.push(`${key} = $${paramCounter}`);
-    values.push(value);
+    values.push(updateData[key as keyof typeof updateData]);
     paramCounter++;
-  });
+  }
 
-  // Add updated_at timestamp
+  // Always update the updated_at timestamp
   setClause.push(`updated_at = NOW()`);
 
-  // Add the ID to the values array
+  // Add the URL ID as the last parameter
   values.push(id);
 
   const result = await pool.query(
@@ -363,20 +371,13 @@ exports.shortCodeExists = async (shortCode: string) => {
 };
 
 /**
- * Get a URL by its ID (including soft deleted URLs)
+ * Get a URL by ID
  *
- * @param {number} id - The URL ID to look up
- * @param {boolean} includeDeleted - Whether to include soft deleted URLs
+ * @param {number} id - The URL ID to retrieve
  * @returns {Promise<any|null>} The URL object or null if not found
  */
-exports.getUrlById = async (id: number, includeDeleted = false) => {
-  let query = 'SELECT * FROM urls WHERE id = $1';
-
-  if (!includeDeleted) {
-    query += ' AND deleted_at IS NULL';
-  }
-
-  const result = await pool.query(query, [id]);
+exports.getUrlById = async (id: number) => {
+  const result = await pool.query('SELECT * FROM urls WHERE id = $1 AND deleted_at IS NULL', [id]);
 
   return result.rows[0] || null;
 };

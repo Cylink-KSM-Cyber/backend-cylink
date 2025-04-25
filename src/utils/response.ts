@@ -29,6 +29,8 @@ interface ApiResponse<T> {
   data?: T;
   pagination?: Pagination | any;
   search_info?: SearchInfo;
+  filter_info?: any;
+  errors?: string[];
 }
 
 /**
@@ -40,6 +42,8 @@ interface ApiResponse<T> {
  * @param {T} data - Response data
  * @param {Pagination} pagination - Pagination information
  * @param {SearchInfo} searchInfo - Search information
+ * @param {string[]} errors - Validation errors
+ * @param {any} filterInfo - Filter information
  * @returns {Response} Express response with formatted JSON
  */
 export function sendResponse<T>(
@@ -49,6 +53,8 @@ export function sendResponse<T>(
   data: T | null = null,
   pagination: Pagination | null = null,
   searchInfo: SearchInfo | null = null,
+  errors: string[] | null = null,
+  filterInfo: any = null,
 ): Response {
   const response: ApiResponse<T> = {
     status: statusCode,
@@ -65,6 +71,14 @@ export function sendResponse<T>(
 
   if (searchInfo !== null) {
     response.search_info = searchInfo;
+  }
+
+  if (errors !== null && errors.length > 0) {
+    response.errors = errors;
+  }
+
+  if (filterInfo !== null) {
+    response.filter_info = filterInfo;
   }
 
   return res.status(statusCode).json(response);

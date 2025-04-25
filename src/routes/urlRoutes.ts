@@ -929,4 +929,131 @@ router.get('/:url_id/qr-code', accessToken, getQrCodeByUrlId);
  */
 router.get('/:url_id/ctr', accessToken, ctrController.getUrlCTRStats);
 
+/**
+ * @swagger
+ * /api/v1/urls/{id}:
+ *   put:
+ *     summary: Update an existing URL
+ *     description: Update properties of an existing shortened URL
+ *     tags: [URLs]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the URL to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Updated title for the URL
+ *                 example: Updated Title
+ *               original_url:
+ *                 type: string
+ *                 description: Updated original URL
+ *                 example: https://example.com/updated-path
+ *               expiry_date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Updated expiry date (use null to remove expiry)
+ *                 example: 2025-06-30T00:00:00Z
+ *               is_active:
+ *                 type: boolean
+ *                 description: Updated active status
+ *                 example: false
+ *     responses:
+ *       200:
+ *         description: URL updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: URL updated successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 123
+ *                     original_url:
+ *                       type: string
+ *                       example: https://example.com/updated-path
+ *                     short_code:
+ *                       type: string
+ *                       example: abc123
+ *                     short_url:
+ *                       type: string
+ *                       example: https://cylink.id/abc123
+ *                     title:
+ *                       type: string
+ *                       example: Updated Title
+ *                     clicks:
+ *                       type: integer
+ *                       example: 42
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-04-10T12:00:00Z
+ *                     updated_at:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-04-18T15:30:00Z
+ *                     expiry_date:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-06-30T00:00:00Z
+ *                       nullable: true
+ *                     is_active:
+ *                       type: boolean
+ *                       example: false
+ *       400:
+ *         description: Bad Request - validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: Validation error
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example:
+ *                     - Original URL must be a valid URL
+ *                     - Expiry date must be in the future
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *       403:
+ *         description: Forbidden - user does not own this URL
+ *       404:
+ *         description: URL not found
+ *       500:
+ *         description: Server error
+ */
+router.put(
+  '/:id',
+  accessToken,
+  validate({ fields: fields.updateUrl.body, preserveBodyProps: true }),
+  urlController.updateUrl,
+);
+
 module.exports = router;
