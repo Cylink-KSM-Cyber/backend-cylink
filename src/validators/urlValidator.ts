@@ -58,6 +58,42 @@ module.exports = {
   ],
 
   /**
+   * Validation rules for updating a URL
+   */
+  updateUrl: {
+    params: {
+      id: {
+        type: 'number',
+        required: true,
+        integer: true,
+        positive: true,
+      },
+    },
+    body: {
+      title: {
+        type: 'string',
+        optional: true,
+        max: 255,
+      },
+      original_url: {
+        type: 'string',
+        optional: true,
+        max: 2048,
+      },
+      expiry_date: {
+        type: 'string',
+        optional: true,
+        // null is allowed to remove expiry date
+        nullable: true,
+      },
+      is_active: {
+        type: 'boolean',
+        optional: true,
+      },
+    },
+  },
+
+  /**
    * Validation rules for GET /urls/:id/analytics endpoint
    */
   getUrlAnalytics: [
