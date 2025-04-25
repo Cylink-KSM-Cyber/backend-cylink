@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { UrlWithSearchHighlights, SearchInfo } from '../interfaces/URL';
+import { UrlWithSearchHighlights, SearchInfo, UpdateUrlRequest } from '../interfaces/URL';
 import logger from '../utils/logger';
 const { sendResponse } = require('../utils/response');
 
@@ -1309,5 +1309,124 @@ exports.getUrlsWithStatusFilter = async (req: Request, res: Response): Promise<R
     // Log and return unexpected errors
     logger.error('Error filtering URLs by status:', error);
     return sendResponse(res, 500, 'An error occurred while filtering URLs');
+  }
+};
+
+/**
+ * Update an existing URL
+ * Allows authenticated users to update properties of their own URLs
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Response with the updated URL or error
+ */
+exports.updateUrl = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const { id } = req.params;
+    const userId = req.body.id; // From authentication middleware
+
+    if (!userId) {
+      return sendResponse(res, 401, 'Unauthorized: No user ID');
+    }
+
+    // Convert ID to number
+    const urlId = parseInt(id as string, 10);
+
+    if (isNaN(urlId)) {
+      return sendResponse(res, 400, 'Invalid URL ID');
+    }
+
+    // Get the existing URL
+    const existingUrl = await urlModel.getUrlById(urlId);
+
+    if (!existingUrl) {
+      return sendResponse(res, 404, 'URL not found');
+    }
+
+    // Check if the URL belongs to the authenticated user
+    if (existingUrl.user_id !== userId) {
+      return sendResponse(res, 403, 'You do not have permission to update this URL');
+    }
+
+    const updateData: UpdateUrlRequest = req.body;
+    const validationErrors: string[] = [];
+
+    // Validate original_url if provided
+    if (updateData.original_url !== undefined) {
+      if (!isValidUrl(updateData.original_url)) {
+        validationErrors.push('Original URL must be a valid URL');
+      }
+    }
+
+    // Validate expiry_date if provided
+    if (updateData.expiry_date && updateData.expiry_date !== null) {
+      const expiryDate = new Date(updateData.expiry_date);
+      const now = new Date();
+
+      if (isNaN(expiryDate.getTime())) {
+        validationErrors.push('Expiry date must be a valid date');
+      } else if (expiryDate <= now) {
+        validationErrors.push('Expiry date must be in the future');
+      }
+    }
+
+    // If there are validation errors, return them
+    if (validationErrors.length > 0) {
+      return sendResponse(res, 400, 'Validation error', null, null, null, validationErrors);
+    }
+
+    // Prepare update data
+    const updateFields: any = {};
+
+    if (updateData.title !== undefined) {
+      updateFields.title = updateData.title;
+    }
+
+    if (updateData.original_url !== undefined) {
+      updateFields.original_url = updateData.original_url;
+    }
+
+    if (updateData.expiry_date !== undefined) {
+      updateFields.expiry_date = updateData.expiry_date;
+    }
+
+    if (updateData.is_active !== undefined) {
+      updateFields.is_active = updateData.is_active;
+    }
+
+    // Update the URL
+    const updatedUrl = await urlModel.updateUrl(urlId, updateFields);
+
+    if (!updatedUrl) {
+      return sendResponse(res, 500, 'Failed to update URL');
+    }
+
+    // Get the click count
+    const clickCount = await clickModel.getClickCountByUrlId(urlId);
+
+    // Format the response
+    const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
+    const shortUrl = baseUrl + updatedUrl.short_code;
+
+    const formattedUrl = {
+      id: updatedUrl.id,
+      original_url: updatedUrl.original_url,
+      short_code: updatedUrl.short_code,
+      short_url: shortUrl,
+      title: updatedUrl.title,
+      clicks: clickCount,
+      created_at: new Date(updatedUrl.created_at).toISOString(),
+      updated_at: new Date(updatedUrl.updated_at).toISOString(),
+      expiry_date: updatedUrl.expiry_date ? new Date(updatedUrl.expiry_date).toISOString() : null,
+      is_active: updatedUrl.is_active,
+    };
+
+    // Log the update
+    logger.info(`URL ${urlId} updated by user ${userId}`);
+
+    return sendResponse(res, 200, 'URL updated successfully', formattedUrl);
+  } catch (error) {
+    logger.error('Error updating URL:', error);
+    return sendResponse(res, 500, 'Internal server error');
   }
 };
