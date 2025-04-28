@@ -129,3 +129,196 @@ This API documentation provides numerous benefits for both internal developers a
 
 - `POST /api/v1/qr-codes` - Generate a new QR code
 - `GET /api/v1/qr-codes/:id` - Get a specific QR code by ID
+
+### Delete QR Code
+
+Soft-deletes a QR code.
+
+**Request:**
+
+- Method: DELETE
+- Endpoint: `/api/v1/qr-codes/{id}`
+- Authorization: Bearer Token
+
+**Response:**
+
+- Success:
+
+  ```json
+  {
+    "status": 200,
+    "message": "QR code deleted successfully",
+    "data": {
+      "id": 45,
+      "deleted_at": "2023-04-18T15:30:00Z"
+    }
+  }
+  ```
+
+- Error (Not Found):
+
+  ```json
+  {
+    "status": 404,
+    "message": "QR code not found"
+  }
+  ```
+
+- Error (Unauthorized):
+
+  ```json
+  {
+    "status": 401,
+    "message": "Unauthorized"
+  }
+  ```
+
+- Error (Forbidden):
+  ```json
+  {
+    "status": 403,
+    "message": "You do not have permission to delete this QR code"
+  }
+  ```
+
+## URLs API Endpoints
+
+### Get URLs with Filtering and Search
+
+```
+GET /api/v1/urls
+```
+
+**Authentication Required**: Yes (Bearer Token)
+
+**Query Parameters**:
+
+- `status` (optional): Filter by URL status - 'all', 'active', 'inactive', 'expired', 'expiring-soon' (default: 'all')
+- `search` (optional): Search term to filter results
+- `page` (optional): Page number for pagination (default: 1)
+- `limit` (optional): Number of items per page (default: 10)
+- `sortBy` (optional): Field to sort by - 'created_at', 'clicks', 'title', 'relevance' (default: 'created_at')
+- `sortOrder` (optional): Order of sorting - 'asc', 'desc' (default: 'desc')
+
+**Response**:
+
+```json
+{
+  "status": 200,
+  "message": "URLs filtered successfully",
+  "data": [
+    {
+      "id": 123,
+      "original_url": "https://example.com/path",
+      "short_code": "abc123",
+      "short_url": "https://cylink.id/abc123",
+      "title": "Example URL",
+      "clicks": 42,
+      "created_at": "2025-04-10T12:00:00Z",
+      "updated_at": "2025-04-11T09:30:00Z",
+      "expiry_date": "2025-05-10T00:00:00Z",
+      "is_active": true,
+      "status": "active",
+      "days_until_expiry": 30
+    }
+    // More URLs...
+  ],
+  "pagination": {
+    "total": 24,
+    "page": 1,
+    "limit": 10,
+    "total_pages": 3
+  },
+  "filter_info": {
+    "status": "active",
+    "total_matching": 24,
+    "total_all": 35
+  }
+}
+```
+
+**Status Filtering Options**:
+
+- `all`: Returns all URLs (default)
+- `active`: Only returns URLs that are currently active (not expired and is_active=true)
+- `inactive`: Only returns URLs that are manually set to inactive (is_active=false)
+- `expired`: Only returns URLs that have passed their expiry date
+- `expiring-soon`: Only returns URLs that will expire within the next 7 days
+
+**Combined Search and Status Filtering**:
+You can combine the `status` and `search` parameters to find URLs that match both criteria. For example:
+
+```
+GET /api/v1/urls?status=active&search=example
+```
+
+This will return only active URLs that contain "example" in their original URL, short code, or title.
+
+When both search and status filtering are used, the response will include both `filter_info` and `search_info`:
+
+```json
+{
+  "status": 200,
+  "message": "URLs filtered and searched successfully",
+  "data": [
+    // Filtered and searched URLs...
+  ],
+  "pagination": {
+    "total": 5,
+    "page": 1,
+    "limit": 10,
+    "total_pages": 1
+  },
+  "filter_info": {
+    "status": "active",
+    "total_matching": 5,
+    "total_all": 35
+  },
+  "search_info": {
+    "term": "example",
+    "fields_searched": ["original_url", "short_code", "title"],
+    "total_matches": 8
+  }
+}
+```
+
+If no URLs match the specified filter and search:
+
+```json
+{
+  "status": 200,
+  "message": "No URLs match the specified filter and search term \"example\"",
+  "data": [],
+  "pagination": {
+    "total": 0,
+    "page": 1,
+    "limit": 10,
+    "total_pages": 0
+  },
+  "filter_info": {
+    "status": "expired",
+    "total_matching": 0,
+    "total_all": 35
+  },
+  "search_info": {
+    "term": "example",
+    "fields_searched": ["original_url", "short_code", "title"],
+    "total_matches": 8
+  }
+}
+```
+
+**Error Responses**:
+
+- 400: Invalid parameters (e.g., invalid status value)
+
+```json
+{
+  "status": 400,
+  "message": "Invalid status parameter",
+  "errors": ["Status must be one of: all, active, inactive, expired, expiring-soon"]
+}
+```
+
+- 401: Unauthorized (invalid or missing token)
+- 500: Server error

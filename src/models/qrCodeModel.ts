@@ -1,5 +1,10 @@
 const pool = require('../config/database');
-import { QrCode, QrCodeCreateData, QrCodeUpdateData } from '../interfaces/QrCode';
+import {
+  QrCode,
+  QrCodeCreateData,
+  QrCodeUpdateData,
+  QrCodeListQueryParams,
+} from '../interfaces/QrCode';
 
 /**
  * QR Code Model
@@ -52,10 +57,15 @@ export const createQrCode = async (qrCodeData: QrCodeCreateData): Promise<QrCode
  * Get a QR code by its ID
  *
  * @param {number} id - The QR code ID to look up
+ * @param {boolean} includeDeleted - Whether to include soft-deleted QR codes
  * @returns {Promise<QrCode|null>} The QR code object or null if not found
  */
-export const getQrCodeById = async (id: number): Promise<QrCode | null> => {
-  const result = await pool.query('SELECT * FROM qr_codes WHERE id = $1', [id]);
+export const getQrCodeById = async (id: number, includeDeleted = false): Promise<QrCode | null> => {
+  const query = includeDeleted
+    ? 'SELECT * FROM qr_codes WHERE id = $1'
+    : 'SELECT * FROM qr_codes WHERE id = $1 AND deleted_at IS NULL';
+
+  const result = await pool.query(query, [id]);
   return result.rows[0] || null;
 };
 
@@ -63,14 +73,18 @@ export const getQrCodeById = async (id: number): Promise<QrCode | null> => {
  * Get all QR codes associated with a specific URL
  *
  * @param {number} urlId - The URL ID
+ * @param {boolean} includeDeleted - Whether to include soft-deleted QR codes
  * @returns {Promise<QrCode[]>} Array of QR code objects
  */
-export const getQrCodesByUrlId = async (urlId: number): Promise<QrCode[]> => {
-  const result = await pool.query(
-    'SELECT * FROM qr_codes WHERE url_id = $1 ORDER BY created_at DESC',
-    [urlId],
-  );
+export const getQrCodesByUrlId = async (
+  urlId: number,
+  includeDeleted = false,
+): Promise<QrCode[]> => {
+  const query = includeDeleted
+    ? 'SELECT * FROM qr_codes WHERE url_id = $1 ORDER BY created_at DESC'
+    : 'SELECT * FROM qr_codes WHERE url_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC';
 
+  const result = await pool.query(query, [urlId]);
   return result.rows;
 };
 
@@ -104,7 +118,7 @@ export const updateQrCode = async (
 
   const result = await pool.query(
     `UPDATE qr_codes SET ${setClause.join(', ')} 
-    WHERE id = $${paramCounter} 
+    WHERE id = $${paramCounter} AND deleted_at IS NULL
     RETURNING *`,
     values,
   );
@@ -113,14 +127,28 @@ export const updateQrCode = async (
 };
 
 /**
- * Delete a QR code by ID
+ * Soft delete a QR code by ID
  *
  * @param {number} id - The QR code ID to delete
+ * @returns {Promise<QrCode|null>} The deleted QR code with deleted_at timestamp or null if not found
+ */
+export const deleteQrCode = async (id: number): Promise<QrCode | null> => {
+  const result = await pool.query(
+    'UPDATE qr_codes SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL RETURNING *',
+    [id],
+  );
+
+  return result.rows[0] || null;
+};
+
+/**
+ * Hard delete a QR code by ID (for administrative purposes only)
+ *
+ * @param {number} id - The QR code ID to permanently delete
  * @returns {Promise<boolean>} Whether the deletion was successful
  */
-export const deleteQrCode = async (id: number): Promise<boolean> => {
+export const hardDeleteQrCode = async (id: number): Promise<boolean> => {
   const result = await pool.query('DELETE FROM qr_codes WHERE id = $1 RETURNING id', [id]);
-
   return result.rowCount > 0;
 };
 
@@ -128,10 +156,151 @@ export const deleteQrCode = async (id: number): Promise<boolean> => {
  * Check if a URL has any associated QR codes
  *
  * @param {number} urlId - The URL ID to check
+ * @param {boolean} includeDeleted - Whether to include soft-deleted QR codes
  * @returns {Promise<boolean>} Whether the URL has any QR codes
  */
-export const urlHasQrCodes = async (urlId: number): Promise<boolean> => {
-  const result = await pool.query('SELECT 1 FROM qr_codes WHERE url_id = $1 LIMIT 1', [urlId]);
+export const urlHasQrCodes = async (urlId: number, includeDeleted = false): Promise<boolean> => {
+  const query = includeDeleted
+    ? 'SELECT 1 FROM qr_codes WHERE url_id = $1 LIMIT 1'
+    : 'SELECT 1 FROM qr_codes WHERE url_id = $1 AND deleted_at IS NULL LIMIT 1';
 
+  const result = await pool.query(query, [urlId]);
   return result.rowCount > 0;
+};
+
+/**
+ * Get all QR codes for a specific user with pagination, sorting, and filtering
+ *
+ * @param {number} userId - The ID of the user
+ * @param {QrCodeListQueryParams} queryParams - Query parameters for pagination, sorting, and filtering
+ * @param {boolean} includeDeleted - Whether to include soft-deleted QR codes
+ * @returns {Promise<{qrCodes: QrCode[], total: number}>} QR codes and total count
+ * @throws {Error} If invalid parameters are provided
+ */
+export const getQrCodesByUser = async (
+  userId: number,
+  queryParams: QrCodeListQueryParams,
+  includeDeleted = false,
+): Promise<{ qrCodes: QrCode[]; total: number }> => {
+  const {
+    page = 1,
+    limit = 10,
+    sortBy = 'created_at',
+    sortOrder = 'desc',
+    search,
+    color,
+    includeLogo,
+    includeUrl = true,
+  } = queryParams;
+
+  // Validate and sanitize the sort column to prevent SQL injection
+  const validSortColumns: Record<string, string> = {
+    created_at: 'qc.created_at',
+    url_id: 'qc.url_id',
+    color: 'qc.color',
+    include_logo: 'qc.include_logo',
+    size: 'qc.size',
+  };
+
+  // Explicitly validate sortBy parameter
+  if (sortBy && !validSortColumns[sortBy]) {
+    const allowedValues = Object.keys(validSortColumns).join(', ');
+    throw new Error(`Invalid sortBy parameter. Must be one of: ${allowedValues}`);
+  }
+
+  // Use the validated sort column or default to created_at
+  const sortColumn = validSortColumns[sortBy] || 'qc.created_at';
+
+  // Validate sortOrder
+  if (sortOrder && sortOrder !== 'asc' && sortOrder !== 'desc') {
+    throw new Error('Invalid sortOrder parameter. Must be "asc" or "desc"');
+  }
+
+  const offset = (page - 1) * limit;
+
+  // Build the base query
+  let baseQuery = `
+    FROM qr_codes qc
+    JOIN urls u ON qc.url_id = u.id
+    WHERE u.user_id = $1
+      AND u.deleted_at IS NULL
+  `;
+
+  // Add condition to exclude deleted QR codes unless includeDeleted is true
+  if (!includeDeleted) {
+    baseQuery += ' AND qc.deleted_at IS NULL';
+  }
+
+  const queryValues: any[] = [userId];
+  let paramIndex = 2;
+
+  // Add search functionality
+  if (search) {
+    baseQuery += ` AND (
+      u.original_url ILIKE $${paramIndex} OR 
+      u.short_code ILIKE $${paramIndex} OR
+      u.title ILIKE $${paramIndex}
+    )`;
+    queryValues.push(`%${search}%`);
+    paramIndex++;
+  }
+
+  // Add color filter
+  if (color) {
+    baseQuery += ` AND qc.color = $${paramIndex}`;
+    queryValues.push(color);
+    paramIndex++;
+  }
+
+  // Add include_logo filter
+  if (includeLogo !== undefined) {
+    baseQuery += ` AND qc.include_logo = $${paramIndex}`;
+    queryValues.push(includeLogo);
+    paramIndex++;
+  }
+
+  // Get total count
+  const countQuery = `SELECT COUNT(*) ${baseQuery}`;
+  const countResult = await pool.query(countQuery, queryValues);
+  const total = parseInt(countResult.rows[0].count, 10);
+
+  // Get paginated and sorted QR codes
+  let selectFields = 'qc.*';
+  if (includeUrl) {
+    selectFields +=
+      ', u.id as url_id, u.original_url, u.title, u.short_code, (SELECT COUNT(*) FROM clicks c WHERE c.url_id = u.id) as clicks';
+  }
+
+  const dataQuery = `
+    SELECT ${selectFields}
+    ${baseQuery}
+    ORDER BY ${sortColumn} ${sortOrder === 'asc' ? 'ASC' : 'DESC'}
+    LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+  `;
+
+  queryValues.push(limit, offset);
+  const dataResult = await pool.query(dataQuery, queryValues);
+
+  // Format the results
+  const qrCodes = dataResult.rows.map((row: any) => {
+    if (includeUrl) {
+      // If includeUrl is true, format the data to include URL information
+      const { original_url, title, clicks, short_code, ...qrCodeData } = row;
+
+      return {
+        ...qrCodeData,
+        short_code, // Include the short_code directly in the QR code object
+        url: {
+          id: row.url_id,
+          original_url,
+          title,
+          clicks: clicks || 0,
+          short_code,
+        },
+      };
+    }
+    return row;
+  });
+
+  return { qrCodes, total };
 };

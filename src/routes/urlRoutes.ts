@@ -2,6 +2,7 @@ const router = require('express').Router();
 
 const { getQrCodeByUrlId } = require('../controllers/qrCodeController');
 const urlController = require('../controllers/urlController');
+const ctrController = require('../controllers/ctrController');
 const { accessToken } = require('../middlewares/authMiddleware');
 const validate = require('../utils/validator');
 const fields = require('../validators/urlValidator');
@@ -72,11 +73,23 @@ const fields = require('../validators/urlValidator');
  * @swagger
  * /api/v1/urls:
  *   get:
- *     summary: Get all URLs for authenticated user
+ *     summary: Get all URLs for authenticated user with optional filtering by status and search
  *     tags: [URLs]
  *     security:
  *       - BearerAuth: []
  *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [all, active, inactive, expired, expiring-soon]
+ *           default: all
+ *         description: Filter URLs by their status
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Text to search in original URLs, short codes, or titles (minimum 2 characters)
  *       - in: query
  *         name: page
  *         schema:
@@ -93,9 +106,9 @@ const fields = require('../validators/urlValidator');
  *         name: sortBy
  *         schema:
  *           type: string
- *           enum: [created_at, clicks, title]
+ *           enum: [created_at, clicks, title, relevance]
  *           default: created_at
- *         description: Field to sort by
+ *         description: Field to sort by (defaults to 'relevance' when search parameter is provided)
  *       - in: query
  *         name: sortOrder
  *         schema:
@@ -105,7 +118,7 @@ const fields = require('../validators/urlValidator');
  *         description: Sort order
  *     responses:
  *       200:
- *         description: A list of URLs with pagination
+ *         description: A list of URLs with pagination, filtering, and search information
  *         content:
  *           application/json:
  *             schema:
@@ -116,29 +129,102 @@ const fields = require('../validators/urlValidator');
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: Successfully retrieved all URLs
+ *                   example: URLs filtered successfully
  *                 data:
+ *                   type: array
+ *                   items:
+ *                     allOf:
+ *                       - $ref: '#/components/schemas/Url'
+ *                       - type: object
+ *                         properties:
+ *                           status:
+ *                             type: string
+ *                             enum: [active, inactive, expired, expiring-soon]
+ *                             example: active
+ *                           days_until_expiry:
+ *                             type: integer
+ *                             example: 30
+ *                             nullable: true
+ *                           matches:
+ *                             type: object
+ *                             properties:
+ *                               original_url:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                                 example: ["<em>example</em>.com"]
+ *                                 nullable: true
+ *                               short_code:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                                 nullable: true
+ *                               title:
+ *                                 type: array
+ *                                 items:
+ *                                   type: string
+ *                                 nullable: true
+ *                 pagination:
  *                   type: object
  *                   properties:
- *                     urls:
+ *                     total:
+ *                       type: integer
+ *                       example: 24
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     total_pages:
+ *                       type: integer
+ *                       example: 3
+ *                 filter_info:
+ *                   type: object
+ *                   properties:
+ *                     status:
+ *                       type: string
+ *                       example: "active"
+ *                     total_matching:
+ *                       type: integer
+ *                       example: 24
+ *                     total_all:
+ *                       type: integer
+ *                       example: 35
+ *                 search_info:
+ *                   type: object
+ *                   properties:
+ *                     term:
+ *                       type: string
+ *                       example: "example"
+ *                     fields_searched:
  *                       type: array
  *                       items:
- *                         $ref: '#/components/schemas/Url'
- *                     pagination:
- *                       type: object
- *                       properties:
- *                         total:
- *                           type: integer
- *                           example: 57
- *                         page:
- *                           type: integer
- *                           example: 1
- *                         limit:
- *                           type: integer
- *                           example: 10
- *                         total_pages:
- *                           type: integer
- *                           example: 6
+ *                         type: string
+ *                       example: ["original_url", "short_code", "title"]
+ *                     total_matches:
+ *                       type: integer
+ *                       example: 24
+ *       204:
+ *         description: No URLs found
+ *       400:
+ *         description: Invalid parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid status parameter"
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example: ["Status must be one of: all, active, inactive, expired, expiring-soon"]
  *       401:
  *         description: Unauthorized, authentication required
  *       500:
@@ -148,7 +234,7 @@ router.get(
   '/',
   accessToken,
   validate({ query: fields.getUrls, preserveBodyProps: true }),
-  urlController.getAllUrls,
+  urlController.getUrlsWithStatusFilter,
 );
 
 /**
@@ -707,5 +793,267 @@ router.get(
  * }
  */
 router.get('/:url_id/qr-code', accessToken, getQrCodeByUrlId);
+
+/**
+ * @swagger
+ * /api/v1/urls/{url_id}/ctr:
+ *   get:
+ *     summary: Get CTR statistics for a specific URL
+ *     description: Retrieves Click-Through Rate (CTR) statistics for a specific URL
+ *     tags: [URLs, CTR]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: url_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the URL to get statistics for
+ *       - in: query
+ *         name: start_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date for the analysis period (format- YYYY-MM-DD, default- 30 days ago)
+ *       - in: query
+ *         name: end_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date for the analysis period (format- YYYY-MM-DD, default- today)
+ *       - in: query
+ *         name: comparison
+ *         schema:
+ *           type: string
+ *           enum: [7, 14, 30, 90, custom]
+ *         description: Comparison period in days (default- 30)
+ *       - in: query
+ *         name: group_by
+ *         schema:
+ *           type: string
+ *           enum: [day, week, month]
+ *         description: How to group the time series data (default- day)
+ *     responses:
+ *       200:
+ *         description: URL CTR statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: URL CTR statistics retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     overall:
+ *                       type: object
+ *                       properties:
+ *                         total_impressions:
+ *                           type: string
+ *                           example: "115"
+ *                         total_clicks:
+ *                           type: string
+ *                           example: "43"
+ *                         ctr:
+ *                           type: string
+ *                           example: "37.39"
+ *                         unique_impressions:
+ *                           type: string
+ *                           example: "78"
+ *                         unique_ctr:
+ *                           type: string
+ *                           example: "55.13"
+ *                         analysis_period:
+ *                           type: object
+ *                           properties:
+ *                             start_date:
+ *                               type: string
+ *                               format: date
+ *                               example: "2025-03-21"
+ *                             end_date:
+ *                               type: string
+ *                               format: date
+ *                               example: "2025-04-20"
+ *                             days:
+ *                               type: integer
+ *                               example: 30
+ *                     top_performing_days:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           date:
+ *                             type: string
+ *                             format: date
+ *                             example: "2025-04-09"
+ *                           impressions:
+ *                             type: string
+ *                             example: "5"
+ *                           clicks:
+ *                             type: string
+ *                             example: "4"
+ *                           ctr:
+ *                             type: string
+ *                             example: "80.00"
+ *                     ctr_by_source:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           source:
+ *                             type: string
+ *                             example: "direct"
+ *                           impressions:
+ *                             type: string
+ *                             example: "11"
+ *                           clicks:
+ *                             type: string
+ *                             example: "13"
+ *                           ctr:
+ *                             type: string
+ *                             example: "118.18"
+ *       400:
+ *         description: Invalid URL ID
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *       404:
+ *         description: URL not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/:url_id/ctr', accessToken, ctrController.getUrlCTRStats);
+
+/**
+ * @swagger
+ * /api/v1/urls/{id}:
+ *   put:
+ *     summary: Update an existing URL
+ *     description: Update properties of an existing shortened URL
+ *     tags: [URLs]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the URL to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Updated title for the URL
+ *                 example: Updated Title
+ *               original_url:
+ *                 type: string
+ *                 description: Updated original URL
+ *                 example: https://example.com/updated-path
+ *               expiry_date:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Updated expiry date (use null to remove expiry)
+ *                 example: 2025-06-30T00:00:00Z
+ *               is_active:
+ *                 type: boolean
+ *                 description: Updated active status
+ *                 example: false
+ *     responses:
+ *       200:
+ *         description: URL updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: URL updated successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 123
+ *                     original_url:
+ *                       type: string
+ *                       example: https://example.com/updated-path
+ *                     short_code:
+ *                       type: string
+ *                       example: abc123
+ *                     short_url:
+ *                       type: string
+ *                       example: https://cylink.id/abc123
+ *                     title:
+ *                       type: string
+ *                       example: Updated Title
+ *                     clicks:
+ *                       type: integer
+ *                       example: 42
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-04-10T12:00:00Z
+ *                     updated_at:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-04-18T15:30:00Z
+ *                     expiry_date:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-06-30T00:00:00Z
+ *                       nullable: true
+ *                     is_active:
+ *                       type: boolean
+ *                       example: false
+ *       400:
+ *         description: Bad Request - validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: Validation error
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example:
+ *                     - Original URL must be a valid URL
+ *                     - Expiry date must be in the future
+ *       401:
+ *         description: Unauthorized - missing or invalid token
+ *       403:
+ *         description: Forbidden - user does not own this URL
+ *       404:
+ *         description: URL not found
+ *       500:
+ *         description: Server error
+ */
+router.put(
+  '/:id',
+  accessToken,
+  validate({ fields: fields.updateUrl.body, preserveBodyProps: true }),
+  urlController.updateUrl,
+);
 
 module.exports = router;

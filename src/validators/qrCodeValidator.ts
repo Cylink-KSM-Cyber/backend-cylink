@@ -132,4 +132,82 @@ module.exports = {
       },
     },
   ],
+
+  /**
+   * Validation rules for listing QR codes
+   */
+  listQrCodes: [
+    {
+      name: 'page',
+      type: 'integer',
+      required: false,
+      customValidation: (value: number) => {
+        if (value !== undefined && value < 1) {
+          return 'Page must be greater than or equal to 1';
+        }
+        return null;
+      },
+    },
+    {
+      name: 'limit',
+      type: 'integer',
+      required: false,
+      customValidation: (value: number) => {
+        if (value !== undefined && (value < 1 || value > 100)) {
+          return 'Limit must be between 1 and 100';
+        }
+        return null;
+      },
+    },
+    {
+      name: 'sortBy',
+      type: 'string',
+      required: false,
+      enum: ['created_at', 'url_id', 'color', 'include_logo', 'size'],
+    },
+    {
+      name: 'sortOrder',
+      type: 'string',
+      required: false,
+      enum: ['asc', 'desc'],
+    },
+    {
+      name: 'search',
+      type: 'string',
+      required: false,
+    },
+    {
+      name: 'color',
+      type: 'string',
+      required: false,
+      customValidation: (value: string) => {
+        if (value && !/^#[0-9A-Fa-f]{6}$/.test(value)) {
+          return 'Color must be a valid hex code';
+        }
+        return null;
+      },
+    },
+    {
+      name: 'includeLogo',
+      type: 'string',
+      required: false,
+      customValidation: (value: string) => {
+        if (value !== undefined && value !== 'true' && value !== 'false') {
+          return 'includeLogo must be "true" or "false"';
+        }
+        return null;
+      },
+    },
+    {
+      name: 'includeUrl',
+      type: 'string',
+      required: false,
+      customValidation: (value: string) => {
+        if (value !== undefined && value !== 'true' && value !== 'false') {
+          return 'includeUrl must be "true" or "false"';
+        }
+        return null;
+      },
+    },
+  ],
 };

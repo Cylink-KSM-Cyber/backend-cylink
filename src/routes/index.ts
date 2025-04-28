@@ -4,6 +4,8 @@ const authRoutes = require('../routes/authRoutes');
 const publicUrlRoutes = require('../routes/publicUrlRoutes');
 const urlRoutes = require('../routes/urlRoutes');
 const qrCodeRoutes = require('../routes/qrCodeRoutes');
+const conversionRoutes = require('../routes/conversionRoutes');
+const ctrRoutes = require('../routes/ctrRoutes');
 
 /**
  * Main router
@@ -23,5 +25,11 @@ router.use('/public/urls', publicUrlRoutes);
 
 // QR code generation routes
 router.use('/qr-codes', qrCodeRoutes);
+
+// Conversion tracking routes
+router.use('/', conversionRoutes);
+
+// CTR (Click-Through Rate) routes
+router.use('/ctr', ctrRoutes);
 
 module.exports = router;

@@ -1,0 +1,728 @@
+[2025-04-20 10:51:31] ERROR: uncaughtException: cannot drop type users_role because other objects depend on it
+error: cannot drop type users_role because other objects depend on it
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5) error: cannot drop type users_role because other objects depend on it
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-20 11:02:51] ERROR: uncaughtException: ⨯ Unable to compile TypeScript:
+[96msrc/controllers/urlController.ts[0m:[93m144[0m:[93m13[0m - [91merror[0m[90m TS2345: [0mArgument of type 'PaginationData' is not assignable to parameter of type 'Pagination'.
+  Type 'PaginationData' is missing the following properties from type 'Pagination': currentPage, totalPages, pageSize, totalItems, and 2 more.
+
+[7m144[0m             pagination,
+[7m   [0m [91m            ~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m207[0m:[93m11[0m - [91merror[0m[90m TS2345: [0mArgument of type 'PaginationData' is not assignable to parameter of type 'Pagination'.
+  Type 'PaginationData' is missing the following properties from type 'Pagination': currentPage, totalPages, pageSize, totalItems, and 2 more.
+
+[7m207[0m           pagination,
+[7m   [0m [91m          ~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m305[0m:[93m85[0m - [91merror[0m[90m TS2345: [0mArgument of type 'PaginationData' is not assignable to parameter of type 'Pagination'.
+  Type 'PaginationData' is missing the following properties from type 'Pagination': currentPage, totalPages, pageSize, totalItems, and 2 more.
+
+[7m305[0m     return sendResponse(res, 200, 'Successfully retrieved all URLs', paginatedUrls, pagination);
+[7m   [0m [91m                                                                                    ~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1013[0m:[93m37[0m - [91merror[0m[90m TS2345: [0mArgument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+[7m1013[0m       return sendResponse(res, 400, dateResult.error);
+[7m    [0m [91m                                    ~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1030[0m:[93m37[0m - [91merror[0m[90m TS2345: [0mArgument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+[7m1030[0m       return sendResponse(res, 400, comparisonResult.error);
+[7m    [0m [91m                                    ~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1164[0m:[93m83[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 7.
+
+[7m1164[0m       return sendResponse(res, 400, 'Invalid status parameter', null, null, null, [
+[7m    [0m [91m                                                                                  ~[0m
+[7m1165[0m         `Status must be one of: ${validStatuses.join(', ')}`,
+[7m    [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[7m1166[0m       ]);
+[7m    [0m [91m~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1208[0m:[93m13[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 8.
+
+[7m1208[0m             null,
+[7m    [0m [91m            ~~~~~[0m
+[7m1209[0m             filter_info,
+[7m    [0m [91m~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1221[0m:[93m11[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 8.
+
+[7m1221[0m           null,
+[7m    [0m [91m          ~~~~~[0m
+[7m1222[0m           filter_info,
+[7m    [0m [91m~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1273[0m:[93m9[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 8.
+
+[7m1273[0m         null,
+[7m    [0m [91m        ~~~~~[0m
+[7m1274[0m         filter_info,
+[7m    [0m [91m~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1286[0m:[93m7[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 8.
+
+[7m1286[0m       null,
+[7m    [0m [91m      ~~~~~[0m
+[7m1287[0m       filter_info,
+[7m    [0m [91m~~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1292[0m:[93m83[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 7.
+
+[7m1292[0m       return sendResponse(res, 400, 'Invalid status parameter', null, null, null, [
+[7m    [0m [91m                                                                                  ~[0m
+[7m1293[0m         'Status must be one of: all, active, inactive, expired, expiring-soon',
+[7m    [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[7m1294[0m       ]);
+[7m    [0m [91m~~~~~~~[0m
+
+TSError: ⨯ Unable to compile TypeScript:
+[96msrc/controllers/urlController.ts[0m:[93m144[0m:[93m13[0m - [91merror[0m[90m TS2345: [0mArgument of type 'PaginationData' is not assignable to parameter of type 'Pagination'.
+  Type 'PaginationData' is missing the following properties from type 'Pagination': currentPage, totalPages, pageSize, totalItems, and 2 more.
+
+[7m144[0m             pagination,
+[7m   [0m [91m            ~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m207[0m:[93m11[0m - [91merror[0m[90m TS2345: [0mArgument of type 'PaginationData' is not assignable to parameter of type 'Pagination'.
+  Type 'PaginationData' is missing the following properties from type 'Pagination': currentPage, totalPages, pageSize, totalItems, and 2 more.
+
+[7m207[0m           pagination,
+[7m   [0m [91m          ~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m305[0m:[93m85[0m - [91merror[0m[90m TS2345: [0mArgument of type 'PaginationData' is not assignable to parameter of type 'Pagination'.
+  Type 'PaginationData' is missing the following properties from type 'Pagination': currentPage, totalPages, pageSize, totalItems, and 2 more.
+
+[7m305[0m     return sendResponse(res, 200, 'Successfully retrieved all URLs', paginatedUrls, pagination);
+[7m   [0m [91m                                                                                    ~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1013[0m:[93m37[0m - [91merror[0m[90m TS2345: [0mArgument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+[7m1013[0m       return sendResponse(res, 400, dateResult.error);
+[7m    [0m [91m                                    ~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1030[0m:[93m37[0m - [91merror[0m[90m TS2345: [0mArgument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+[7m1030[0m       return sendResponse(res, 400, comparisonResult.error);
+[7m    [0m [91m                                    ~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1164[0m:[93m83[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 7.
+
+[7m1164[0m       return sendResponse(res, 400, 'Invalid status parameter', null, null, null, [
+[7m    [0m [91m                                                                                  ~[0m
+[7m1165[0m         `Status must be one of: ${validStatuses.join(', ')}`,
+[7m    [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[7m1166[0m       ]);
+[7m    [0m [91m~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1208[0m:[93m13[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 8.
+
+[7m1208[0m             null,
+[7m    [0m [91m            ~~~~~[0m
+[7m1209[0m             filter_info,
+[7m    [0m [91m~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1221[0m:[93m11[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 8.
+
+[7m1221[0m           null,
+[7m    [0m [91m          ~~~~~[0m
+[7m1222[0m           filter_info,
+[7m    [0m [91m~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1273[0m:[93m9[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 8.
+
+[7m1273[0m         null,
+[7m    [0m [91m        ~~~~~[0m
+[7m1274[0m         filter_info,
+[7m    [0m [91m~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1286[0m:[93m7[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 8.
+
+[7m1286[0m       null,
+[7m    [0m [91m      ~~~~~[0m
+[7m1287[0m       filter_info,
+[7m    [0m [91m~~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1292[0m:[93m83[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 7.
+
+[7m1292[0m       return sendResponse(res, 400, 'Invalid status parameter', null, null, null, [
+[7m    [0m [91m                                                                                  ~[0m
+[7m1293[0m         'Status must be one of: all, active, inactive, expired, expiring-soon',
+[7m    [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[7m1294[0m       ]);
+[7m    [0m [91m~~~~~~~[0m
+
+    at createTSError (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14) TSError: ⨯ Unable to compile TypeScript:
+[96msrc/controllers/urlController.ts[0m:[93m144[0m:[93m13[0m - [91merror[0m[90m TS2345: [0mArgument of type 'PaginationData' is not assignable to parameter of type 'Pagination'.
+  Type 'PaginationData' is missing the following properties from type 'Pagination': currentPage, totalPages, pageSize, totalItems, and 2 more.
+
+[7m144[0m             pagination,
+[7m   [0m [91m            ~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m207[0m:[93m11[0m - [91merror[0m[90m TS2345: [0mArgument of type 'PaginationData' is not assignable to parameter of type 'Pagination'.
+  Type 'PaginationData' is missing the following properties from type 'Pagination': currentPage, totalPages, pageSize, totalItems, and 2 more.
+
+[7m207[0m           pagination,
+[7m   [0m [91m          ~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m305[0m:[93m85[0m - [91merror[0m[90m TS2345: [0mArgument of type 'PaginationData' is not assignable to parameter of type 'Pagination'.
+  Type 'PaginationData' is missing the following properties from type 'Pagination': currentPage, totalPages, pageSize, totalItems, and 2 more.
+
+[7m305[0m     return sendResponse(res, 200, 'Successfully retrieved all URLs', paginatedUrls, pagination);
+[7m   [0m [91m                                                                                    ~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1013[0m:[93m37[0m - [91merror[0m[90m TS2345: [0mArgument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+[7m1013[0m       return sendResponse(res, 400, dateResult.error);
+[7m    [0m [91m                                    ~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1030[0m:[93m37[0m - [91merror[0m[90m TS2345: [0mArgument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+[7m1030[0m       return sendResponse(res, 400, comparisonResult.error);
+[7m    [0m [91m                                    ~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1164[0m:[93m83[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 7.
+
+[7m1164[0m       return sendResponse(res, 400, 'Invalid status parameter', null, null, null, [
+[7m    [0m [91m                                                                                  ~[0m
+[7m1165[0m         `Status must be one of: ${validStatuses.join(', ')}`,
+[7m    [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[7m1166[0m       ]);
+[7m    [0m [91m~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1208[0m:[93m13[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 8.
+
+[7m1208[0m             null,
+[7m    [0m [91m            ~~~~~[0m
+[7m1209[0m             filter_info,
+[7m    [0m [91m~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1221[0m:[93m11[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 8.
+
+[7m1221[0m           null,
+[7m    [0m [91m          ~~~~~[0m
+[7m1222[0m           filter_info,
+[7m    [0m [91m~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1273[0m:[93m9[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 8.
+
+[7m1273[0m         null,
+[7m    [0m [91m        ~~~~~[0m
+[7m1274[0m         filter_info,
+[7m    [0m [91m~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1286[0m:[93m7[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 8.
+
+[7m1286[0m       null,
+[7m    [0m [91m      ~~~~~[0m
+[7m1287[0m       filter_info,
+[7m    [0m [91m~~~~~~~~~~~~~~~~~[0m
+[96msrc/controllers/urlController.ts[0m:[93m1292[0m:[93m83[0m - [91merror[0m[90m TS2554: [0mExpected 3-6 arguments, but got 7.
+
+[7m1292[0m       return sendResponse(res, 400, 'Invalid status parameter', null, null, null, [
+[7m    [0m [91m                                                                                  ~[0m
+[7m1293[0m         'Status must be one of: all, active, inactive, expired, expiring-soon',
+[7m    [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[7m1294[0m       ]);
+[7m    [0m [91m~~~~~~~[0m
+
+    at createTSError (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+[2025-04-20 11:06:11] ERROR: uncaughtException: argument handler must be a function
+TypeError: argument handler must be a function
+    at Function.use (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\router\index.js:392:13)
+    at Object.<anonymous> (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\src\routes\index.ts:33:8)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24) TypeError: argument handler must be a function
+    at Function.use (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\router\index.js:392:13)
+    at Object.<anonymous> (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\src\routes\index.ts:33:8)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+[2025-04-20 11:06:47] ERROR: uncaughtException: argument handler must be a function
+TypeError: argument handler must be a function
+    at Function.use (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\router\index.js:392:13)
+    at Object.<anonymous> (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\src\routes\index.ts:33:8)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24) TypeError: argument handler must be a function
+    at Function.use (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\router\index.js:392:13)
+    at Object.<anonymous> (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\src\routes\index.ts:33:8)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+[2025-04-20 11:08:37] ERROR: uncaughtException: argument handler must be a function
+TypeError: argument handler must be a function
+    at Function.use (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\router\index.js:392:13)
+    at Object.<anonymous> (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\src\routes\index.ts:33:8)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24) TypeError: argument handler must be a function
+    at Function.use (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\router\index.js:392:13)
+    at Object.<anonymous> (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\src\routes\index.ts:33:8)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1618:23)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+[2025-04-20 11:12:53] ERROR: uncaughtException: ⨯ Unable to compile TypeScript:
+[96msrc/routes/urlRoutes.ts[0m:[93m849[0m:[93m41[0m - [91merror[0m[90m TS2304: [0mCannot find name 'getUrlCTRStats'.
+
+[7m849[0m router.get('/:url_id/ctr', accessToken, getUrlCTRStats);
+[7m   [0m [91m                                        ~~~~~~~~~~~~~~[0m
+
+TSError: ⨯ Unable to compile TypeScript:
+[96msrc/routes/urlRoutes.ts[0m:[93m849[0m:[93m41[0m - [91merror[0m[90m TS2304: [0mCannot find name 'getUrlCTRStats'.
+
+[7m849[0m router.get('/:url_id/ctr', accessToken, getUrlCTRStats);
+[7m   [0m [91m                                        ~~~~~~~~~~~~~~[0m
+
+    at createTSError (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14) TSError: ⨯ Unable to compile TypeScript:
+[96msrc/routes/urlRoutes.ts[0m:[93m849[0m:[93m41[0m - [91merror[0m[90m TS2304: [0mCannot find name 'getUrlCTRStats'.
+
+[7m849[0m router.get('/:url_id/ctr', accessToken, getUrlCTRStats);
+[7m   [0m [91m                                        ~~~~~~~~~~~~~~[0m
+
+    at createTSError (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+[2025-04-22 06:12:22] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:12:30] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:12:31] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:12:31] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:12:32] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:02] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:03] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:04] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:04] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:04] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:20:05] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:25:42] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:25:43] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:25:43] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:33:45] ERROR: URL error: Failed to create authenticated URL: 
+[2025-04-22 06:33:52] ERROR: URL error: Failed to create authenticated URL: 
+[2025-04-22 06:33:53] ERROR: URL error: Failed to create authenticated URL: 
+[2025-04-22 06:40:05] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 06:40:05] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:40:05] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:40:09] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:40:09] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 06:40:09] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 06:40:09] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:40:09] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 06:47:43] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 06:47:43] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 06:47:43] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 06:47:43] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 06:47:43] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 07:14:02] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 07:14:02] ERROR: Error getting overall conversion rate: error: relation "conversion_goals" does not exist 
+[2025-04-22 07:14:02] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 07:14:02] ERROR: Error getting overall conversion rate: error: relation "clicks" does not exist 
+[2025-04-22 07:14:02] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 07:18:10] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 07:18:10] ERROR: Error getting overall conversion rate: error: relation "clicks" does not exist 
+[2025-04-22 07:18:10] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 07:18:10] ERROR: Error retrieving QR codes: 
+[2025-04-22 07:59:58] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 07:59:58] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 07:59:58] ERROR: Error retrieving QR codes: 
+[2025-04-22 07:59:58] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 07:59:58] ERROR: Error getting overall conversion rate: error: relation "clicks" does not exist 
+[2025-04-22 07:59:58] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:00:07] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:00:08] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:00:08] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:00:20] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:00:21] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:07:44] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:07:44] ERROR: Error retrieving QR codes: 
+[2025-04-22 08:07:44] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:07:44] ERROR: Error getting overall conversion rate: error: relation "clicks" does not exist 
+[2025-04-22 08:07:44] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:07:45] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:07:51] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:07:51] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:07:51] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:07:51] ERROR: Error retrieving QR codes: 
+[2025-04-22 08:07:51] ERROR: Error getting overall conversion rate: error: relation "clicks" does not exist 
+[2025-04-22 08:07:51] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:07:51] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:07:51] ERROR: Error retrieving QR codes: 
+[2025-04-22 08:07:51] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:07:51] ERROR: Error getting overall conversion rate: error: relation "clicks" does not exist 
+[2025-04-22 08:07:51] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:07:51] ERROR: Error retrieving QR codes: 
+[2025-04-22 08:07:51] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:07:51] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:07:51] ERROR: Error retrieving QR codes: 
+[2025-04-22 08:07:51] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:07:52] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:07:55] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:07:55] ERROR: Error getting overall conversion rate: error: relation "clicks" does not exist 
+[2025-04-22 08:07:55] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:07:55] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:07:55] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:08] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:25] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:25] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:08:25] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:08:25] ERROR: Error retrieving QR codes: 
+[2025-04-22 08:08:25] ERROR: Error getting overall conversion rate: error: relation "clicks" does not exist 
+[2025-04-22 08:08:25] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:25] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:25] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:25] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:26] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:26] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:26] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:26] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:26] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:28] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:28] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:28] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:29] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:29] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:29] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:08:29] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:12:17] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:12:17] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:12:17] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:12:17] ERROR: Error retrieving QR codes: 
+[2025-04-22 08:12:17] ERROR: Error getting overall conversion rate: error: relation "conversion_goals" does not exist 
+[2025-04-22 08:12:17] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:12:17] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:12:17] ERROR: Error retrieving QR codes: 
+[2025-04-22 08:12:17] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:12:17] ERROR: Error retrieving QR codes: 
+[2025-04-22 08:12:17] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:12:17] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:12:17] ERROR: Error retrieving QR codes: 
+[2025-04-22 08:12:17] ERROR: Error getting overall conversion rate: error: relation "clicks" does not exist 
+[2025-04-22 08:24:55] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:24:55] ERROR: Error getting overall conversion rate: error: relation "conversion_goals" does not exist 
+[2025-04-22 08:25:08] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:25:21] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:25:21] ERROR: Error retrieving QR codes: 
+[2025-04-22 08:25:21] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:25:21] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:25:21] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:25:21] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:25:22] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:25:22] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:25:23] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:25:23] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:37:56] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:37:56] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:37:56] ERROR: Error retrieving QR codes: 
+[2025-04-22 08:37:56] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:37:56] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:37:56] ERROR: Error getting overall conversion rate: error: relation "clicks" does not exist 
+[2025-04-22 08:37:56] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:37:56] ERROR: Error retrieving QR codes: 
+[2025-04-22 08:37:56] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:37:56] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:37:56] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:37:56] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:37:57] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:39:49] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:39:49] ERROR: URL error: Failed to retrieve total clicks analytics: 
+[2025-04-22 08:39:49] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:39:49] ERROR: Error retrieving QR codes: 
+[2025-04-22 08:39:49] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:39:49] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:53:34] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:53:34] ERROR: Error retrieving QR codes for user: relation "qr_codes" does not exist error: relation "qr_codes" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-22 08:53:34] ERROR: Error retrieving QR codes: 
+[2025-04-23 17:03:47] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 17:03:52] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 17:03:53] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 17:03:54] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 17:28:41] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 19:35:59] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 19:36:00] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 19:36:01] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 19:36:02] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 19:38:24] ERROR: Error filtering URLs by status: relation "clicks" does not exist error: relation "clicks" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 19:38:25] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 19:38:25] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 19:38:26] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 19:38:26] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 19:38:27] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 19:38:27] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 19:38:27] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 19:38:28] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 19:38:28] ERROR: Error filtering URLs by status: relation "urls" does not exist error: relation "urls" does not exist
+    at C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\pg-pool\index.js:45:11
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+[2025-04-23 19:39:50] ERROR: uncaughtException: ⨯ Unable to compile TypeScript:
+[96msrc/services/urlService.ts[0m:[93m384[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'limit' does not exist on type '{ status: "all" | "active" | "inactive" | "expired" | "expiring-soon"; sortBy: string; sortOrder: "asc" | "desc"; }'.
+
+[7m384[0m     modifiedOptions.limit = 1000; // High limit to get all URLs
+[7m   [0m [91m                    ~~~~~[0m
+[96msrc/services/urlService.ts[0m:[93m385[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'page' does not exist on type '{ status: "all" | "active" | "inactive" | "expired" | "expiring-soon"; sortBy: string; sortOrder: "asc" | "desc"; }'.
+
+[7m385[0m     modifiedOptions.page = 1;
+[7m   [0m [91m                    ~~~~[0m
+[96msrc/services/urlService.ts[0m:[93m388[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'page' does not exist on type '{ status: "all" | "active" | "inactive" | "expired" | "expiring-soon"; sortBy: string; sortOrder: "asc" | "desc"; }'.
+
+[7m388[0m     modifiedOptions.page = page;
+[7m   [0m [91m                    ~~~~[0m
+[96msrc/services/urlService.ts[0m:[93m389[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'limit' does not exist on type '{ status: "all" | "active" | "inactive" | "expired" | "expiring-soon"; sortBy: string; sortOrder: "asc" | "desc"; }'.
+
+[7m389[0m     modifiedOptions.limit = limit;
+[7m   [0m [91m                    ~~~~~[0m
+
+TSError: ⨯ Unable to compile TypeScript:
+[96msrc/services/urlService.ts[0m:[93m384[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'limit' does not exist on type '{ status: "all" | "active" | "inactive" | "expired" | "expiring-soon"; sortBy: string; sortOrder: "asc" | "desc"; }'.
+
+[7m384[0m     modifiedOptions.limit = 1000; // High limit to get all URLs
+[7m   [0m [91m                    ~~~~~[0m
+[96msrc/services/urlService.ts[0m:[93m385[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'page' does not exist on type '{ status: "all" | "active" | "inactive" | "expired" | "expiring-soon"; sortBy: string; sortOrder: "asc" | "desc"; }'.
+
+[7m385[0m     modifiedOptions.page = 1;
+[7m   [0m [91m                    ~~~~[0m
+[96msrc/services/urlService.ts[0m:[93m388[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'page' does not exist on type '{ status: "all" | "active" | "inactive" | "expired" | "expiring-soon"; sortBy: string; sortOrder: "asc" | "desc"; }'.
+
+[7m388[0m     modifiedOptions.page = page;
+[7m   [0m [91m                    ~~~~[0m
+[96msrc/services/urlService.ts[0m:[93m389[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'limit' does not exist on type '{ status: "all" | "active" | "inactive" | "expired" | "expiring-soon"; sortBy: string; sortOrder: "asc" | "desc"; }'.
+
+[7m389[0m     modifiedOptions.limit = limit;
+[7m   [0m [91m                    ~~~~~[0m
+
+    at createTSError (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14) TSError: ⨯ Unable to compile TypeScript:
+[96msrc/services/urlService.ts[0m:[93m384[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'limit' does not exist on type '{ status: "all" | "active" | "inactive" | "expired" | "expiring-soon"; sortBy: string; sortOrder: "asc" | "desc"; }'.
+
+[7m384[0m     modifiedOptions.limit = 1000; // High limit to get all URLs
+[7m   [0m [91m                    ~~~~~[0m
+[96msrc/services/urlService.ts[0m:[93m385[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'page' does not exist on type '{ status: "all" | "active" | "inactive" | "expired" | "expiring-soon"; sortBy: string; sortOrder: "asc" | "desc"; }'.
+
+[7m385[0m     modifiedOptions.page = 1;
+[7m   [0m [91m                    ~~~~[0m
+[96msrc/services/urlService.ts[0m:[93m388[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'page' does not exist on type '{ status: "all" | "active" | "inactive" | "expired" | "expiring-soon"; sortBy: string; sortOrder: "asc" | "desc"; }'.
+
+[7m388[0m     modifiedOptions.page = page;
+[7m   [0m [91m                    ~~~~[0m
+[96msrc/services/urlService.ts[0m:[93m389[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'limit' does not exist on type '{ status: "all" | "active" | "inactive" | "expired" | "expiring-soon"; sortBy: string; sortOrder: "asc" | "desc"; }'.
+
+[7m389[0m     modifiedOptions.limit = limit;
+[7m   [0m [91m                    ~~~~~[0m
+
+    at createTSError (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:859:12)
+    at reportTSError (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:863:19)
+    at getOutput (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1077:36)
+    at Object.compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1433:41)
+    at Module.m._compile (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1706:10
+    at Object.require.extensions.<computed> [as .ts] (C:\Users\Nugraha Adhitama\Documents\project\test-cylink\node_modules\ts-node\src\index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)

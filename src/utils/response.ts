@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { SearchInfo } from '../interfaces/URL';
 
 /**
  * Response Utility
@@ -26,7 +27,10 @@ interface ApiResponse<T> {
   status: number;
   message: string;
   data?: T;
-  pagination?: Pagination;
+  pagination?: Pagination | any;
+  search_info?: SearchInfo;
+  filter_info?: any;
+  errors?: string[];
 }
 
 /**
@@ -37,6 +41,9 @@ interface ApiResponse<T> {
  * @param {string} message - Response message
  * @param {T} data - Response data
  * @param {Pagination} pagination - Pagination information
+ * @param {SearchInfo} searchInfo - Search information
+ * @param {string[]} errors - Validation errors
+ * @param {any} filterInfo - Filter information
  * @returns {Response} Express response with formatted JSON
  */
 export function sendResponse<T>(
@@ -45,6 +52,9 @@ export function sendResponse<T>(
   message: string,
   data: T | null = null,
   pagination: Pagination | null = null,
+  searchInfo: SearchInfo | null = null,
+  errors: string[] | null = null,
+  filterInfo: any = null,
 ): Response {
   const response: ApiResponse<T> = {
     status: statusCode,
@@ -57,6 +67,18 @@ export function sendResponse<T>(
 
   if (pagination !== null) {
     response.pagination = pagination;
+  }
+
+  if (searchInfo !== null) {
+    response.search_info = searchInfo;
+  }
+
+  if (errors !== null && errors.length > 0) {
+    response.errors = errors;
+  }
+
+  if (filterInfo !== null) {
+    response.filter_info = filterInfo;
   }
 
   return res.status(statusCode).json(response);

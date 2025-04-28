@@ -9,9 +9,10 @@ import {
   downloadQrCodeByShortCode,
   QrCodeFormat,
   getQrCodeColors,
+  getAllQrCodes,
+  softDeleteQrCode,
 } from '../services/qrCodeService';
-
-const logger = require('../utils/logger');
+import logger from '../utils/logger';
 const { sendResponse } = require('../utils/response');
 
 /**
@@ -429,6 +430,146 @@ export const getQrCodeByShortCode = async (req: Request, res: Response): Promise
     return sendResponse(res, 200, 'Successfully retrieved QR code', qrCode);
   } catch (error) {
     logger.error('Error retrieving QR code:', error);
+    return sendResponse(res, 500, 'Internal Server Error');
+  }
+};
+
+/**
+ * Get all QR codes for the authenticated user with pagination, sorting, and filtering
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Response with QR codes or error
+ */
+export const getQrCodesByUser = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const userId = req.body.id; // User ID from auth middleware
+
+    // Parse query parameters
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+    const sortBy = req.query.sortBy as
+      | 'created_at'
+      | 'url_id'
+      | 'color'
+      | 'include_logo'
+      | 'size'
+      | undefined;
+    const sortOrder = req.query.sortOrder as 'asc' | 'desc';
+    const search = req.query.search as string;
+    const color = req.query.color as string;
+    const includeLogo = req.query.includeLogo ? req.query.includeLogo === 'true' : undefined;
+    const includeUrl = req.query.includeUrl ? req.query.includeUrl === 'true' : true;
+
+    // Additional validation at controller level
+    if (sortBy && !['created_at', 'url_id', 'color', 'include_logo', 'size'].includes(sortBy)) {
+      logger.warn(`Invalid sortBy parameter received: ${sortBy}`);
+      return sendResponse(
+        res,
+        400,
+        'Invalid sortBy parameter. Must be one of: created_at, url_id, color, include_logo, size',
+      );
+    }
+
+    if (sortOrder && !['asc', 'desc'].includes(sortOrder)) {
+      logger.warn(`Invalid sortOrder parameter received: ${sortOrder}`);
+      return sendResponse(res, 400, 'Invalid sortOrder parameter. Must be "asc" or "desc"');
+    }
+
+    // Get QR codes from service
+    const result = await getAllQrCodes(userId, {
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+      search,
+      color,
+      includeLogo,
+      includeUrl,
+    });
+
+    if (result.data.length === 0) {
+      return sendResponse(res, 200, 'No QR codes found', [], result.pagination);
+    }
+
+    logger.info(`Successfully retrieved QR codes for user ID: ${userId}`);
+    return sendResponse(
+      res,
+      200,
+      'QR codes retrieved successfully',
+      result.data,
+      result.pagination,
+    );
+  } catch (error) {
+    // Handle specific error conditions
+    if (error instanceof Error) {
+      // Check for validation errors from the model or service
+      if (error.message.includes('Invalid sortBy') || error.message.includes('Invalid sortOrder')) {
+        logger.warn('Validation error in QR code retrieval:', error.message);
+        return sendResponse(res, 400, error.message);
+      }
+
+      logger.error('Error retrieving QR codes:', error.message);
+    } else {
+      logger.error('Error retrieving QR codes:', error);
+    }
+
+    return sendResponse(res, 500, 'Internal Server Error');
+  }
+};
+
+/**
+ * Delete a QR code (soft delete)
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Response with deletion confirmation or error
+ */
+export const deleteQrCodeById = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return sendResponse(res, 400, 'Invalid QR code ID');
+    }
+
+    // Get the authenticated user ID from the request
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      return sendResponse(res, 401, 'Unauthorized');
+    }
+
+    // Attempt to delete the QR code
+    const deletedQrCode = await softDeleteQrCode(id, userId);
+
+    if (!deletedQrCode) {
+      return sendResponse(res, 500, 'Failed to delete QR code');
+    }
+
+    logger.info(`Successfully deleted QR code with ID: ${id}`);
+    return sendResponse(res, 200, 'QR code deleted successfully', {
+      id: deletedQrCode.id,
+      deleted_at: deletedQrCode.deleted_at,
+    });
+  } catch (error) {
+    // Handle specific error conditions
+    if (error instanceof Error) {
+      if (error.message.includes('QR code not found')) {
+        return sendResponse(res, 404, 'QR code not found');
+      }
+
+      if (error.message.includes('Associated URL not found')) {
+        return sendResponse(res, 404, 'Associated URL not found');
+      }
+
+      if (error.message.includes('permission to delete')) {
+        return sendResponse(res, 403, 'You do not have permission to delete this QR code');
+      }
+
+      logger.error('QR code deletion error:', error.message);
+    } else {
+      logger.error('QR code deletion error:', error);
+    }
+
     return sendResponse(res, 500, 'Internal Server Error');
   }
 };

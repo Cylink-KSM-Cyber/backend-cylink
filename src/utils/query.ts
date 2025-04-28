@@ -9,7 +9,7 @@
  * Table schema interface
  */
 interface TableSchema {
-  [columnName: string]: string | boolean;
+  [columnName: string]: string | boolean | string[];
 }
 
 /**
@@ -51,18 +51,37 @@ exports.generateQuery = {
       for (const name in tables) {
         query += `CREATE TABLE IF NOT EXISTS ${name} (\n`;
 
-        const columns = Object.keys(tables[name]);
-        columns.forEach((column, index) => {
-          if (column === 'timestamps') {
-            query += '\tcreated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n';
-            query += '\tupdated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n';
-            query += '\tdeleted_at TIMESTAMP\n';
-          } else {
-            const columnDefinition = `${column} ${tables[name][column]}`;
+        // Collect standard columns and special constraints separately
+        const standardColumns: string[] = [];
+        let uniqueConstraints = '';
 
-            query += `\t${columnDefinition}${index === columns.length - 1 ? '' : ','}\n`;
+        // First pass - Categorize columns vs constraints
+        for (const column in tables[name]) {
+          if (column === 'timestamps') {
+            standardColumns.push('created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
+            standardColumns.push('updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
+            standardColumns.push('deleted_at TIMESTAMP');
+          } else if (column === 'unique') {
+            // Handle unique constraints
+            const uniqueColumns = tables[name][column];
+            if (Array.isArray(uniqueColumns)) {
+              uniqueConstraints = `UNIQUE(${uniqueColumns.join(', ')})`;
+            }
+          } else {
+            standardColumns.push(`${column} ${tables[name][column]}`);
           }
-        });
+        }
+
+        // Second pass - Build the query
+        for (let i = 0; i < standardColumns.length; i++) {
+          const isLast = i === standardColumns.length - 1 && !uniqueConstraints;
+          query += `\t${standardColumns[i]}${isLast ? '' : ','}\n`;
+        }
+
+        // Add unique constraints if any
+        if (uniqueConstraints) {
+          query += `\t${uniqueConstraints}\n`;
+        }
 
         query += ');\n';
       }

@@ -1,10 +1,16 @@
-import { QrCode, QrCodeCreateData, QrCodeUpdateData } from '../interfaces/QrCode';
+import {
+  QrCode,
+  QrCodeCreateData,
+  QrCodeUpdateData,
+  QrCodeListQueryParams,
+  QrCodeListResponse,
+} from '../interfaces/QrCode';
 import { generateQrCodePng, generateQrCodeSvg, mapQrCodeToOptions } from '../utils/qrCodeGenerator';
 import { getQrCodeColorOptions, QrCodeColorOptions } from '../config/qrCodeColors';
+import logger from '../utils/logger';
 
 const urlModel = require('../models/urlModel');
 const qrCodeModel = require('../models/qrCodeModel');
-const logger = require('../utils/logger');
 
 /**
  * QR Code Service
@@ -476,4 +482,97 @@ export const updateQrCode = async (id: number, updateData: any): Promise<QrCode 
  */
 export const deleteQrCode = async (id: number): Promise<boolean> => {
   return await qrCodeModel.deleteQrCode(id);
+};
+
+/**
+ * Gets all QR codes for a user with pagination, sorting, and filtering
+ *
+ * @param {number} userId - User ID to get QR codes for
+ * @param {QrCodeListQueryParams} queryParams - Query parameters for pagination, sorting, and filtering
+ * @returns {Promise<QrCodeListResponse>} List of QR codes with pagination information
+ */
+export const getAllQrCodes = async (
+  userId: number,
+  queryParams: QrCodeListQueryParams,
+): Promise<QrCodeListResponse> => {
+  try {
+    // Get QR codes from the database with filtering and pagination
+    const { qrCodes, total } = await qrCodeModel.getQrCodesByUser(userId, queryParams);
+
+    // Calculate pagination information
+    const page = queryParams.page || 1;
+    const limit = queryParams.limit || 10;
+    const totalPages = Math.ceil(total / limit);
+
+    // Format each QR code with appropriate URLs
+    const formattedQrCodes = qrCodes.map((qrCode: any) => {
+      // If the QR code already has short_code from the model query
+      if (qrCode.short_code) {
+        return formatQrCodeResponse(qrCode, qrCode.short_code);
+      }
+      return qrCode;
+    });
+
+    // Format the response
+    return {
+      data: formattedQrCodes,
+      pagination: {
+        total,
+        page,
+        limit,
+        total_pages: totalPages,
+      },
+    };
+  } catch (error) {
+    logger.error('Error retrieving QR codes for user:', error);
+    throw new Error('Failed to retrieve QR codes');
+  }
+};
+
+/**
+ * Soft deletes a QR code by its ID
+ *
+ * @param {number} id - QR code ID to delete
+ * @param {number} userId - User ID for authorization check
+ * @returns {Promise<QrCode|null>} The deleted QR code with deleted_at timestamp or null if not found/unauthorized
+ * @throws {Error} If QR code is not found or user is not authorized
+ */
+export const softDeleteQrCode = async (id: number, userId: number): Promise<QrCode | null> => {
+  // Get QR code from database
+  const qrCode = await qrCodeModel.getQrCodeById(id, true);
+  if (!qrCode) {
+    throw new Error('QR code not found');
+  }
+
+  // Get URL to check ownership
+  const url = await urlModel.getUrlById(qrCode.url_id);
+  if (!url) {
+    logger.error(`URL not found for QR code ID ${id} with URL ID ${qrCode.url_id}`);
+    throw new Error('Associated URL not found');
+  }
+
+  // Check if the user owns this QR code
+  if (url.user_id !== userId) {
+    logger.warn(`Unauthorized attempt to delete QR code ID ${id} by user ${userId}`);
+    throw new Error('You do not have permission to delete this QR code');
+  }
+
+  // Check if already deleted
+  if (qrCode.deleted_at) {
+    logger.info(`QR code ID ${id} is already deleted`);
+    return qrCode;
+  }
+
+  // Perform soft delete
+  const deletedQrCode = await qrCodeModel.deleteQrCode(id);
+
+  if (!deletedQrCode) {
+    logger.error(`Failed to delete QR code ID ${id}`);
+    throw new Error('Failed to delete QR code');
+  }
+
+  // Log the deletion for audit purposes
+  logger.info(`QR code ID ${id} soft-deleted by user ${userId}`);
+
+  return deletedQrCode;
 };

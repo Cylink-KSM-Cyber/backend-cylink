@@ -6,6 +6,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
+const conversionModel = require('../models/conversionModel');
 
 /**
  * Click information interface
@@ -17,6 +18,8 @@ interface ClickInfo {
   country: string | null;
   deviceType: string;
   browser: string;
+  clickId?: number; // Added for conversion tracking
+  trackingId?: string; // Added for conversion tracking
 }
 
 /**
@@ -91,6 +94,20 @@ module.exports = (req: Request, res: Response, next: NextFunction): void => {
 
   // Attach to request object for use in route handlers
   (req as ClickTrackingRequest).clickInfo = clickInfo;
+
+  // Add a method to set the click ID after it's recorded
+  // This will be used by the redirect middleware to generate a tracking ID
+  (req as any).setClickId = (clickId: number, urlId: number): void => {
+    clickInfo.clickId = clickId;
+
+    // Generate a tracking ID for conversion tracking
+    if (clickId && urlId) {
+      clickInfo.trackingId = conversionModel.generateTrackingId({
+        clickId,
+        urlId,
+      });
+    }
+  };
 
   next();
 };

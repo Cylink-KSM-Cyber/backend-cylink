@@ -9,22 +9,42 @@ module.exports = {
   /**
    * Validation rules for GET /urls endpoint
    */
-  getUrls: [
-    { name: 'page', type: 'number', required: false },
-    { name: 'limit', type: 'number', required: false },
-    {
-      name: 'sortBy',
-      type: 'string',
-      required: false,
-      enum: ['created_at', 'clicks', 'title'],
+  getUrls: {
+    query: {
+      search: {
+        type: 'string',
+        optional: true,
+      },
+      page: {
+        type: 'number',
+        optional: true,
+        integer: true,
+        positive: true,
+      },
+      limit: {
+        type: 'number',
+        optional: true,
+        integer: true,
+        min: 1,
+        max: 100,
+      },
+      sortBy: {
+        type: 'string',
+        optional: true,
+        enum: ['created_at', 'clicks', 'title', 'relevance'],
+      },
+      sortOrder: {
+        type: 'string',
+        optional: true,
+        enum: ['asc', 'desc'],
+      },
+      status: {
+        type: 'string',
+        optional: true,
+        enum: ['all', 'active', 'inactive', 'expired', 'expiring-soon'],
+      },
     },
-    {
-      name: 'sortOrder',
-      type: 'string',
-      required: false,
-      enum: ['asc', 'desc'],
-    },
-  ],
+  },
 
   /**
    * Validation rules for creating a shortened URL
@@ -34,7 +54,44 @@ module.exports = {
     { name: 'custom_code', type: 'string', required: false },
     { name: 'title', type: 'string', required: false },
     { name: 'expiry_date', type: 'string', required: false },
+    { name: 'goal_id', type: 'number', required: false, optional: true },
   ],
+
+  /**
+   * Validation rules for updating a URL
+   */
+  updateUrl: {
+    params: {
+      id: {
+        type: 'number',
+        required: true,
+        integer: true,
+        positive: true,
+      },
+    },
+    body: {
+      title: {
+        type: 'string',
+        optional: true,
+        max: 255,
+      },
+      original_url: {
+        type: 'string',
+        optional: true,
+        max: 2048,
+      },
+      expiry_date: {
+        type: 'string',
+        optional: true,
+        // null is allowed to remove expiry date
+        nullable: true,
+      },
+      is_active: {
+        type: 'boolean',
+        optional: true,
+      },
+    },
+  },
 
   /**
    * Validation rules for GET /urls/:id/analytics endpoint
@@ -99,5 +156,16 @@ module.exports = {
       type: 'integer',
       optional: true,
     },
+  },
+
+  /**
+   * Validates the URL status filter parameter
+   *
+   * @param {string} status - The status parameter to validate
+   * @returns {boolean} Whether the status is valid
+   */
+  isValidStatusFilter: (status: string): boolean => {
+    const validStatusFilters = ['all', 'active', 'inactive', 'expired', 'expiring-soon'];
+    return validStatusFilters.includes(status);
   },
 };
