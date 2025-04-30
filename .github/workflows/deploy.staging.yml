@@ -38,7 +38,7 @@ jobs:
         context: ./
         file: ./docker/api/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}-staging:staging
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:staging
     
     - name: Create .env file from secrets
       uses: 0ndt/envfile@v2
