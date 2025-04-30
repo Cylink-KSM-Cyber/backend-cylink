@@ -58,6 +58,9 @@ jobs:
         script: |
           cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/production
           git pull
-          sed -i '/^STAGING_/d' .env
+
+          # Remove prefix
+          sed -i 's/^PRODUCTION_//g' .env
+          
           docker-compose pull
           docker-compose up -d
