@@ -28,7 +28,7 @@ jobs:
         context: ./docker/webserver
         file: ./docker/webserver/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}.webserver:prod
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}-webserver:prod
         build-args: |
           SERVER_NAME=${{ secrets.PRODUCTION_APP_DOMAIN_NAME }}
 

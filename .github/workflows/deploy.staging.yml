@@ -28,7 +28,7 @@ jobs:
         context: ./docker/webserver
         file: ./docker/webserver/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}.webserver:staging
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}-webserver:staging
         build-args: |
           SERVER_NAME=${{ secrets.STAGING_APP_DOMAIN_NAME }}
 
