@@ -22,13 +22,23 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+    - name: Build and push webserver image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./docker/webserver
+        file: ./docker/webserver/Dockerfile
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}.webserver:staging
+        build-args: |
+          SERVER_NAME=${{ secrets.STAGING_APP_DOMAIN_NAME }}
+
     - name: Build and push api image
       uses: docker/build-push-action@v5
       with:
         context: ./
         file: ./docker/api/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}-staging:latest
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}-staging:staging
     
     - name: Create .env file from secrets
       uses: 0ndt/envfile@v2
@@ -61,6 +71,6 @@ jobs:
 
           # Remove prefix
           sed -i 's/^STAGING_//g' .env
-          
+
           docker-compose pull
           docker-compose -f docker-compose.yml -f docker-compose.staging.yml up -d

@@ -2,24 +2,25 @@ version: '3.8'
 
 services:
   api:
-    image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}-staging:latest
-    container_name: ${DOCKERHUB_APP_ID}-staging.api
+    image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}:staging
+    container_name: ${DOCKERHUB_APP_ID}.api.staging
     volumes:
       - staging-api-dependencies:/app/node_modules
       - staging-api-build:/app/dist
   
   database:
-    container_name: ${DOCKERHUB_APP_ID}-staging.database
+    container_name: ${DOCKERHUB_APP_ID}.database.staging
     volumes:
       - staging-db-data:/var/lib/postgresql/data
   
   webserver:
-    container_name: ${DOCKERHUB_APP_ID}-staging.webserver
+    image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}-webserver:staging
+    container_name: ${DOCKERHUB_APP_ID}.webserver.staging
 
 volumes:
   staging-api-dependencies:
-    name: ${DOCKERHUB_APP_ID}-staging.api.dependencies
+    name: ${DOCKERHUB_APP_ID}.api.dependencies.staging
   staging-api-build:
-    name: ${DOCKERHUB_APP_ID}-staging.api.build
+    name: ${DOCKERHUB_APP_ID}.api.build.staging
   staging-db-data:
-    name: ${DOCKERHUB_APP_ID}-staging.db
+    name: ${DOCKERHUB_APP_ID}.db.staging
