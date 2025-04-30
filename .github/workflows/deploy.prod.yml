@@ -33,7 +33,7 @@ jobs:
     - name: Create .env file from secrets
       uses: 0ndt/envfile@v2
       with:
-        secrets: ${{ toJSON(fromJSON(toJSON(secrets)) | omit('VPS_SSH_KEY')) }}
+        secrets: ${{ toJSON(secrets) }}
     
     - name: Upload .env to VPS
       uses: appleboy/scp-action@v0.1.7
@@ -57,5 +57,6 @@ jobs:
         script: |
           cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/production
           git pull
+          sed -i '/^VPS_SSH_KEY=/d' .env
           docker-compose pull
           docker-compose up -d
