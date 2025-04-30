@@ -46,6 +46,8 @@ services:
   webserver:
     image: nginx:latest
     container_name: ${DOCKERHUB_APP_ID}.webserver
+    environment:
+      SERVER_NAME: ${APP_DOMAIN_NAME}
     volumes:
       - ./docker/webserver/nginx.conf:/etc/nginx/conf.d/default.conf
     ports:
@@ -56,6 +58,7 @@ services:
     depends_on:
       - api
     restart: unless-stopped
+    entrypoint: /bin/bash -c "envsubst < /etc/nginx/conf.d/default.conf > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
 
 volumes:
   api-dependencies:

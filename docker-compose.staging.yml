@@ -33,6 +33,14 @@ services:
       - staging-db-data:/var/lib/postgresql/data
     ports:
       - "5434:5432"
+  
+  webserver:
+    container_name: ${DOCKERHUB_APP_ID}-staging.webserver
+    environment:
+      SERVER_NAME: ${STAGING_APP_DOMAIN_NAME}
+    ports:
+      - "${STAGING_APP_PORT_HTTP}:80"
+      - "${STAGING_APP_PORT_HTTPS}:443"
 
 volumes:
   staging-api-dependencies:
