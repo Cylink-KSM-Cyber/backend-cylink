@@ -4,43 +4,17 @@ services:
   api:
     image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}-staging:latest
     container_name: ${DOCKERHUB_APP_ID}-staging.api
-    environment:
-      PORT: ${STAGING_APP_PORT}
-      ENABLE_LOG: ${STAGING_APP_ENABLE_LOG}
-      DATABASE_URL: postgres://${STAGING_DATABASE_USER}:${STAGING_DATABASE_PASSWORD}@database:5432/${STAGING_DATABASE_NAME}
-      DATABASE_SSL: ${STAGING_DATABASE_SSL}
-      DATABASE_SCHEMA: ${STAGING_DATABASE_SCHEMA}
-      ACCESS_TOKEN_SECRET: ${STAGING_APP_ACCESS_TOKEN_SECRET}
-      REFRESH_TOKEN_SECRET: ${STAGING_APP_REFRESH_TOKEN_SECRET}
-      VERIFICATION_TOKEN_SECRET: ${STAGING_APP_VERIFICATION_TOKEN_SECRET}
-      ENABLE_EMAIL_VERIFICATION: ${STAGING_APP_ENABLE_EMAIL_VERIFICATION}
-      MAILER_TOKEN: ${STAGING_APP_MAILER_TOKEN}
-      MAILER_SENDER: ${STAGING_APP_MAILER_SENDER}
-      WEB_VERIFICATOR_URL: ${STAGING_APP_WEB_VERIFICATOR_URL}
-      FRONTEND_URL: ${STAGING_APP_FRONTEND_URL}
     volumes:
-      - ./:/app
       - staging-api-dependencies:/app/node_modules
       - staging-api-build:/app/dist
   
   database:
     container_name: ${DOCKERHUB_APP_ID}-staging.database
-    environment:
-      POSTGRES_USER: ${STAGING_DATABASE_USER}
-      POSTGRES_PASSWORD: ${STAGING_DATABASE_PASSWORD}
-      POSTGRES_DB: ${STAGING_DATABASE_NAME}
     volumes:
       - staging-db-data:/var/lib/postgresql/data
-    ports:
-      - "5434:5432"
   
   webserver:
     container_name: ${DOCKERHUB_APP_ID}-staging.webserver
-    environment:
-      SERVER_NAME: ${STAGING_APP_DOMAIN_NAME}
-    ports:
-      - "${STAGING_APP_PORT_HTTP}:80"
-      - "${STAGING_APP_PORT_HTTPS}:443"
 
 volumes:
   staging-api-dependencies:
