@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # Render the final config
-envsubst '\${SERVER_NAME}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
+VAR_LIST='${SERVER_NAME}'
+envsubst "$VAR_LIST" < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
 
 # Debug
 echo "---- Generated Nginx config ----"
