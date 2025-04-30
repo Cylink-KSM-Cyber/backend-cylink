@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  api:
+    image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}:prod
+    container_name: ${DOCKERHUB_APP_ID}.api
+    environment:
+      PORT: ${APP_PORT}
+      ENABLE_LOG: ${APP_ENABLE_LOG}
+      DATABASE_URL: postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@database:5432/${DATABASE_NAME}
+      DATABASE_SSL: ${DATABASE_SSL}
+      DATABASE_SCHEMA: ${DATABASE_SCHEMA}
+      ACCESS_TOKEN_SECRET: ${APP_ACCESS_TOKEN_SECRET}
+      REFRESH_TOKEN_SECRET: ${APP_REFRESH_TOKEN_SECRET}
+      VERIFICATION_TOKEN_SECRET: ${APP_VERIFICATION_TOKEN_SECRET}
+      ENABLE_EMAIL_VERIFICATION: ${APP_ENABLE_EMAIL_VERIFICATION}
+      MAILER_TOKEN: ${APP_MAILER_TOKEN}
+      MAILER_SENDER: ${APP_MAILER_SENDER}
+      WEB_VERIFICATOR_URL: ${APP_WEB_VERIFICATOR_URL}
+      FRONTEND_URL: ${APP_FRONTEND_URL}
+    volumes:
+      - ./:/app
+      - api-dependencies:/app/node_modules
+      - api-build:/app/dist
+    networks:
+      - app
+    depends_on:
+      - database
+    restart: unless-stopped
+
+  database:
+    image: postgres:15
+    container_name: ${DOCKERHUB_APP_ID}.database
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "${DATABASE_PORT}:5432"
+    networks:
+      - app
+    restart: unless-stopped
+
+  webserver:    
+    image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}-webserver:prod
+    container_name: ${DOCKERHUB_APP_ID}.webserver
+    ports:
+      - "${APP_PORT_HTTP}:80"
+      - "${APP_PORT_HTTPS}:443"
+    networks:
+      - app
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  api-dependencies:
+    name: ${DOCKERHUB_APP_ID}.api.dependencies
+  api-build:
+    name: ${DOCKERHUB_APP_ID}.api.build
+  db-data:
+    name: ${DOCKERHUB_APP_ID}.db
+
+networks:
+  app:
+    driver: bridge
+    name: ${DOCKERHUB_APP_ID}.app
