@@ -3,5 +3,10 @@
 # Render the final config
 envsubst < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
 
+# Debug
+echo "---- Generated Nginx config ----"
+cat /etc/nginx/conf.d/default.conf
+echo "--------------------------------"
+
 # Run nginx
 exec nginx -g "daemon off;"
