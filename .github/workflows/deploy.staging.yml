@@ -30,6 +30,22 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}-staging:latest
     
+    - name: Create .env file from secrets
+      uses: 0ndt/envfile@v2
+      with:
+        secrets: ${{ toJSON(secrets) }}
+    
+    - name: Upload .env to VPS
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        port: ${{ secrets.VPS_PORT }}
+        username: ${{ secrets.VPS_USER }}
+        key: |
+          ${{ secrets.VPS_SSH_KEY }}
+        source: ".env"
+        target: "/opt/${{ secrets.DOCKERHUB_APP_ID }}/staging"
+    
     - name: Deploy to VPS
       uses: appleboy/ssh-action@v1.0.0
       with:
