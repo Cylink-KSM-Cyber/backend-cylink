@@ -5,6 +5,7 @@ services:
     image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}:staging
     container_name: ${DOCKERHUB_APP_ID}.api.staging
     volumes:
+      - ./:/app
       - staging-api-dependencies:/app/node_modules
       - staging-api-build:/app/dist
   
