@@ -44,8 +44,10 @@ services:
     restart: unless-stopped
 
   webserver:    
-    image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}-webserver:prod
+    image: nginx:latest
     container_name: ${DOCKERHUB_APP_ID}.webserver
+    volumes:
+      - ./docker/webserver/nginx.conf:/etc/nginx/conf.d/default.conf
     ports:
       - "${APP_PORT_HTTP}:80"
       - "${APP_PORT_HTTPS}:443"
