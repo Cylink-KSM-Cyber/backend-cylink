@@ -15,7 +15,7 @@ services:
       MAILER_TOKEN: ${APP_MAILER_TOKEN}
       MAILER_SENDER: ${APP_MAILER_SENDER}
       WEB_VERIFICATOR_URL: ${APP_WEB_VERIFICATOR_URL}
-      FRONTEND_URL: ${APP_FRONTEND_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
     networks:
       - app
     depends_on:
