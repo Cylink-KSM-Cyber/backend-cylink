@@ -4,10 +4,6 @@ services:
   api:
     image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}:prod
     container_name: ${DOCKERHUB_APP_ID}.api
-    volumes:
-      - ./:/app
-      - api-dependencies:/app/node_modules
-      - api-build:/app/dist
 
   database:
     container_name: ${DOCKERHUB_APP_ID}.database
@@ -16,11 +12,3 @@ services:
 
   webserver:    
     container_name: ${DOCKERHUB_APP_ID}.webserver
-
-volumes:
-  api-dependencies:
-    name: ${DOCKERHUB_APP_ID}.api.dependencies
-  api-build:
-    name: ${DOCKERHUB_APP_ID}.api.build
-  db-data:
-    name: ${DOCKERHUB_APP_ID}.db
