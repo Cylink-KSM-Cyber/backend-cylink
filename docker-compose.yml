@@ -2,14 +2,8 @@ version: '3.8'
 
 services:
   api:
-    image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}:prod
-    container_name: ${DOCKERHUB_APP_ID}.api
     environment:
       DATABASE_URL: postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@database:5432/${DATABASE_NAME}
-    volumes:
-      - ./:/app
-      - api-dependencies:/app/node_modules
-      - api-build:/app/dist
     networks:
       - app
     depends_on:
@@ -18,13 +12,10 @@ services:
 
   database:
     image: postgres:15
-    container_name: ${DOCKERHUB_APP_ID}.database
     environment:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
-    volumes:
-      - db-data:/var/lib/postgresql/data
     ports:
       - "${DATABASE_PORT}:5432"
     networks:
@@ -44,14 +35,6 @@ services:
     depends_on:
       - api
     restart: unless-stopped
-
-volumes:
-  api-dependencies:
-    name: ${DOCKERHUB_APP_ID}.api.dependencies
-  api-build:
-    name: ${DOCKERHUB_APP_ID}.api.build
-  db-data:
-    name: ${DOCKERHUB_APP_ID}.db
 
 networks:
   app:
