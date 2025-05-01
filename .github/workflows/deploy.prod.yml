@@ -21,17 +21,6 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-    
-    - name: Build and push webserver image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./docker/webserver
-        file: ./docker/webserver/Dockerfile
-        push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}-webserver:prod
-        no-cache: true
-        build-args: |
-          SERVER_NAME=${{ secrets.PRODUCTION_APP_DOMAIN_NAME }}
 
     - name: Build and push api image
       uses: docker/build-push-action@v5
