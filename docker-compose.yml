@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   api:
+    image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}:prod
     environment:
       PORT: ${APP_PORT}
       ENABLE_LOG: ${APP_ENABLE_LOG}

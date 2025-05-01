@@ -12,3 +12,7 @@ services:
   
   webserver:
     container_name: ${DOCKERHUB_APP_ID}.webserver.staging
+
+volumes:
+  staging-db-data:
+    name: ${DOCKERHUB_APP_ID}.db.staging
