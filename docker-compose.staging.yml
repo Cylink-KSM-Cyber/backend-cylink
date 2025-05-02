@@ -16,3 +16,8 @@ services:
 volumes:
   staging-db-data:
     name: ${DOCKERHUB_APP_ID}.db.staging
+
+networks:
+  app:
+    driver: bridge
+    name: ${DOCKERHUB_APP_ID}.app.staging

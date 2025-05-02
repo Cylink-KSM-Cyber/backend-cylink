@@ -16,3 +16,8 @@ services:
 volumes:
   db-data:
     name: ${DOCKERHUB_APP_ID}.db
+
+networks:
+  app:
+    driver: bridge
+    name: ${DOCKERHUB_APP_ID}.app.prod
