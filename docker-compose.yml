@@ -3,7 +3,6 @@ version: '3.8'
 services:
   api:
     image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}:prod
-    container_name: ${DOCKERHUB_APP_ID}.api
     environment:
       PORT: ${APP_PORT}
       ENABLE_LOG: ${APP_ENABLE_LOG}
@@ -17,11 +16,7 @@ services:
       MAILER_TOKEN: ${APP_MAILER_TOKEN}
       MAILER_SENDER: ${APP_MAILER_SENDER}
       WEB_VERIFICATOR_URL: ${APP_WEB_VERIFICATOR_URL}
-      FRONTEND_URL: ${APP_FRONTEND_URL}
-    volumes:
-      - ./:/app
-      - api-dependencies:/app/node_modules
-      - api-build:/app/dist
+      FRONTEND_URL: ${FRONTEND_URL}
     networks:
       - app
     depends_on:
@@ -30,13 +25,10 @@ services:
 
   database:
     image: postgres:15
-    container_name: ${DOCKERHUB_APP_ID}.database
     environment:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
-    volumes:
-      - db-data:/var/lib/postgresql/data
     ports:
       - "${DATABASE_PORT}:5432"
     networks:
@@ -45,7 +37,6 @@ services:
 
   webserver:    
     image: nginx:latest
-    container_name: ${DOCKERHUB_APP_ID}.webserver
     volumes:
       - ./docker/webserver/nginx.conf:/etc/nginx/conf.d/default.conf
     ports:
@@ -56,14 +47,6 @@ services:
     depends_on:
       - api
     restart: unless-stopped
-
-volumes:
-  api-dependencies:
-    name: ${DOCKERHUB_APP_ID}.api.dependencies
-  api-build:
-    name: ${DOCKERHUB_APP_ID}.api.build
-  db-data:
-    name: ${DOCKERHUB_APP_ID}.db
 
 networks:
   app:

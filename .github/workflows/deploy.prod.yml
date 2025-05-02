@@ -29,6 +29,7 @@ jobs:
         file: ./docker/api/Dockerfile
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:prod
+        no-cache: true
 
     - name: Create .env file from secrets
       uses: 0ndt/envfile@v2
@@ -63,4 +64,4 @@ jobs:
           sed -i 's/^PRODUCTION_//g' .env
 
           docker-compose pull
-          docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-prod up -d --force-recreate --remove-orphans
+          docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-prod -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate --remove-orphans
