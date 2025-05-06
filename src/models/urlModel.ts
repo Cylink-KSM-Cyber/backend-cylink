@@ -374,10 +374,15 @@ exports.shortCodeExists = async (shortCode: string) => {
  * Get a URL by ID
  *
  * @param {number} id - The URL ID to retrieve
+ * @param {boolean} [includeSoftDeleted=false] - Whether to include soft-deleted URLs
  * @returns {Promise<any|null>} The URL object or null if not found
  */
-exports.getUrlById = async (id: number) => {
-  const result = await pool.query('SELECT * FROM urls WHERE id = $1 AND deleted_at IS NULL', [id]);
+exports.getUrlById = async (id: number, includeSoftDeleted: boolean = false) => {
+  const query = includeSoftDeleted
+    ? 'SELECT * FROM urls WHERE id = $1'
+    : 'SELECT * FROM urls WHERE id = $1 AND deleted_at IS NULL';
+
+  const result = await pool.query(query, [id]);
 
   return result.rows[0] || null;
 };
