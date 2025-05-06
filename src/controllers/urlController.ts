@@ -643,6 +643,12 @@ exports.deleteUrl = async (req: Request, res: Response): Promise<Response> => {
       return sendResponse(res, 401, 'Unauthorized');
     }
 
+    // Store some information about the URL before deletion
+    const urlInfo = {
+      id: url.id,
+      short_code: url.short_code,
+    };
+
     // Perform soft delete
     const isDeleted = await urlModel.deleteUrl(urlId);
 
@@ -650,28 +656,49 @@ exports.deleteUrl = async (req: Request, res: Response): Promise<Response> => {
       return sendResponse(res, 500, 'Failed to delete URL');
     }
 
-    // Get the updated URL to return the deleted_at timestamp (including soft deleted URLs)
-    const deletedUrl = await urlModel.getUrlById(urlId, true);
+    try {
+      // Get the updated URL to return the deleted_at timestamp (including soft deleted URLs)
+      const deletedUrl = await urlModel.getUrlById(urlId, true);
 
-    // Format response
-    const response = {
-      id: deletedUrl.id,
-      short_code: deletedUrl.short_code,
-      deleted_at: new Date(deletedUrl.deleted_at).toISOString(),
-    };
+      if (deletedUrl) {
+        // Format response
+        const response = {
+          id: deletedUrl.id,
+          short_code: deletedUrl.short_code,
+          deleted_at: new Date(deletedUrl.deleted_at).toISOString(),
+        };
 
-    logger.info(`Successfully deleted URL with ID ${urlId}`);
+        logger.info(`Successfully deleted URL with ID ${urlId}`);
 
-    return sendResponse(res, 200, 'Successfully deleted URL', response);
+        return sendResponse(res, 200, 'Successfully deleted URL', response);
+      } else {
+        // This shouldn't happen, but handle it just in case
+        logger.warn(`URL with ID ${urlId} was deleted but couldn't be retrieved afterwards`);
+        return sendResponse(res, 200, 'Successfully deleted URL', {
+          id: urlInfo.id,
+          short_code: urlInfo.short_code,
+          deleted_at: new Date().toISOString(),
+        });
+      }
+    } catch (retrieveError) {
+      // If we can't retrieve the deleted URL, still return success
+      logger.warn(`Error retrieving deleted URL with ID ${urlId}: ${retrieveError}`);
+      return sendResponse(res, 200, 'Successfully deleted URL', {
+        id: urlInfo.id,
+        short_code: urlInfo.short_code,
+      });
+    }
   } catch (error: unknown) {
     if (error instanceof TypeError) {
-      logger.error('URL error: Type error while deleting URL:', error.message);
+      logger.error(
+        `URL error: Type error while deleting URL: ${error instanceof Error ? error.message : JSON.stringify(error)}`,
+      );
       return sendResponse(res, 400, 'Invalid request format');
     } else if (error instanceof Error) {
-      logger.error('URL error: Failed to delete URL:', error.message);
+      logger.error(`URL error: Failed to delete URL: ${error.message}`);
       return sendResponse(res, 500, 'Internal Server Error');
     } else {
-      logger.error('URL error: Unknown error while deleting URL:', String(error));
+      logger.error(`URL error: Unknown error while deleting URL: ${JSON.stringify(error)}`);
       return sendResponse(res, 500, 'Internal server error');
     }
   }
