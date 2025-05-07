@@ -149,6 +149,7 @@ export interface UrlUpdateData {
 export interface UpdateUrlRequest {
   title?: string;
   original_url?: string;
+  short_code?: string;
   expiry_date?: string | null;
   is_active?: boolean;
 }
