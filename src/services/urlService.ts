@@ -140,7 +140,9 @@ exports.getUrlByShortCode = async (shortCode: string) => {
  */
 exports.updateUrl = async (urlId: number, updateData: any) => {
   try {
-    logger.info(`Service: Updating URL ${urlId} with data:`, updateData);
+    logger.info(
+      `URL update processing - URL ID: ${urlId}, Fields: ${Object.keys(updateData).join(', ')}`,
+    );
 
     // Sanitize the update data to ensure only valid fields are updated
     const validFields = [
@@ -172,6 +174,9 @@ exports.updateUrl = async (urlId: number, updateData: any) => {
         // Get the URL with this short code to see if it's the same URL we're updating
         const existingUrl = await urlModel.getUrlByShortCode(sanitizedUpdateData.short_code);
         if (existingUrl && existingUrl.id !== urlId) {
+          logger.warn(
+            `Short code already in use - URL ID: ${urlId}, Short Code: ${sanitizedUpdateData.short_code}`,
+          );
           throw new Error('This short code is already taken');
         }
       }
@@ -189,11 +194,9 @@ exports.updateUrl = async (urlId: number, updateData: any) => {
       delete sanitizedUpdateData.password;
     }
 
-    logger.debug(`Service: Sanitized update data for URL ${urlId}:`, sanitizedUpdateData);
-
     // If no valid fields to update, return early
     if (Object.keys(sanitizedUpdateData).length === 0) {
-      logger.warn(`Service: No valid fields to update for URL ${urlId}`);
+      logger.warn(`No valid fields to update - URL ID: ${urlId}`);
       return null;
     }
 
@@ -201,14 +204,15 @@ exports.updateUrl = async (urlId: number, updateData: any) => {
     const updatedUrl = await urlModel.updateUrl(urlId, sanitizedUpdateData);
 
     if (!updatedUrl) {
-      logger.warn(`Service: Failed to update URL ${urlId} - no rows affected`);
+      logger.warn(`URL update operation returned no results - URL ID: ${urlId}`);
       return null;
     }
 
-    logger.info(`Service: Successfully updated URL ${urlId}`);
+    logger.info(`URL update completed - URL ID: ${urlId}`);
     return updatedUrl;
   } catch (error) {
-    logger.error(`Service: Error updating URL ${urlId}:`, error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`URL update error - URL ID: ${urlId}, Error: ${errorMessage}`);
     throw error;
   }
 };
