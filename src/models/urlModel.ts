@@ -1,5 +1,5 @@
 const pool = require('../config/database');
-const { UrlCreateData, UrlUpdateData } = require('../interfaces/URL');
+const { UrlCreateData } = require('../interfaces/URL');
 
 /**
  * URL Model
@@ -306,13 +306,12 @@ function highlightMatches(text: string, term: string): string[] | null {
  * Update a URL by ID
  *
  * @param {number} id - The URL ID to update
- * @param {UrlUpdateData} updateData - The data to update
+ * @param {any} updateData - The data to update
  * @returns {Promise<any>} The updated URL object
  */
-exports.updateUrl = async (id: number, updateData: typeof UrlUpdateData) => {
-  const keys = Object.keys(updateData).filter(
-    key => updateData[key as keyof typeof updateData] !== undefined,
-  );
+exports.updateUrl = async (id: number, updateData: any) => {
+  // Ensure we're working with valid keys from the update data
+  const keys = Object.keys(updateData).filter(key => updateData[key] !== undefined);
 
   if (keys.length === 0) {
     return null;
@@ -325,7 +324,7 @@ exports.updateUrl = async (id: number, updateData: typeof UrlUpdateData) => {
   // Add each field to be updated to the SET clause
   for (const key of keys) {
     setClause.push(`${key} = $${paramCounter}`);
-    values.push(updateData[key as keyof typeof updateData]);
+    values.push(updateData[key]);
     paramCounter++;
   }
 
@@ -335,12 +334,17 @@ exports.updateUrl = async (id: number, updateData: typeof UrlUpdateData) => {
   // Add the URL ID as the last parameter
   values.push(id);
 
-  const result = await pool.query(
-    `UPDATE urls SET ${setClause.join(', ')} WHERE id = $${paramCounter} RETURNING *`,
-    values,
-  );
+  try {
+    const result = await pool.query(
+      `UPDATE urls SET ${setClause.join(', ')} WHERE id = $${paramCounter} RETURNING *`,
+      values,
+    );
 
-  return result.rows[0] || null;
+    return result.rows[0] || null;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Database error updating URL ${id}: ${errorMessage}`);
+  }
 };
 
 /**

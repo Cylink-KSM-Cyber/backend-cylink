@@ -75,6 +75,11 @@ module.exports = {
         optional: true,
         max: 255,
       },
+      short_code: {
+        type: 'string',
+        optional: true,
+        max: 50,
+      },
       original_url: {
         type: 'string',
         optional: true,

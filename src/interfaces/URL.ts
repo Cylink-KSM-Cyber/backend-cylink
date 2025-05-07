@@ -145,10 +145,18 @@ export interface UrlUpdateData {
 /**
  * Update URL Request interface
  * Used for the PUT /api/v1/urls/:id endpoint
+ *
+ * Fields:
+ * - `title` (optional): The new title for the URL.
+ * - `original_url` (optional): The updated original URL.
+ * - `short_code` (optional): A custom short code for the URL. If provided, it must be unique.
+ * - `expiry_date` (optional): The new expiry date for the URL, or `null` to remove the expiry.
+ * - `is_active` (optional): Indicates whether the URL should be active or inactive.
  */
 export interface UpdateUrlRequest {
   title?: string;
   original_url?: string;
+  short_code?: string;
   expiry_date?: string | null;
   is_active?: boolean;
 }
