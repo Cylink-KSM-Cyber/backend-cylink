@@ -1,5 +1,5 @@
 const pool = require('../config/database');
-const { UrlCreateData, UrlUpdateData } = require('../interfaces/URL');
+const { UrlCreateData } = require('../interfaces/URL');
 
 /**
  * URL Model
@@ -306,7 +306,7 @@ function highlightMatches(text: string, term: string): string[] | null {
  * Update a URL by ID
  *
  * @param {number} id - The URL ID to update
- * @param {UrlUpdateData | any} updateData - The data to update
+ * @param {any} updateData - The data to update
  * @returns {Promise<any>} The updated URL object
  */
 exports.updateUrl = async (id: number, updateData: any) => {
@@ -334,12 +334,6 @@ exports.updateUrl = async (id: number, updateData: any) => {
   // Add the URL ID as the last parameter
   values.push(id);
 
-  // Log the query and parameters for debugging
-  console.log(
-    `UPDATE urls SET ${setClause.join(', ')} WHERE id = $${paramCounter} RETURNING *`,
-    values,
-  );
-
   try {
     const result = await pool.query(
       `UPDATE urls SET ${setClause.join(', ')} WHERE id = $${paramCounter} RETURNING *`,
@@ -348,8 +342,8 @@ exports.updateUrl = async (id: number, updateData: any) => {
 
     return result.rows[0] || null;
   } catch (error) {
-    console.error('Error updating URL:', error);
-    throw error;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Database error updating URL ${id}: ${errorMessage}`);
   }
 };
 
