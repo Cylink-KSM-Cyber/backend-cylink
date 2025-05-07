@@ -58,7 +58,9 @@ jobs:
           ${{ secrets.VPS_SSH_KEY }}
         script: |
           cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/production
-          git pull
+          git fetch origin
+          git reset --hard origin/main
+          git clean -fd
 
           # Remove prefix
           sed -i 's/^PRODUCTION_//g' .env
