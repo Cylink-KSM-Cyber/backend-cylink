@@ -306,13 +306,12 @@ function highlightMatches(text: string, term: string): string[] | null {
  * Update a URL by ID
  *
  * @param {number} id - The URL ID to update
- * @param {UrlUpdateData} updateData - The data to update
+ * @param {UrlUpdateData | any} updateData - The data to update
  * @returns {Promise<any>} The updated URL object
  */
-exports.updateUrl = async (id: number, updateData: typeof UrlUpdateData) => {
-  const keys = Object.keys(updateData).filter(
-    key => updateData[key as keyof typeof updateData] !== undefined,
-  );
+exports.updateUrl = async (id: number, updateData: any) => {
+  // Ensure we're working with valid keys from the update data
+  const keys = Object.keys(updateData).filter(key => updateData[key] !== undefined);
 
   if (keys.length === 0) {
     return null;
@@ -325,7 +324,7 @@ exports.updateUrl = async (id: number, updateData: typeof UrlUpdateData) => {
   // Add each field to be updated to the SET clause
   for (const key of keys) {
     setClause.push(`${key} = $${paramCounter}`);
-    values.push(updateData[key as keyof typeof updateData]);
+    values.push(updateData[key]);
     paramCounter++;
   }
 
@@ -335,12 +334,23 @@ exports.updateUrl = async (id: number, updateData: typeof UrlUpdateData) => {
   // Add the URL ID as the last parameter
   values.push(id);
 
-  const result = await pool.query(
+  // Log the query and parameters for debugging
+  console.log(
     `UPDATE urls SET ${setClause.join(', ')} WHERE id = $${paramCounter} RETURNING *`,
     values,
   );
 
-  return result.rows[0] || null;
+  try {
+    const result = await pool.query(
+      `UPDATE urls SET ${setClause.join(', ')} WHERE id = $${paramCounter} RETURNING *`,
+      values,
+    );
+
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error('Error updating URL:', error);
+    throw error;
+  }
 };
 
 /**
