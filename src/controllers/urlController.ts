@@ -1323,9 +1323,11 @@ exports.getUrlsWithStatusFilter = async (req: Request, res: Response): Promise<R
 exports.updateUrl = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { id } = req.params;
-    const userId = req.body.id; // From authentication middleware
+    // Get the user ID from authentication middleware
+    const userId = req.body.id || (req as any).user?.id;
 
     if (!userId) {
+      logger.warn('Update URL attempt without user ID');
       return sendResponse(res, 401, 'Unauthorized: No user ID');
     }
 
@@ -1333,22 +1335,45 @@ exports.updateUrl = async (req: Request, res: Response): Promise<Response> => {
     const urlId = parseInt(id as string, 10);
 
     if (isNaN(urlId)) {
+      logger.warn(`Invalid URL ID format: ${id}`);
       return sendResponse(res, 400, 'Invalid URL ID');
     }
+
+    // Log the request
+    logger.info(`Update URL request for ID ${urlId} by user ${userId}`, {
+      requestBody: JSON.stringify(req.body),
+    });
 
     // Get the existing URL
     const existingUrl = await urlModel.getUrlById(urlId);
 
     if (!existingUrl) {
+      logger.warn(`URL not found: ${urlId}`);
       return sendResponse(res, 404, 'URL not found');
     }
 
     // Check if the URL belongs to the authenticated user
     if (existingUrl.user_id !== userId) {
+      logger.warn(
+        `User ${userId} attempted to update URL ${urlId} which belongs to user ${existingUrl.user_id}`,
+      );
       return sendResponse(res, 403, 'You do not have permission to update this URL');
     }
 
-    const updateData: UpdateUrlRequest = req.body;
+    // Create a clean update object from the request body
+    const updateData: UpdateUrlRequest = {
+      title: req.body.title,
+      original_url: req.body.original_url,
+      short_code: req.body.short_code,
+      expiry_date: req.body.expiry_date,
+      is_active: req.body.is_active !== undefined ? Boolean(req.body.is_active) : undefined,
+    };
+
+    // Only keep defined fields
+    const cleanUpdateData = Object.entries(updateData)
+      .filter(([_, value]) => value !== undefined)
+      .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {});
+
     const validationErrors: string[] = [];
 
     // Validate original_url if provided
@@ -1356,6 +1381,15 @@ exports.updateUrl = async (req: Request, res: Response): Promise<Response> => {
       if (!isValidUrl(updateData.original_url)) {
         validationErrors.push('Original URL must be a valid URL');
       }
+    }
+
+    // Validate short_code if provided
+    if (updateData.short_code !== undefined) {
+      if (updateData.short_code.length < 1) {
+        validationErrors.push('Short code cannot be empty');
+      }
+      // Additional validations can be added here based on your requirements
+      // For example, checking for special characters, length limits, etc.
     }
 
     // Validate expiry_date if provided
@@ -1372,61 +1406,52 @@ exports.updateUrl = async (req: Request, res: Response): Promise<Response> => {
 
     // If there are validation errors, return them
     if (validationErrors.length > 0) {
+      logger.warn(`Validation errors for URL update ${urlId}:`, validationErrors);
       return sendResponse(res, 400, 'Validation error', null, null, null, validationErrors);
     }
 
-    // Prepare update data
-    const updateFields: any = {};
+    // Log the cleaned update data
+    logger.info(`Update data for URL ${urlId}:`, cleanUpdateData);
 
-    if (updateData.title !== undefined) {
-      updateFields.title = updateData.title;
+    // Update the URL using the service to ensure proper handling
+    try {
+      const updatedUrl = await urlService.updateUrl(urlId, cleanUpdateData);
+
+      if (!updatedUrl) {
+        logger.error(`Failed to update URL ${urlId}`);
+        return sendResponse(res, 500, 'Failed to update URL');
+      }
+
+      // Get the click count
+      const clickCount = await clickModel.getClickCountByUrlId(urlId);
+
+      // Format the response
+      const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
+      const shortUrl = baseUrl + updatedUrl.short_code;
+
+      const formattedUrl = {
+        id: updatedUrl.id,
+        original_url: updatedUrl.original_url,
+        short_code: updatedUrl.short_code,
+        short_url: shortUrl,
+        title: updatedUrl.title,
+        clicks: clickCount,
+        created_at: new Date(updatedUrl.created_at).toISOString(),
+        updated_at: new Date(updatedUrl.updated_at).toISOString(),
+        expiry_date: updatedUrl.expiry_date ? new Date(updatedUrl.expiry_date).toISOString() : null,
+        is_active: updatedUrl.is_active,
+      };
+
+      // Log the successful update
+      logger.info(`URL ${urlId} updated successfully by user ${userId}`);
+
+      return sendResponse(res, 200, 'URL updated successfully', formattedUrl);
+    } catch (updateError) {
+      logger.error(`Error in updating URL ${urlId}:`, updateError);
+      return sendResponse(res, 500, 'Error updating URL');
     }
-
-    if (updateData.original_url !== undefined) {
-      updateFields.original_url = updateData.original_url;
-    }
-
-    if (updateData.expiry_date !== undefined) {
-      updateFields.expiry_date = updateData.expiry_date;
-    }
-
-    if (updateData.is_active !== undefined) {
-      updateFields.is_active = updateData.is_active;
-    }
-
-    // Update the URL
-    const updatedUrl = await urlModel.updateUrl(urlId, updateFields);
-
-    if (!updatedUrl) {
-      return sendResponse(res, 500, 'Failed to update URL');
-    }
-
-    // Get the click count
-    const clickCount = await clickModel.getClickCountByUrlId(urlId);
-
-    // Format the response
-    const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
-    const shortUrl = baseUrl + updatedUrl.short_code;
-
-    const formattedUrl = {
-      id: updatedUrl.id,
-      original_url: updatedUrl.original_url,
-      short_code: updatedUrl.short_code,
-      short_url: shortUrl,
-      title: updatedUrl.title,
-      clicks: clickCount,
-      created_at: new Date(updatedUrl.created_at).toISOString(),
-      updated_at: new Date(updatedUrl.updated_at).toISOString(),
-      expiry_date: updatedUrl.expiry_date ? new Date(updatedUrl.expiry_date).toISOString() : null,
-      is_active: updatedUrl.is_active,
-    };
-
-    // Log the update
-    logger.info(`URL ${urlId} updated by user ${userId}`);
-
-    return sendResponse(res, 200, 'URL updated successfully', formattedUrl);
   } catch (error) {
-    logger.error('Error updating URL:', error);
+    logger.error('Unexpected error in updateUrl controller:', error);
     return sendResponse(res, 500, 'Internal server error');
   }
 };
