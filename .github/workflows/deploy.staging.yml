@@ -65,5 +65,4 @@ jobs:
           # Remove prefix
           sed -i 's/^STAGING_//g' .env
 
-          docker-compose pull
-          docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-staging -f docker-compose.yml -f docker-compose.staging.yml up -d --force-recreate
+          docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-staging -f docker-compose.yml -f docker-compose.staging.yml up -d --force-recreate --pull always
