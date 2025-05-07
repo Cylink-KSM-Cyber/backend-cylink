@@ -139,19 +139,78 @@ exports.getUrlByShortCode = async (shortCode: string) => {
  * @returns {Promise<any|null>} The updated URL or null if not found
  */
 exports.updateUrl = async (urlId: number, updateData: any) => {
-  // Handle password updates if included
-  if (updateData.password !== undefined) {
-    if (updateData.password) {
-      updateData.password_hash = await bcrypt.hash(updateData.password, 10);
-      updateData.has_password = true;
-    } else {
-      updateData.password_hash = null;
-      updateData.has_password = false;
-    }
-    delete updateData.password;
-  }
+  try {
+    logger.info(`Service: Updating URL ${urlId} with data:`, updateData);
 
-  return await urlModel.updateUrl(urlId, updateData);
+    // Sanitize the update data to ensure only valid fields are updated
+    const validFields = [
+      'title',
+      'original_url',
+      'expiry_date',
+      'is_active',
+      'password',
+      'short_code',
+    ];
+    const sanitizedUpdateData: Record<string, any> = {};
+
+    Object.keys(updateData).forEach(key => {
+      if (validFields.includes(key) && updateData[key] !== undefined) {
+        sanitizedUpdateData[key] = updateData[key];
+      }
+    });
+
+    // Validate short_code if provided
+    if (sanitizedUpdateData.short_code !== undefined) {
+      // Validate short code format
+      if (!shortCodeUtil.isValidShortCode(sanitizedUpdateData.short_code)) {
+        throw new Error('Invalid short code format');
+      }
+
+      // Check if the short code is already in use by another URL
+      const exists = await urlModel.shortCodeExists(sanitizedUpdateData.short_code);
+      if (exists) {
+        // Get the URL with this short code to see if it's the same URL we're updating
+        const existingUrl = await urlModel.getUrlByShortCode(sanitizedUpdateData.short_code);
+        if (existingUrl && existingUrl.id !== urlId) {
+          throw new Error('This short code is already taken');
+        }
+      }
+    }
+
+    // Handle password updates if included
+    if (sanitizedUpdateData.password !== undefined) {
+      if (sanitizedUpdateData.password) {
+        sanitizedUpdateData.password_hash = await bcrypt.hash(sanitizedUpdateData.password, 10);
+        sanitizedUpdateData.has_password = true;
+      } else {
+        sanitizedUpdateData.password_hash = null;
+        sanitizedUpdateData.has_password = false;
+      }
+      delete sanitizedUpdateData.password;
+    }
+
+    logger.debug(`Service: Sanitized update data for URL ${urlId}:`, sanitizedUpdateData);
+
+    // If no valid fields to update, return early
+    if (Object.keys(sanitizedUpdateData).length === 0) {
+      logger.warn(`Service: No valid fields to update for URL ${urlId}`);
+      return null;
+    }
+
+    // Update the URL
+    const updatedUrl = await urlModel.updateUrl(urlId, sanitizedUpdateData);
+
+    if (!updatedUrl) {
+      logger.warn(`Service: Failed to update URL ${urlId} - no rows affected`);
+      return null;
+    }
+
+    logger.info(`Service: Successfully updated URL ${urlId}`);
+    return updatedUrl;
+  } catch (error) {
+    logger.error(`Service: Error updating URL ${urlId}:`, error);
+    throw error;
+  }
 };
 
 /**
