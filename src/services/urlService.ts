@@ -163,6 +163,11 @@ exports.updateUrl = async (urlId: number, updateData: any) => {
 
     // Validate short_code if provided
     if (sanitizedUpdateData.short_code !== undefined) {
+      // Sanitize the short code before validation
+      sanitizedUpdateData.short_code = shortCodeUtil.sanitizeShortCode(
+        sanitizedUpdateData.short_code,
+      );
+
       // Validate short code format
       if (!shortCodeUtil.isValidShortCode(sanitizedUpdateData.short_code)) {
         throw new Error('Invalid short code format');
