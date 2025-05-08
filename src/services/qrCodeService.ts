@@ -497,54 +497,44 @@ export const getAllQrCodes = async (
 ): Promise<QrCodeListResponse> => {
   try {
     // Get QR codes from the database with filtering and pagination
-    try {
-      const { qrCodes, total } = await qrCodeModel.getQrCodesByUser(userId, queryParams);
-
-      // Calculate pagination information
-      const page = queryParams.page || 1;
-      const limit = queryParams.limit || 10;
-      const totalPages = Math.ceil(total / limit);
-
-      // Format each QR code with appropriate URLs
-      const formattedQrCodes = qrCodes.map((qrCode: any) => {
-        // If the QR code already has short_code from the model query
-        if (qrCode.short_code) {
-          return formatQrCodeResponse(qrCode, qrCode.short_code);
-        }
-        return qrCode;
-      });
-
-      // Format the response
-      return {
-        data: formattedQrCodes,
-        pagination: {
-          total,
-          page,
-          limit,
-          total_pages: totalPages,
-        },
-      };
-    } catch (dbError) {
-      // Handle database errors specifically
-      if (dbError instanceof Error) {
-        // Check for specific error types
+    const { qrCodes, total } = await qrCodeModel
+      .getQrCodesByUser(userId, queryParams)
+      .catch((dbError: Error) => {
         if (
           dbError.message.includes('Invalid sortBy') ||
           dbError.message.includes('Invalid sortOrder')
         ) {
           logger.warn(`Parameter validation error: ${dbError.message}`);
-          throw dbError; // Re-throw to be caught by the controller
+          throw dbError;
         }
-
-        // Log database error
         logger.error(`Database error: ${dbError.message}`);
         throw new Error('Failed to retrieve QR codes from database');
-      }
+      });
 
-      // For unknown error types
-      logger.error('Unknown database error occurred during QR code retrieval');
-      throw new Error('Unexpected error when retrieving QR codes');
-    }
+    // Calculate pagination information
+    const page = queryParams.page || 1;
+    const limit = queryParams.limit || 10;
+    const totalPages = Math.ceil(total / limit);
+
+    // Format each QR code with appropriate URLs
+    const formattedQrCodes = qrCodes.map((qrCode: any) => {
+      // If the QR code already has short_code from the model query
+      if (qrCode.short_code) {
+        return formatQrCodeResponse(qrCode, qrCode.short_code);
+      }
+      return qrCode;
+    });
+
+    // Format the response
+    return {
+      data: formattedQrCodes,
+      pagination: {
+        total,
+        page,
+        limit,
+        total_pages: totalPages,
+      },
+    };
   } catch (error) {
     // General error handling
     logger.error(`Error retrieving QR codes for user ${userId}: ${error}`);
