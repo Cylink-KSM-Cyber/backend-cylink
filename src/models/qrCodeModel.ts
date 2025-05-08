@@ -193,27 +193,63 @@ export const getQrCodesByUser = async (
     includeUrl = true,
   } = queryParams;
 
+  // Log incoming query parameters for debugging
+  console.log('[QR Code Model] Processing query parameters:', {
+    userId,
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+    search: search || '[NONE]',
+    color: color || '[NONE]',
+    includeLogo: includeLogo === undefined ? '[UNDEFINED]' : includeLogo,
+    includeUrl,
+  });
+
   // Validate and sanitize the sort column to prevent SQL injection
   const validSortColumns: Record<string, string> = {
+    // Standard values
     created_at: 'qc.created_at',
     url_id: 'qc.url_id',
     color: 'qc.color',
     include_logo: 'qc.include_logo',
     size: 'qc.size',
+    // Alternative formats that users might send
+    createdat: 'qc.created_at',
+    created: 'qc.created_at',
+    date: 'qc.created_at',
+    urlid: 'qc.url_id',
+    url: 'qc.url_id',
+    includelogo: 'qc.include_logo',
+    logo: 'qc.include_logo',
   };
 
-  // Explicitly validate sortBy parameter
-  if (sortBy && !validSortColumns[sortBy]) {
-    const allowedValues = Object.keys(validSortColumns).join(', ');
-    throw new Error(`Invalid sortBy parameter. Must be one of: ${allowedValues}`);
+  // Normalize sortBy to handle case differences and common variations
+  const normalizedSortBy =
+    typeof sortBy === 'string' ? sortBy.toLowerCase().replace(/[^a-z0-9_]/g, '') : 'created_at';
+
+  // Map to valid database column
+  const sortColumn = validSortColumns[normalizedSortBy] || 'qc.created_at';
+
+  // Log the sortBy normalization process
+  if (sortColumn !== validSortColumns[sortBy]) {
+    console.log(`[QR Code Model] Normalized sortBy from "${sortBy}" to DB column "${sortColumn}"`);
   }
 
-  // Use the validated sort column or default to created_at
-  const sortColumn = validSortColumns[sortBy] || 'qc.created_at';
+  // Validate and normalize sortOrder - be lenient with format
+  const normalizedSortOrder =
+    typeof sortOrder === 'string' ? sortOrder.toLowerCase().trim() : 'desc';
+  const validOrder =
+    normalizedSortOrder === 'asc' || normalizedSortOrder === 'ascending' ? 'ASC' : 'DESC';
 
-  // Validate sortOrder
-  if (sortOrder && sortOrder !== 'asc' && sortOrder !== 'desc') {
-    throw new Error('Invalid sortOrder parameter. Must be "asc" or "desc"');
+  // Log the sortOrder normalization process
+  if (
+    (normalizedSortOrder !== 'asc' && normalizedSortOrder !== 'desc') ||
+    normalizedSortOrder !== sortOrder
+  ) {
+    console.log(
+      `[QR Code Model] Normalized sortOrder from "${sortOrder}" to DB order "${validOrder}"`,
+    );
   }
 
   const offset = (page - 1) * limit;
@@ -247,6 +283,7 @@ export const getQrCodesByUser = async (
 
   // Add color filter
   if (color) {
+    console.log(`[QR Code Model] Applying color filter with value: ${color}`);
     baseQuery += ` AND qc.color = $${paramIndex}`;
     queryValues.push(color);
     paramIndex++;
@@ -274,9 +311,17 @@ export const getQrCodesByUser = async (
   const dataQuery = `
     SELECT ${selectFields}
     ${baseQuery}
-    ORDER BY ${sortColumn} ${sortOrder === 'asc' ? 'ASC' : 'DESC'}
+    ORDER BY ${sortColumn} ${validOrder}
     LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
   `;
+
+  // Log the final SQL query for debugging
+  console.log('[QR Code Model] Executing SQL query with parameters:', {
+    query: dataQuery.replace(/\s+/g, ' ').trim(),
+    parameters: [...queryValues, limit, offset],
+    sortColumn,
+    sortOrder: validOrder,
+  });
 
   queryValues.push(limit, offset);
   const dataResult = await pool.query(dataQuery, queryValues);
@@ -302,5 +347,6 @@ export const getQrCodesByUser = async (
     return row;
   });
 
+  console.log(`[QR Code Model] Retrieved ${qrCodes.length} QR codes for user ${userId}`);
   return { qrCodes, total };
 };
