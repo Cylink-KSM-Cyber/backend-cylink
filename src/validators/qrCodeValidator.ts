@@ -163,13 +163,55 @@ module.exports = {
       name: 'sortBy',
       type: 'string',
       required: false,
-      enum: ['created_at', 'url_id', 'color', 'include_logo', 'size'],
+      customValidation: (value: string) => {
+        if (!value) return null;
+
+        // Normalize the value
+        const normalized = value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+
+        // Define valid options including common variations
+        const validOptions = [
+          'created_at',
+          'createdat',
+          'created',
+          'date',
+          'url_id',
+          'urlid',
+          'url',
+          'color',
+          'include_logo',
+          'includelogo',
+          'logo',
+          'size',
+        ];
+
+        if (!validOptions.includes(normalized)) {
+          return `sortBy must be one of: created_at, url_id, color, include_logo, size (received: ${value})`;
+        }
+
+        return null;
+      },
     },
     {
       name: 'sortOrder',
       type: 'string',
       required: false,
-      enum: ['asc', 'desc'],
+      customValidation: (value: string) => {
+        if (!value) return null;
+
+        // Normalize and check
+        const normalized = value.toLowerCase().trim();
+        if (
+          normalized !== 'asc' &&
+          normalized !== 'desc' &&
+          normalized !== 'ascending' &&
+          normalized !== 'descending'
+        ) {
+          return `sortOrder must be "asc" or "desc" (received: ${value})`;
+        }
+
+        return null;
+      },
     },
     {
       name: 'search',
