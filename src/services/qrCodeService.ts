@@ -496,36 +496,90 @@ export const getAllQrCodes = async (
   queryParams: QrCodeListQueryParams,
 ): Promise<QrCodeListResponse> => {
   try {
-    // Get QR codes from the database with filtering and pagination
-    const { qrCodes, total } = await qrCodeModel.getQrCodesByUser(userId, queryParams);
-
-    // Calculate pagination information
-    const page = queryParams.page || 1;
-    const limit = queryParams.limit || 10;
-    const totalPages = Math.ceil(total / limit);
-
-    // Format each QR code with appropriate URLs
-    const formattedQrCodes = qrCodes.map((qrCode: any) => {
-      // If the QR code already has short_code from the model query
-      if (qrCode.short_code) {
-        return formatQrCodeResponse(qrCode, qrCode.short_code);
-      }
-      return qrCode;
+    // Log the request at service level
+    logger.debug('[QR Code Service] Processing getAllQrCodes request:', {
+      userId,
+      queryParams: {
+        page: queryParams.page,
+        limit: queryParams.limit,
+        sortBy: queryParams.sortBy || 'DEFAULT:created_at',
+        sortOrder: queryParams.sortOrder || 'DEFAULT:desc',
+        search: queryParams.search || 'NONE',
+        color: queryParams.color || 'NONE',
+        includeLogo: queryParams.includeLogo === undefined ? 'UNDEFINED' : queryParams.includeLogo,
+        includeUrl: queryParams.includeUrl === undefined ? 'UNDEFINED' : queryParams.includeUrl,
+      },
     });
 
-    // Format the response
-    return {
-      data: formattedQrCodes,
-      pagination: {
-        total,
+    // Get QR codes from the database with filtering and pagination
+    try {
+      const { qrCodes, total } = await qrCodeModel.getQrCodesByUser(userId, queryParams);
+
+      // Calculate pagination information
+      const page = queryParams.page || 1;
+      const limit = queryParams.limit || 10;
+      const totalPages = Math.ceil(total / limit);
+
+      // Format each QR code with appropriate URLs
+      const formattedQrCodes = qrCodes.map((qrCode: any) => {
+        // If the QR code already has short_code from the model query
+        if (qrCode.short_code) {
+          return formatQrCodeResponse(qrCode, qrCode.short_code);
+        }
+        return qrCode;
+      });
+
+      // Log successful retrieval
+      logger.debug('[QR Code Service] Successfully retrieved QR codes:', {
+        userId,
+        count: formattedQrCodes.length,
+        totalPages,
         page,
         limit,
-        total_pages: totalPages,
-      },
-    };
+      });
+
+      // Format the response
+      return {
+        data: formattedQrCodes,
+        pagination: {
+          total,
+          page,
+          limit,
+          total_pages: totalPages,
+        },
+      };
+    } catch (dbError) {
+      // Handle database errors specifically
+      if (dbError instanceof Error) {
+        // Check for specific error types
+        if (
+          dbError.message.includes('Invalid sortBy') ||
+          dbError.message.includes('Invalid sortOrder')
+        ) {
+          logger.warn('[QR Code Service] Parameter validation error:', dbError.message);
+          throw dbError; // Re-throw to be caught by the controller
+        }
+
+        // Log detailed database error
+        logger.error('[QR Code Service] Database error while retrieving QR codes:', {
+          message: dbError.message,
+          userId,
+          queryParams: JSON.stringify(queryParams),
+        });
+
+        throw new Error('Failed to retrieve QR codes from database');
+      }
+
+      // For unknown error types
+      logger.error('[QR Code Service] Unknown database error:', dbError);
+      throw new Error('Unexpected error when retrieving QR codes');
+    }
   } catch (error) {
-    logger.error('Error retrieving QR codes for user:', error);
-    throw new Error('Failed to retrieve QR codes');
+    // General error handling
+    logger.error('[QR Code Service] Error retrieving QR codes for user:', error);
+
+    // Rethrow the original error for the controller to handle
+    throw error;
   }
 };
 
