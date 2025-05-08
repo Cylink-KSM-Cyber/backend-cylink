@@ -468,14 +468,14 @@ export const getQrCodesByUser = async (req: Request, res: Response): Promise<Res
         color = '#' + color;
       }
 
+      // Convert to uppercase for consistency before validation
+      color = color.toUpperCase();
+
       // Validate hex color format
-      if (!/^#[0-9A-Fa-f]{6}$/.test(color)) {
+      if (!/^#[0-9A-F]{6}$/.test(color)) {
         logger.warn(`Invalid color parameter provided: ${color}`);
         return sendResponse(res, 400, 'Invalid color parameter. Must be a valid hex color code.');
       }
-
-      // Ensure uppercase for consistency with database
-      color = color.toUpperCase();
     }
 
     // Additional validation at controller level - normalize sortBy parameter before validation
