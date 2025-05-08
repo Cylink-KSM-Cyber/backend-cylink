@@ -104,10 +104,20 @@ export const updateQrCode = async (
   const values = [];
   let paramCounter = 1;
 
+  const allowedFields = [
+    'url_id',
+    'color',
+    'background_color',
+    'include_logo',
+    'logo_size',
+    'size',
+  ];
   Object.entries(updateData).forEach(([key, value]) => {
-    setClause.push(`${key} = $${paramCounter}`);
-    values.push(value);
-    paramCounter++;
+    if (allowedFields.includes(key)) {
+      setClause.push(`${key} = $${paramCounter}`);
+      values.push(value);
+      paramCounter++;
+    }
   });
 
   // Add updated_at timestamp
