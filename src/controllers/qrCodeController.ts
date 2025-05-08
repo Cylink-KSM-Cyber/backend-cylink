@@ -457,31 +457,109 @@ export const getQrCodesByUser = async (req: Request, res: Response): Promise<Res
       | undefined;
     const sortOrder = req.query.sortOrder as 'asc' | 'desc';
     const search = req.query.search as string;
-    const color = req.query.color as string;
+    let color = req.query.color as string;
     const includeLogo = req.query.includeLogo ? req.query.includeLogo === 'true' : undefined;
     const includeUrl = req.query.includeUrl ? req.query.includeUrl === 'true' : true;
 
-    // Additional validation at controller level
-    if (sortBy && !['created_at', 'url_id', 'color', 'include_logo', 'size'].includes(sortBy)) {
-      logger.warn(`Invalid sortBy parameter received: ${sortBy}`);
-      return sendResponse(
-        res,
-        400,
-        'Invalid sortBy parameter. Must be one of: created_at, url_id, color, include_logo, size',
-      );
+    // Normalize color parameter - ensure it's in the correct format
+    if (color) {
+      // Make sure color is a valid hex color code (e.g., #000000)
+      if (!color.startsWith('#')) {
+        color = '#' + color;
+      }
+
+      // Convert to uppercase for consistency before validation
+      color = color.toUpperCase();
+
+      // Validate hex color format
+      if (!/^#[0-9A-F]{6}$/.test(color)) {
+        logger.warn(`Invalid color parameter provided: ${color}`);
+        return sendResponse(res, 400, 'Invalid color parameter. Must be a valid hex color code.');
+      }
     }
 
-    if (sortOrder && !['asc', 'desc'].includes(sortOrder)) {
-      logger.warn(`Invalid sortOrder parameter received: ${sortOrder}`);
-      return sendResponse(res, 400, 'Invalid sortOrder parameter. Must be "asc" or "desc"');
+    // Additional validation at controller level - normalize sortBy parameter before validation
+    let normalizedSortBy = sortBy;
+    if (sortBy) {
+      // Convert sortBy to lowercase and remove any special characters
+      const cleanedSortBy = sortBy.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+
+      // Map common variations to valid values
+      const sortByMap: Record<string, string> = {
+        createdat: 'created_at',
+        created: 'created_at',
+        urlid: 'url_id',
+        url: 'url_id',
+        includelogo: 'include_logo',
+        logo: 'include_logo',
+      };
+
+      normalizedSortBy = (sortByMap[cleanedSortBy] || cleanedSortBy) as
+        | 'created_at'
+        | 'url_id'
+        | 'color'
+        | 'include_logo'
+        | 'size'
+        | undefined;
+
+      // Validate the normalized parameter
+      if (
+        normalizedSortBy &&
+        !['created_at', 'url_id', 'color', 'include_logo', 'size'].includes(normalizedSortBy)
+      ) {
+        logger.warn(`Invalid sortBy parameter received: ${sortBy}`);
+        return sendResponse(
+          res,
+          400,
+          'Invalid sortBy parameter. Must be one of: created_at, url_id, color, include_logo, size',
+        );
+      }
     }
+
+    // Normalize and validate sortOrder parameter
+    let normalizedSortOrder = sortOrder;
+    if (sortOrder) {
+      // Convert to lowercase and trim
+      normalizedSortOrder = sortOrder.toLowerCase().trim() as 'asc' | 'desc';
+
+      // Validate the normalized parameter
+      const validSortOrders = ['asc', 'desc', 'ascending', 'descending'];
+      if (!validSortOrders.includes(normalizedSortOrder as string)) {
+        logger.warn(`Invalid sortOrder parameter received: ${sortOrder}`);
+        return sendResponse(res, 400, 'Invalid sortOrder parameter. Must be "asc" or "desc"');
+      }
+
+      // Map ascending/descending to asc/desc
+      if (normalizedSortOrder === ('ascending' as any)) {
+        normalizedSortOrder = 'asc';
+      }
+      if (normalizedSortOrder === ('descending' as any)) {
+        normalizedSortOrder = 'desc';
+      }
+    }
+
+    // Ensure the sortBy and sortOrder are valid with type guards
+    const validSortByValues = ['created_at', 'url_id', 'color', 'include_logo', 'size'] as const;
+    const validSortOrderValues = ['asc', 'desc'] as const;
+
+    // Type-safe assertion for sortBy
+    const finalSortBy =
+      normalizedSortBy && validSortByValues.includes(normalizedSortBy as any)
+        ? (normalizedSortBy as (typeof validSortByValues)[number])
+        : 'created_at';
+
+    // Type-safe assertion for sortOrder
+    const finalSortOrder =
+      normalizedSortOrder && validSortOrderValues.includes(normalizedSortOrder as any)
+        ? (normalizedSortOrder as (typeof validSortOrderValues)[number])
+        : 'desc';
 
     // Get QR codes from service
     const result = await getAllQrCodes(userId, {
       page,
       limit,
-      sortBy,
-      sortOrder,
+      sortBy: finalSortBy,
+      sortOrder: finalSortOrder,
       search,
       color,
       includeLogo,
@@ -503,15 +581,16 @@ export const getQrCodesByUser = async (req: Request, res: Response): Promise<Res
   } catch (error) {
     // Handle specific error conditions
     if (error instanceof Error) {
+      // Log error details
+      logger.error(`Error retrieving QR codes: ${error.message}`);
+
       // Check for validation errors from the model or service
       if (error.message.includes('Invalid sortBy') || error.message.includes('Invalid sortOrder')) {
-        logger.warn('Validation error in QR code retrieval:', error.message);
+        logger.warn(`Validation error in QR code retrieval: ${error.message}`);
         return sendResponse(res, 400, error.message);
       }
-
-      logger.error('Error retrieving QR codes:', error.message);
     } else {
-      logger.error('Error retrieving QR codes:', error);
+      logger.error('Error retrieving QR codes: Unknown error type');
     }
 
     return sendResponse(res, 500, 'Internal Server Error');
