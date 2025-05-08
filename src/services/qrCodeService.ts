@@ -496,21 +496,6 @@ export const getAllQrCodes = async (
   queryParams: QrCodeListQueryParams,
 ): Promise<QrCodeListResponse> => {
   try {
-    // Log the request at service level
-    logger.debug('[QR Code Service] Processing getAllQrCodes request:', {
-      userId,
-      queryParams: {
-        page: queryParams.page,
-        limit: queryParams.limit,
-        sortBy: queryParams.sortBy || 'DEFAULT:created_at',
-        sortOrder: queryParams.sortOrder || 'DEFAULT:desc',
-        search: queryParams.search || 'NONE',
-        color: queryParams.color || 'NONE',
-        includeLogo: queryParams.includeLogo === undefined ? 'UNDEFINED' : queryParams.includeLogo,
-        includeUrl: queryParams.includeUrl === undefined ? 'UNDEFINED' : queryParams.includeUrl,
-      },
-    });
-
     // Get QR codes from the database with filtering and pagination
     try {
       const { qrCodes, total } = await qrCodeModel.getQrCodesByUser(userId, queryParams);
@@ -527,15 +512,6 @@ export const getAllQrCodes = async (
           return formatQrCodeResponse(qrCode, qrCode.short_code);
         }
         return qrCode;
-      });
-
-      // Log successful retrieval
-      logger.debug('[QR Code Service] Successfully retrieved QR codes:', {
-        userId,
-        count: formattedQrCodes.length,
-        totalPages,
-        page,
-        limit,
       });
 
       // Format the response
@@ -556,29 +532,22 @@ export const getAllQrCodes = async (
           dbError.message.includes('Invalid sortBy') ||
           dbError.message.includes('Invalid sortOrder')
         ) {
-          logger.warn('[QR Code Service] Parameter validation error:', dbError.message);
+          logger.warn(`Parameter validation error: ${dbError.message}`);
           throw dbError; // Re-throw to be caught by the controller
         }
 
-        // Log detailed database error
-        logger.error('[QR Code Service] Database error while retrieving QR codes:', {
-          message: dbError.message,
-          userId,
-          queryParams: JSON.stringify(queryParams),
-        });
-
+        // Log database error
+        logger.error(`Database error: ${dbError.message}`);
         throw new Error('Failed to retrieve QR codes from database');
       }
 
       // For unknown error types
-      logger.error('[QR Code Service] Unknown database error:', dbError);
+      logger.error('Unknown database error occurred during QR code retrieval');
       throw new Error('Unexpected error when retrieving QR codes');
     }
   } catch (error) {
     // General error handling
-    logger.error('[QR Code Service] Error retrieving QR codes for user:', error);
-
-    // Rethrow the original error for the controller to handle
+    logger.error(`Error retrieving QR codes for user ${userId}: ${error}`);
     throw error;
   }
 };
