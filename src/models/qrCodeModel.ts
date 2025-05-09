@@ -104,10 +104,20 @@ export const updateQrCode = async (
   const values = [];
   let paramCounter = 1;
 
+  const allowedFields = [
+    'url_id',
+    'color',
+    'background_color',
+    'include_logo',
+    'logo_size',
+    'size',
+  ];
   Object.entries(updateData).forEach(([key, value]) => {
-    setClause.push(`${key} = $${paramCounter}`);
-    values.push(value);
-    paramCounter++;
+    if (allowedFields.includes(key)) {
+      setClause.push(`${key} = $${paramCounter}`);
+      values.push(value);
+      paramCounter++;
+    }
   });
 
   // Add updated_at timestamp
@@ -195,26 +205,34 @@ export const getQrCodesByUser = async (
 
   // Validate and sanitize the sort column to prevent SQL injection
   const validSortColumns: Record<string, string> = {
+    // Standard values
     created_at: 'qc.created_at',
     url_id: 'qc.url_id',
     color: 'qc.color',
     include_logo: 'qc.include_logo',
     size: 'qc.size',
+    // Alternative formats that users might send
+    createdat: 'qc.created_at',
+    created: 'qc.created_at',
+    date: 'qc.created_at',
+    urlid: 'qc.url_id',
+    url: 'qc.url_id',
+    includelogo: 'qc.include_logo',
+    logo: 'qc.include_logo',
   };
 
-  // Explicitly validate sortBy parameter
-  if (sortBy && !validSortColumns[sortBy]) {
-    const allowedValues = Object.keys(validSortColumns).join(', ');
-    throw new Error(`Invalid sortBy parameter. Must be one of: ${allowedValues}`);
-  }
+  // Normalize sortBy to handle case differences and common variations
+  const normalizedSortBy =
+    typeof sortBy === 'string' ? sortBy.toLowerCase().replace(/[^a-z0-9_]/g, '') : 'created_at';
 
-  // Use the validated sort column or default to created_at
-  const sortColumn = validSortColumns[sortBy] || 'qc.created_at';
+  // Map to valid database column
+  const sortColumn = validSortColumns[normalizedSortBy] || 'qc.created_at';
 
-  // Validate sortOrder
-  if (sortOrder && sortOrder !== 'asc' && sortOrder !== 'desc') {
-    throw new Error('Invalid sortOrder parameter. Must be "asc" or "desc"');
-  }
+  // Validate and normalize sortOrder - be lenient with format
+  const normalizedSortOrder =
+    typeof sortOrder === 'string' ? sortOrder.toLowerCase().trim() : 'desc';
+  const validOrder =
+    normalizedSortOrder === 'asc' || normalizedSortOrder === 'ascending' ? 'ASC' : 'DESC';
 
   const offset = (page - 1) * limit;
 
@@ -274,7 +292,7 @@ export const getQrCodesByUser = async (
   const dataQuery = `
     SELECT ${selectFields}
     ${baseQuery}
-    ORDER BY ${sortColumn} ${sortOrder === 'asc' ? 'ASC' : 'DESC'}
+    ORDER BY ${sortColumn} ${validOrder}
     LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
   `;
 

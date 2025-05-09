@@ -5197,3 +5197,4 @@ TSError: ⨯ Unable to compile TypeScript:
 [2025-04-23 19:58:47] INFO: Successfully retrieved QR code with ID: 1 
 [2025-04-23 19:58:51] INFO: QR code ID 1 soft-deleted by user 1 
 [2025-04-23 19:58:51] INFO: Successfully deleted QR code with ID: 1 
+[2025-05-07 06:43:49] INFO: Successfully deleted URL with ID 54 

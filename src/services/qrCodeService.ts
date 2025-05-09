@@ -497,7 +497,19 @@ export const getAllQrCodes = async (
 ): Promise<QrCodeListResponse> => {
   try {
     // Get QR codes from the database with filtering and pagination
-    const { qrCodes, total } = await qrCodeModel.getQrCodesByUser(userId, queryParams);
+    const { qrCodes, total } = await qrCodeModel
+      .getQrCodesByUser(userId, queryParams)
+      .catch((dbError: Error) => {
+        if (
+          dbError.message.includes('Invalid sortBy') ||
+          dbError.message.includes('Invalid sortOrder')
+        ) {
+          logger.warn(`Parameter validation error: ${dbError.message}`);
+          throw dbError;
+        }
+        logger.error(`Database error: ${dbError.message}`);
+        throw new Error('Failed to retrieve QR codes from database');
+      });
 
     // Calculate pagination information
     const page = queryParams.page || 1;
@@ -524,8 +536,9 @@ export const getAllQrCodes = async (
       },
     };
   } catch (error) {
-    logger.error('Error retrieving QR codes for user:', error);
-    throw new Error('Failed to retrieve QR codes');
+    // General error handling
+    logger.error(`Error retrieving QR codes for user ${userId}: ${error}`);
+    throw error;
   }
 };
 

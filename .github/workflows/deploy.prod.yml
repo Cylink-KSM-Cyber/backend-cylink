@@ -35,33 +35,34 @@ jobs:
       uses: 0ndt/envfile@v2
       with:
         secrets: ${{ toJSON(secrets) }}
-        exclude: VPS_SSH_KEY, STAGING_*
+        exclude: DEPLOYMENT_*, STAGING_*
     
     - name: Upload .env to VPS
       uses: appleboy/scp-action@v0.1.7
       with:
-        host: ${{ secrets.VPS_HOST }}
-        port: ${{ secrets.VPS_PORT }}
-        username: ${{ secrets.VPS_USER }}
+        host: ${{ secrets.DEPLOYMENT_HOST }}
+        port: ${{ secrets.DEPLOYMENT_PORT }}
+        username: ${{ secrets.DEPLOYMENT_USER }}
         key: |
-          ${{ secrets.VPS_SSH_KEY }}
+          ${{ secrets.DEPLOYMENT_SSH_KEY }}
         source: ".env"
         target: "/opt/${{ secrets.DOCKERHUB_APP_ID }}/production"
     
     - name: Deploy to VPS
       uses: appleboy/ssh-action@v1.0.0
       with:
-        host: ${{ secrets.VPS_HOST }}
-        port: ${{ secrets.VPS_PORT }}
-        username: ${{ secrets.VPS_USER }}
+        host: ${{ secrets.DEPLOYMENT_HOST }}
+        port: ${{ secrets.DEPLOYMENT_PORT }}
+        username: ${{ secrets.DEPLOYMENT_USER }}
         key: |
-          ${{ secrets.VPS_SSH_KEY }}
+          ${{ secrets.DEPLOYMENT_SSH_KEY }}
         script: |
           cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/production
-          git pull
+          git fetch origin
+          git reset --hard origin/main
+          git clean -fd
 
           # Remove prefix
           sed -i 's/^PRODUCTION_//g' .env
 
-          docker-compose pull
-          docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-prod -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate
+          docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-prod -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate --pull always
