@@ -63,7 +63,7 @@ jobs:
           git clean -fd
 
           # Remove prefix
-          sed -i -E 's/^(STAGING_|PRODUCTION_)//g' .env
+          sed -i 's/^DEV_//g' .env
 
           docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-dev -f docker-compose.yml -f docker-compose.dev.yml up -d --force-recreate --pull always
           docker system prune -af
