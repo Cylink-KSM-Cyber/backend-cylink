@@ -17,6 +17,7 @@ services:
       MAILER_SENDER: ${MAILER_SENDER}
       WEB_VERIFICATOR_URL: ${WEB_VERIFICATOR_URL}
       FRONTEND_URL: ${FRONTEND_URL}
+      SHORT_URL_BASE: ${SHORT_URL_BASE}
     networks:
       - app
     depends_on:
