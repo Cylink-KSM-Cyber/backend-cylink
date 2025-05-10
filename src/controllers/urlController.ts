@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { UrlWithSearchHighlights, SearchInfo, UpdateUrlRequest } from '../interfaces/URL';
 import logger from '../utils/logger';
+import { isValidUrl } from '../utils/urlValidator';
 const { sendResponse } = require('../utils/response');
 
 const clickModel = require('../models/clickModel');
@@ -329,25 +330,6 @@ exports.getAllUrls = async (req: Request, res: Response): Promise<Response> => {
     }
   }
 };
-
-/**
- * Utility function to validate a URL
- *
- * @param {string} url - URL to validate
- * @returns {boolean} Whether the URL is valid
- */
-function isValidUrl(url: string): boolean {
-  try {
-    const parsedUrl = new URL(url);
-    return ['http:', 'https:'].includes(parsedUrl.protocol);
-  } catch (error: unknown) {
-    // URL constructor throws TypeError for invalid URLs
-    if (error instanceof TypeError) {
-      logger.debug('Invalid URL format:', url);
-    }
-    return false;
-  }
-}
 
 /**
  * Create a shortened URL for anonymous users
