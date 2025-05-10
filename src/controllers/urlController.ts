@@ -14,7 +14,7 @@ import {
   formatISODate,
   calculateDaysBetween,
 } from '../utils/analyticsUtils';
-import { getAllUrls } from './urls';
+import { getAllUrls, createAnonymousUrl } from './urls';
 const { sendResponse } = require('../utils/response');
 
 const clickModel = require('../models/clickModel');
@@ -31,84 +31,8 @@ const urlService = require('../services/urlService');
 // Export the refactored getAllUrls function
 exports.getAllUrls = getAllUrls;
 
-/**
- * Create a shortened URL for anonymous users
- *
- * @param {Request} req - Express request object
- * @param {Response} res - Express response object
- * @returns {Promise<Response>} Response with created URL or error
- */
-exports.createAnonymousUrl = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    const { original_url, custom_code, title, expiry_date, goal_id } = req.body;
-
-    // Validate the URL
-    if (!isValidUrl(original_url)) {
-      return sendResponse(res, 400, 'Invalid URL provided');
-    }
-
-    // Create options object for URL creation
-    const urlOptions = {
-      originalUrl: original_url,
-      customShortCode: custom_code,
-      title,
-      expiryDate: expiry_date ? new Date(expiry_date) : undefined,
-      goalId: goal_id ? parseInt(goal_id) : undefined,
-    };
-
-    try {
-      // Create the shortened URL
-      const newUrl = await urlService.createShortenedUrl(urlOptions);
-
-      // Generate the full short URL
-      const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
-      const shortUrl = baseUrl + newUrl.short_code;
-
-      // Format the response
-      const response = {
-        id: newUrl.id,
-        original_url: newUrl.original_url,
-        short_code: newUrl.short_code,
-        short_url: shortUrl,
-        title: newUrl.title ?? null,
-        created_at: new Date(newUrl.created_at).toISOString(),
-        expiry_date: newUrl.expiry_date ? new Date(newUrl.expiry_date).toISOString() : null,
-        is_active: newUrl.is_active,
-        goal_id: goal_id ? parseInt(goal_id) : null,
-      };
-
-      logger.info(`Successfully created anonymous shortened URL: ${shortUrl}`);
-
-      return sendResponse(res, 201, 'Successfully created shortened URL', response);
-    } catch (error) {
-      // Handle custom code already taken error
-      if (error instanceof Error && error.message === 'This custom short code is already taken') {
-        return sendResponse(res, 409, 'Custom code already in use');
-      } else if (error instanceof TypeError) {
-        logger.error('URL error: Type error while creating anonymous URL:', error.message);
-        return sendResponse(res, 400, 'Invalid data format');
-      } else if (error instanceof Error) {
-        logger.error('URL error: Failed to create anonymous URL:', error.message);
-        return sendResponse(res, 500, 'Internal Server Error');
-      } else {
-        logger.error('URL error: Unknown error while creating anonymous URL:', String(error));
-        return sendResponse(res, 500, 'Internal server error');
-      }
-    }
-  } catch (error: unknown) {
-    // Handle specific error types
-    if (error instanceof TypeError) {
-      logger.error('URL error: Type error while creating shortened URL:', error.message);
-      return sendResponse(res, 400, 'Invalid data format');
-    } else if (error instanceof Error) {
-      logger.error('URL error: Failed to create shortened URL:', error.message);
-      return sendResponse(res, 500, 'Internal Server Error');
-    } else {
-      logger.error('URL error: Unknown error while creating shortened URL:', String(error));
-      return sendResponse(res, 500, 'Internal server error');
-    }
-  }
-};
+// Export the refactored createAnonymousUrl function
+exports.createAnonymousUrl = createAnonymousUrl;
 
 /**
  * Create a shortened URL for authenticated users
