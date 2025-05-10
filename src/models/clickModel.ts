@@ -1,4 +1,5 @@
 const pool = require('../config/database');
+import { TotalClicksAnalyticsOptions, ClickSummaryOptions } from '../interfaces/URL';
 
 /**
  * Click Analytics Model
@@ -488,19 +489,12 @@ exports.getCountryStatsWithDateRange = async (urlId: number, startDate?: Date, e
  * Gets total clicks analytics across all URLs for a user with date filtering
  *
  * @param {number} userId - User ID
- * @param {Object} options - Query options
- * @param {Date} [options.startDate] - Start date for filtering
- * @param {Date} [options.endDate] - End date for filtering
- * @param {string} [options.groupBy='day'] - Time grouping (day, week, month)
+ * @param {TotalClicksAnalyticsOptions} options - Query options
  * @returns {Promise<any>} Total clicks analytics data
  */
 exports.getTotalClicksAnalytics = async (
   userId: number,
-  options: {
-    startDate?: Date;
-    endDate?: Date;
-    groupBy?: 'day' | 'week' | 'month';
-  } = {},
+  options: TotalClicksAnalyticsOptions = {},
 ) => {
   // Default to 'day' if groupBy is not valid
   const groupBy = ['day', 'week', 'month'].includes(options.groupBy || '')
@@ -564,18 +558,10 @@ exports.getTotalClicksAnalytics = async (
  * Gets summary data for total clicks analytics
  *
  * @param {number} userId - User ID
- * @param {Object} options - Query options
- * @param {Date} [options.startDate] - Start date for filtering
- * @param {Date} [options.endDate] - End date for filtering
+ * @param {ClickSummaryOptions} options - Query options
  * @returns {Promise<any>} Summary data
  */
-exports.getTotalClicksSummary = async (
-  userId: number,
-  options: {
-    startDate?: Date;
-    endDate?: Date;
-  } = {},
-) => {
+exports.getTotalClicksSummary = async (userId: number, options: ClickSummaryOptions = {}) => {
   let query = `
     SELECT 
       COUNT(*) as total_clicks,
@@ -609,19 +595,12 @@ exports.getTotalClicksSummary = async (
  * Gets top performing days in terms of click count
  *
  * @param {number} userId - User ID
- * @param {Object} options - Query options
- * @param {Date} [options.startDate] - Start date for filtering
- * @param {Date} [options.endDate] - End date for filtering
- * @param {number} [options.limit=3] - Number of top days to return
+ * @param {ClickSummaryOptions & { limit?: number }} options - Query options
  * @returns {Promise<any[]>} Top performing days data
  */
 exports.getTopPerformingDays = async (
   userId: number,
-  options: {
-    startDate?: Date;
-    endDate?: Date;
-    limit?: number;
-  } = {},
+  options: ClickSummaryOptions & { limit?: number } = {},
 ) => {
   const limit = options.limit || 3;
 
@@ -668,18 +647,10 @@ exports.getTopPerformingDays = async (
  * Gets active URLs count within a date range
  *
  * @param {number} userId - User ID
- * @param {Object} options - Query options
- * @param {Date} [options.startDate] - Start date for filtering
- * @param {Date} [options.endDate] - End date for filtering
+ * @param {ClickSummaryOptions} options - Query options
  * @returns {Promise<number>} Count of active URLs
  */
-exports.getActiveUrlsCount = async (
-  userId: number,
-  options: {
-    startDate?: Date;
-    endDate?: Date;
-  } = {},
-) => {
+exports.getActiveUrlsCount = async (userId: number, options: ClickSummaryOptions = {}) => {
   let query = `
     SELECT COUNT(DISTINCT c.url_id) as count
     FROM clicks c
