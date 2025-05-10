@@ -1,5 +1,15 @@
 import { Request, Response } from 'express';
-import { UrlWithSearchHighlights, SearchInfo, UpdateUrlRequest } from '../interfaces/URL';
+import {
+  UrlWithSearchHighlights,
+  SearchInfo,
+  UpdateUrlRequest,
+  UrlEntity,
+  UrlWithClicks,
+  PaginationData,
+  RecentClick,
+  AnalyticsOptions,
+  TotalClicksAnalyticsResponse,
+} from '../interfaces/URL';
 import logger from '../utils/logger';
 import { isValidUrl } from '../utils/urlValidator';
 import {
@@ -21,50 +31,6 @@ const urlService = require('../services/urlService');
  * Handles URL-related operations including listing, creating, updating, and deleting shortened URLs
  * @module controllers/urlController
  */
-
-/**
- * URL Database Entity interface
- */
-interface UrlEntity {
-  id: number;
-  user_id: number | null;
-  original_url: string;
-  short_code: string;
-  title: string | null;
-  expiry_date: Date | null;
-  is_active: boolean;
-  has_password: boolean;
-  password_hash: string | null;
-  redirect_type: string;
-  created_at: Date;
-  updated_at: Date;
-  deleted_at: Date | null;
-}
-
-/**
- * URL with click statistics interface
- */
-interface UrlWithClicks {
-  id: number;
-  original_url: string;
-  short_code: string;
-  short_url: string;
-  title: string | null;
-  clicks: number;
-  created_at: string;
-  expiry_date: string | null;
-  is_active: boolean;
-}
-
-/**
- * Pagination interface
- */
-interface PaginationData {
-  total: number;
-  page: number;
-  limit: number;
-  total_pages: number;
-}
 
 /**
  * Get all URLs for an authenticated user
@@ -496,14 +462,6 @@ exports.createAuthenticatedUrl = async (req: Request, res: Response): Promise<Re
 };
 
 /**
- * Recent click information interface
- */
-interface RecentClick {
-  clicked_at: Date;
-  device_type: string;
-}
-
-/**
  * Get URL details by ID or short code
  *
  * @param {Request} req - Express request object
@@ -694,15 +652,6 @@ exports.deleteUrl = async (req: Request, res: Response): Promise<Response> => {
 };
 
 /**
- * Analytics filter options interface
- */
-interface AnalyticsOptions {
-  startDate?: string;
-  endDate?: string;
-  groupBy?: unknown;
-}
-
-/**
  * Get analytics for a specific URL
  *
  * @param {Request} req - Express request object
@@ -772,67 +721,6 @@ exports.getUrlAnalytics = async (req: Request, res: Response): Promise<Response>
     }
   }
 };
-
-/**
- * Response for total clicks analytics
- */
-interface TotalClicksAnalyticsResponse {
-  summary: {
-    total_clicks: number;
-    total_urls: number;
-    avg_clicks_per_url: number;
-    analysis_period: {
-      start_date: string;
-      end_date: string;
-      days: number;
-    };
-    comparison: {
-      period_days: number;
-      previous_period: {
-        start_date: string;
-        end_date: string;
-      };
-      total_clicks: {
-        current: number;
-        previous: number;
-        change: number;
-        change_percentage: number;
-      };
-      avg_clicks_per_url: {
-        current: number;
-        previous: number;
-        change: number;
-        change_percentage: number;
-      };
-      active_urls: {
-        current: number;
-        previous: number;
-        change: number;
-        change_percentage: number;
-      };
-    };
-  };
-  time_series: {
-    data: Array<{
-      date: string;
-      clicks: number;
-      urls_count: number;
-      avg_clicks: number;
-    }>;
-    pagination: {
-      total_items: number;
-      total_pages: number;
-      current_page: number;
-      limit: number;
-    };
-  };
-  top_performing_days: Array<{
-    date: string;
-    clicks: number;
-    urls_count: number;
-    avg_clicks: number;
-  }>;
-}
 
 /**
  * Get total clicks analytics for all URLs of a user
