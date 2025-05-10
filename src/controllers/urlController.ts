@@ -1,14 +1,7 @@
 import { Request, Response } from 'express';
-import { UpdateUrlRequest, TotalClicksAnalyticsResponse } from '../interfaces/URL';
+import { UpdateUrlRequest } from '../interfaces/URL';
 import logger from '../utils/logger';
 import { isValidUrl } from '../utils/urlValidator';
-import {
-  parseAnalyticsDates,
-  determineComparisonPeriod,
-  calculateComparisonMetrics,
-  formatISODate,
-  calculateDaysBetween,
-} from '../utils/analyticsUtils';
 import {
   getAllUrls,
   createAnonymousUrl,
@@ -16,6 +9,7 @@ import {
   getUrlDetails,
   deleteUrl,
   getUrlAnalytics,
+  getTotalClicksAnalytics,
 } from './urls';
 const { sendResponse } = require('../utils/response');
 
@@ -48,162 +42,8 @@ exports.deleteUrl = deleteUrl;
 // Export the refactored getUrlAnalytics function
 exports.getUrlAnalytics = getUrlAnalytics;
 
-/**
- * Get total clicks analytics for all URLs of a user
- *
- * @param {Request} req - Express request object
- * @param {Response} res - Express response object
- * @returns {Promise<Response>} Response with analytics data
- */
-exports.getTotalClicksAnalytics = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    // Get user ID from authentication token
-    const userId = req.body.id;
-
-    if (!userId) {
-      return sendResponse(res, 401, 'Unauthorized: No user ID');
-    }
-
-    // Parse query parameters
-    const startDateString = req.query.start_date as string;
-    const endDateString = req.query.end_date as string;
-    const comparison = (req.query.comparison as string) ?? '30';
-    const customComparisonStartString = req.query.custom_comparison_start as string;
-    const customComparisonEndString = req.query.custom_comparison_end as string;
-    const groupBy = (req.query.group_by as 'day' | 'week' | 'month') ?? 'day';
-    const page = parseInt(req.query.page as string) ?? 1;
-    const limit = Math.min(parseInt(req.query.limit as string) || 30, 90); // Cap at 90 data points
-
-    // Parse and validate dates
-    const dateResult = parseAnalyticsDates(startDateString, endDateString);
-    if ('error' in dateResult) {
-      return sendResponse(res, 400, dateResult.error);
-    }
-
-    // Destructure with non-null assertion since we've checked for errors
-    const { startDate, endDate } = dateResult;
-
-    if (!startDate || !endDate) {
-      // This is a safeguard that shouldn't happen given the implementation
-      logger.error('Unexpected: dateResult has no error but missing date values');
-      return sendResponse(res, 500, 'Internal Server Error');
-    }
-
-    // Calculate days in the analysis period
-    const analysisPeriodDays = calculateDaysBetween(startDate, endDate);
-
-    // Determine comparison period
-    const comparisonResult = determineComparisonPeriod(
-      comparison,
-      startDate,
-      customComparisonStartString,
-      customComparisonEndString,
-    );
-
-    if ('error' in comparisonResult) {
-      return sendResponse(res, 400, comparisonResult.error);
-    }
-
-    const { comparisonPeriodDays, previousPeriodStartDate, previousPeriodEndDate } =
-      comparisonResult;
-
-    if (!comparisonPeriodDays || !previousPeriodStartDate || !previousPeriodEndDate) {
-      // This is a safeguard that shouldn't happen given the implementation
-      logger.error('Unexpected: comparisonResult has no error but missing period values');
-      return sendResponse(res, 500, 'Internal Server Error');
-    }
-
-    // Prepare query options
-    const options = { startDate, endDate, groupBy };
-    const previousPeriodOptions = {
-      startDate: previousPeriodStartDate,
-      endDate: previousPeriodEndDate,
-    };
-
-    // Fetch analytics data
-    const [
-      clicksAnalytics,
-      summary,
-      topPerformingDays,
-      activeUrlsCount,
-      previousSummary,
-      previousActiveUrlsCount,
-    ] = await Promise.all([
-      clickModel.getTotalClicksAnalytics(userId, options),
-      clickModel.getTotalClicksSummary(userId, options),
-      clickModel.getTopPerformingDays(userId, options),
-      clickModel.getActiveUrlsCount(userId, options),
-      clickModel.getTotalClicksSummary(userId, previousPeriodOptions),
-      clickModel.getActiveUrlsCount(userId, previousPeriodOptions),
-    ]);
-
-    // Apply pagination to time series data
-    const totalItems = clicksAnalytics.length;
-    const totalPages = Math.ceil(totalItems / limit);
-    const offset = (page - 1) * limit;
-    const paginatedTimeSeries = clicksAnalytics.slice(offset, offset + limit);
-
-    // Format dates for response
-    const analysisStartDateStr = formatISODate(startDate);
-    const analysisEndDateStr = formatISODate(endDate);
-    const prevStartDateStr = formatISODate(previousPeriodStartDate);
-    const prevEndDateStr = formatISODate(previousPeriodEndDate);
-
-    // Calculate comparison metrics
-    const comparisonMetrics = calculateComparisonMetrics(
-      summary,
-      previousSummary,
-      activeUrlsCount || 0,
-      previousActiveUrlsCount || 0,
-    );
-
-    // Construct the response
-    const responseData: TotalClicksAnalyticsResponse = {
-      summary: {
-        total_clicks: summary?.total_clicks ?? 0,
-        total_urls: summary?.total_urls ?? 0,
-        avg_clicks_per_url: summary?.avg_clicks_per_url ?? 0,
-        analysis_period: {
-          start_date: analysisStartDateStr,
-          end_date: analysisEndDateStr,
-          days: analysisPeriodDays,
-        },
-        comparison: {
-          period_days: comparisonPeriodDays,
-          previous_period: {
-            start_date: prevStartDateStr,
-            end_date: prevEndDateStr,
-          },
-          ...comparisonMetrics,
-        },
-      },
-      time_series: {
-        data: paginatedTimeSeries,
-        pagination: {
-          total_items: totalItems,
-          total_pages: totalPages,
-          current_page: page,
-          limit,
-        },
-      },
-      top_performing_days: topPerformingDays,
-    };
-
-    logger.info(`Successfully retrieved total clicks analytics for user ${userId}`);
-    return sendResponse(res, 200, 'Successfully retrieved total clicks analytics', responseData);
-  } catch (error: unknown) {
-    if (error instanceof TypeError) {
-      logger.error('URL error: Type error while retrieving total clicks analytics:', error.message);
-      return sendResponse(res, 400, 'Invalid request format');
-    } else if (error instanceof Error) {
-      logger.error('URL error: Failed to retrieve total clicks analytics:', error.message);
-      return sendResponse(res, 500, 'Failed to retrieve total clicks analytics');
-    } else {
-      logger.error('URL error: Unknown error while retrieving total clicks:', String(error));
-      return sendResponse(res, 500, 'Internal server error');
-    }
-  }
-};
+// Export the refactored getTotalClicksAnalytics function
+exports.getTotalClicksAnalytics = getTotalClicksAnalytics;
 
 /**
  * Get URLs for an authenticated user with status filtering
