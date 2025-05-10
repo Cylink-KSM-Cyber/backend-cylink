@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import {
   UpdateUrlRequest,
-  RecentClick,
   AnalyticsOptions,
   TotalClicksAnalyticsResponse,
 } from '../interfaces/URL';
@@ -14,7 +13,7 @@ import {
   formatISODate,
   calculateDaysBetween,
 } from '../utils/analyticsUtils';
-import { getAllUrls, createAnonymousUrl, createAuthenticatedUrl } from './urls';
+import { getAllUrls, createAnonymousUrl, createAuthenticatedUrl, getUrlDetails } from './urls';
 const { sendResponse } = require('../utils/response');
 
 const clickModel = require('../models/clickModel');
@@ -37,103 +36,8 @@ exports.createAnonymousUrl = createAnonymousUrl;
 // Export the refactored createAuthenticatedUrl function
 exports.createAuthenticatedUrl = createAuthenticatedUrl;
 
-/**
- * Get URL details by ID or short code
- *
- * @param {Request} req - Express request object
- * @param {Response} res - Express response object
- * @returns {Promise<Response>} Response with URL details or error
- */
-exports.getUrlDetails = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    // Get user ID from authentication token
-    const userId = req.body.id;
-
-    // Get identifier (could be an ID or a short code)
-    const { identifier } = req.params;
-
-    // Determine if it's an ID (number) or a short code (string)
-    const isId = !isNaN(Number(identifier));
-
-    // Get the URL details
-    let url;
-    if (isId) {
-      url = await urlModel.getUrlById(Number(identifier));
-    } else {
-      url = await urlModel.getUrlByShortCode(identifier);
-    }
-
-    // Check if URL exists
-    if (!url) {
-      return sendResponse(res, 404, 'URL not found');
-    }
-
-    // Check if the URL belongs to the authenticated user
-    if (url.user_id && url.user_id !== userId) {
-      return sendResponse(res, 401, 'Unauthorized');
-    }
-
-    // Get click count
-    const clickCount = await clickModel.getClickCountByUrlId(url.id);
-
-    // Get analytics
-    const analytics = await urlService.getUrlAnalytics(url.id);
-
-    // Get recent clicks (last 10)
-    const recentClicks = await clickModel.getRecentClicksByUrlId(url.id, 10);
-
-    // Format recent clicks
-    const formattedRecentClicks = recentClicks.map((click: RecentClick) => ({
-      timestamp: new Date(click.clicked_at).toISOString(),
-      device_type: click.device_type ?? 'unknown',
-    }));
-
-    // Generate the full short URL
-    const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
-    const shortUrl = baseUrl + url.short_code;
-
-    // Format dates
-    const createdAt = new Date(url.created_at).toISOString();
-    const updatedAt = url.updated_at ? new Date(url.updated_at).toISOString() : createdAt;
-    const expiryDate = url.expiry_date ? new Date(url.expiry_date).toISOString() : null;
-
-    // Construct response
-    const response = {
-      id: url.id,
-      original_url: url.original_url,
-      short_code: url.short_code,
-      short_url: shortUrl,
-      title: url.title ?? null,
-      clicks: clickCount,
-      created_at: createdAt,
-      updated_at: updatedAt,
-      expiry_date: expiryDate,
-      is_active: url.is_active,
-      analytics: {
-        browser_stats: analytics.browserStats,
-        device_stats: analytics.deviceStats,
-        recent_clicks: formattedRecentClicks,
-      },
-    };
-
-    logger.info(
-      `Successfully retrieved URL details for ${isId ? 'ID' : 'short code'} ${identifier}`,
-    );
-
-    return sendResponse(res, 200, 'Successfully retrieved URL', response);
-  } catch (error: unknown) {
-    if (error instanceof TypeError) {
-      logger.error('URL error: Type error while retrieving URL details:', error.message);
-      return sendResponse(res, 400, 'Invalid request format');
-    } else if (error instanceof Error) {
-      logger.error('URL error: Failed to retrieve URL details:', error.message);
-      return sendResponse(res, 500, 'Internal Server Error');
-    } else {
-      logger.error('URL error: Unknown error while retrieving URL details:', String(error));
-      return sendResponse(res, 500, 'Internal server error');
-    }
-  }
-};
+// Export the refactored getUrlDetails function
+exports.getUrlDetails = getUrlDetails;
 
 /**
  * Delete a URL by ID (soft delete)
