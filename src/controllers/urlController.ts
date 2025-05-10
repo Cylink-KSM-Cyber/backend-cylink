@@ -1,9 +1,5 @@
 import { Request, Response } from 'express';
-import {
-  UpdateUrlRequest,
-  AnalyticsOptions,
-  TotalClicksAnalyticsResponse,
-} from '../interfaces/URL';
+import { UpdateUrlRequest, TotalClicksAnalyticsResponse } from '../interfaces/URL';
 import logger from '../utils/logger';
 import { isValidUrl } from '../utils/urlValidator';
 import {
@@ -19,6 +15,7 @@ import {
   createAuthenticatedUrl,
   getUrlDetails,
   deleteUrl,
+  getUrlAnalytics,
 } from './urls';
 const { sendResponse } = require('../utils/response');
 
@@ -48,76 +45,8 @@ exports.getUrlDetails = getUrlDetails;
 // Export the refactored deleteUrl function
 exports.deleteUrl = deleteUrl;
 
-/**
- * Get analytics for a specific URL
- *
- * @param {Request} req - Express request object
- * @param {Response} res - Express response object
- * @returns {Promise<Response>} Response with URL analytics or error
- */
-exports.getUrlAnalytics = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    // Get user ID from authentication token
-    const userId = req.body.id;
-
-    // Get URL ID from request parameters
-    const urlId = parseInt(req.params.id);
-
-    if (isNaN(urlId)) {
-      return sendResponse(res, 400, 'Invalid URL ID');
-    }
-
-    // Check if URL exists
-    const url = await urlModel.getUrlById(urlId);
-
-    if (!url) {
-      return sendResponse(res, 404, 'URL not found');
-    }
-
-    // Check if the URL belongs to the authenticated user
-    if (url.user_id && url.user_id !== userId) {
-      return sendResponse(res, 401, 'Unauthorized');
-    }
-
-    // Extract query parameters for analytics
-    const { start_date, end_date, group_by } = req.query;
-
-    // Prepare options for the analytics service
-    const options: AnalyticsOptions = {};
-
-    if (start_date) {
-      options.startDate = start_date as string;
-    }
-
-    if (end_date) {
-      options.endDate = end_date as string;
-    }
-
-    if (group_by && ['day', 'week', 'month'].includes(group_by as string)) {
-      options.groupBy = group_by;
-    }
-
-    // Get analytics data with filters
-    const analytics = await urlService.getUrlAnalyticsWithFilters(urlId, options);
-
-    logger.info(`Successfully retrieved analytics for URL ID ${urlId}`);
-
-    return sendResponse(res, 200, 'Successfully retrieved URL analytics', analytics);
-  } catch (error: unknown) {
-    if (error instanceof Error && error.message === 'URL not found') {
-      return sendResponse(res, 404, 'URL not found');
-    } else if (error instanceof TypeError) {
-      logger.error('URL error: Type error while retrieving analytics:', error.message);
-      return sendResponse(res, 400, 'Invalid request format');
-    } else if (error instanceof Error) {
-      logger.error('URL error: Failed to retrieve URL analytics:', error.message);
-      return sendResponse(res, 500, 'Internal Server Error');
-    } else {
-      logger.error('URL error: Unknown error while retrieving analytics:', String(error));
-      return sendResponse(res, 500, 'Internal server error');
-    }
-  }
-};
+// Export the refactored getUrlAnalytics function
+exports.getUrlAnalytics = getUrlAnalytics;
 
 /**
  * Get total clicks analytics for all URLs of a user
