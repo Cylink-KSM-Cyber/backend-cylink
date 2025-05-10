@@ -2,6 +2,13 @@ import { Request, Response } from 'express';
 import { UrlWithSearchHighlights, SearchInfo, UpdateUrlRequest } from '../interfaces/URL';
 import logger from '../utils/logger';
 import { isValidUrl } from '../utils/urlValidator';
+import {
+  parseAnalyticsDates,
+  determineComparisonPeriod,
+  calculateComparisonMetrics,
+  formatISODate,
+  calculateDaysBetween,
+} from '../utils/analyticsUtils';
 const { sendResponse } = require('../utils/response');
 
 const clickModel = require('../models/clickModel');
@@ -828,181 +835,6 @@ interface TotalClicksAnalyticsResponse {
 }
 
 /**
- * Summary data interface for click analytics
- */
-interface ClicksSummary {
-  total_clicks?: number;
-  total_urls?: number;
-  avg_clicks_per_url?: number;
-}
-
-/**
- * Parse and validate date parameters for analytics
- *
- * @param startDateString Optional start date string
- * @param endDateString Optional end date string
- * @returns Object with validated dates or error response
- */
-const parseAnalyticsDates = (startDateString?: string, endDateString?: string) => {
-  const now = new Date();
-  let startDate: Date;
-  let endDate: Date = now;
-
-  // Parse start date
-  if (startDateString) {
-    startDate = new Date(startDateString);
-    if (isNaN(startDate.getTime())) {
-      return { error: 'Invalid start_date format. Use YYYY-MM-DD' };
-    }
-  } else {
-    // Default to 30 days ago
-    startDate = new Date();
-    startDate.setDate(startDate.getDate() - 30);
-  }
-
-  // Parse end date
-  if (endDateString) {
-    endDate = new Date(endDateString);
-    if (isNaN(endDate.getTime())) {
-      return { error: 'Invalid end_date format. Use YYYY-MM-DD' };
-    }
-  }
-
-  // Validate date range
-  if (endDate < startDate) {
-    return { error: 'end_date must be after start_date' };
-  }
-
-  return { startDate, endDate };
-};
-
-/**
- * Determine comparison period for analytics
- *
- * @param comparison Comparison type
- * @param startDate Analysis start date
- * @param customStartString Custom comparison start date
- * @param customEndString Custom comparison end date
- * @returns Object with comparison period info or error
- */
-const determineComparisonPeriod = (
-  comparison: string,
-  startDate: Date,
-  customStartString?: string,
-  customEndString?: string,
-) => {
-  let comparisonPeriodDays: number;
-  let previousPeriodStartDate: Date;
-  let previousPeriodEndDate: Date;
-
-  if (comparison === 'custom') {
-    // Custom comparison period
-    if (!customStartString || !customEndString) {
-      return {
-        error:
-          'custom_comparison_start and custom_comparison_end are required when comparison=custom',
-      };
-    }
-
-    previousPeriodStartDate = new Date(customStartString);
-    previousPeriodEndDate = new Date(customEndString);
-
-    if (isNaN(previousPeriodStartDate.getTime()) || isNaN(previousPeriodEndDate.getTime())) {
-      return { error: 'Invalid custom comparison date format. Use YYYY-MM-DD' };
-    }
-
-    if (previousPeriodEndDate < previousPeriodStartDate) {
-      return { error: 'custom_comparison_end must be after custom_comparison_start' };
-    }
-
-    comparisonPeriodDays =
-      Math.ceil(
-        (previousPeriodEndDate.getTime() - previousPeriodStartDate.getTime()) /
-          (1000 * 60 * 60 * 24),
-      ) + 1;
-  } else {
-    // Standard comparison periods
-    comparisonPeriodDays = parseInt(comparison) || 30;
-
-    if (![7, 14, 30, 90].includes(comparisonPeriodDays)) {
-      return { error: 'comparison must be one of: 7, 14, 30, 90, custom' };
-    }
-
-    // Calculate previous period dates
-    previousPeriodEndDate = new Date(startDate);
-    previousPeriodEndDate.setDate(previousPeriodEndDate.getDate() - 1);
-
-    previousPeriodStartDate = new Date(previousPeriodEndDate);
-    previousPeriodStartDate.setDate(previousPeriodStartDate.getDate() - (comparisonPeriodDays - 1));
-  }
-
-  return {
-    comparisonPeriodDays,
-    previousPeriodStartDate,
-    previousPeriodEndDate,
-  };
-};
-
-/**
- * Calculate comparison metrics for analytics
- *
- * @param current Current period data
- * @param previous Previous period data
- * @param activeUrlsCount Current period active URLs
- * @param previousActiveUrlsCount Previous period active URLs
- * @returns Comparison metrics
- */
-const calculateComparisonMetrics = (
-  current: ClicksSummary,
-  previous: ClicksSummary,
-  activeUrlsCount: number,
-  previousActiveUrlsCount: number,
-) => {
-  const currentTotalClicks = current?.total_clicks ?? 0;
-  const previousTotalClicks = previous?.total_clicks ?? 0;
-  const clicksChange = currentTotalClicks - previousTotalClicks;
-  const clicksChangePercentage =
-    previousTotalClicks === 0
-      ? 0
-      : parseFloat(((clicksChange / previousTotalClicks) * 100).toFixed(2));
-
-  const currentAvgClicks = current?.avg_clicks_per_url ?? 0;
-  const previousAvgClicks = previous?.avg_clicks_per_url ?? 0;
-  const avgClicksChange = currentAvgClicks - previousAvgClicks;
-  const avgClicksChangePercentage =
-    previousAvgClicks === 0
-      ? 0
-      : parseFloat(((avgClicksChange / previousAvgClicks) * 100).toFixed(2));
-
-  const urlsChange = activeUrlsCount - previousActiveUrlsCount;
-  const urlsChangePercentage =
-    previousActiveUrlsCount === 0
-      ? 0
-      : parseFloat(((urlsChange / previousActiveUrlsCount) * 100).toFixed(2));
-
-  return {
-    total_clicks: {
-      current: currentTotalClicks,
-      previous: previousTotalClicks,
-      change: clicksChange,
-      change_percentage: clicksChangePercentage,
-    },
-    avg_clicks_per_url: {
-      current: currentAvgClicks,
-      previous: previousAvgClicks,
-      change: avgClicksChange,
-      change_percentage: avgClicksChangePercentage,
-    },
-    active_urls: {
-      current: activeUrlsCount,
-      previous: previousActiveUrlsCount,
-      change: urlsChange,
-      change_percentage: urlsChangePercentage,
-    },
-  };
-};
-
-/**
  * Get total clicks analytics for all URLs of a user
  *
  * @param {Request} req - Express request object
@@ -1033,11 +865,18 @@ exports.getTotalClicksAnalytics = async (req: Request, res: Response): Promise<R
     if ('error' in dateResult) {
       return sendResponse(res, 400, dateResult.error);
     }
+
+    // Destructure with non-null assertion since we've checked for errors
     const { startDate, endDate } = dateResult;
 
+    if (!startDate || !endDate) {
+      // This is a safeguard that shouldn't happen given the implementation
+      logger.error('Unexpected: dateResult has no error but missing date values');
+      return sendResponse(res, 500, 'Internal Server Error');
+    }
+
     // Calculate days in the analysis period
-    const analysisPeriodDays =
-      Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const analysisPeriodDays = calculateDaysBetween(startDate, endDate);
 
     // Determine comparison period
     const comparisonResult = determineComparisonPeriod(
@@ -1053,6 +892,12 @@ exports.getTotalClicksAnalytics = async (req: Request, res: Response): Promise<R
 
     const { comparisonPeriodDays, previousPeriodStartDate, previousPeriodEndDate } =
       comparisonResult;
+
+    if (!comparisonPeriodDays || !previousPeriodStartDate || !previousPeriodEndDate) {
+      // This is a safeguard that shouldn't happen given the implementation
+      logger.error('Unexpected: comparisonResult has no error but missing period values');
+      return sendResponse(res, 500, 'Internal Server Error');
+    }
 
     // Prepare query options
     const options = { startDate, endDate, groupBy };
@@ -1085,17 +930,17 @@ exports.getTotalClicksAnalytics = async (req: Request, res: Response): Promise<R
     const paginatedTimeSeries = clicksAnalytics.slice(offset, offset + limit);
 
     // Format dates for response
-    const analysisStartDateStr = startDate.toISOString().split('T')[0];
-    const analysisEndDateStr = endDate.toISOString().split('T')[0];
-    const prevStartDateStr = previousPeriodStartDate.toISOString().split('T')[0];
-    const prevEndDateStr = previousPeriodEndDate.toISOString().split('T')[0];
+    const analysisStartDateStr = formatISODate(startDate);
+    const analysisEndDateStr = formatISODate(endDate);
+    const prevStartDateStr = formatISODate(previousPeriodStartDate);
+    const prevEndDateStr = formatISODate(previousPeriodEndDate);
 
     // Calculate comparison metrics
     const comparisonMetrics = calculateComparisonMetrics(
       summary,
       previousSummary,
-      activeUrlsCount,
-      previousActiveUrlsCount,
+      activeUrlsCount || 0,
+      previousActiveUrlsCount || 0,
     );
 
     // Construct the response
