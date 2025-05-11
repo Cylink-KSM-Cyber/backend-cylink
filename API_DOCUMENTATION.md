@@ -123,7 +123,64 @@ This API documentation provides numerous benefits for both internal developers a
 ### Public URLs (Unauthenticated)
 
 - `POST /api/v1/public/urls` - Create a new anonymous shortened URL
-- `GET /api/v1/public/urls/:short_code` - Resolve and redirect to original URL
+- `GET /api/v1/public/urls/:short_code` - Get details of a shortened URL without authentication
+- `GET /:short_code` - Resolve and redirect to original URL
+
+### Public URL Details
+
+Retrieves public details about a shortened URL by its short code without requiring authentication.
+
+**Request:**
+
+- Method: GET
+- Endpoint: `/api/v1/public/urls/{shortCode}`
+- Authentication: None required
+
+**Parameters:**
+
+- `shortCode` (path parameter, required): The short code of the URL to retrieve
+
+**Rate Limiting:**
+
+- 60 requests per minute per IP address
+
+**Response:**
+
+- Success (200):
+
+  ```json
+  {
+    "status": 200,
+    "message": "URL details retrieved successfully",
+    "data": {
+      "original_url": "https://example.com/very-long-url-path",
+      "title": "Example Website - Optional Title",
+      "short_code": "abc123",
+      "short_url": "https://cylink.id/abc123",
+      "created_at": "2025-04-10T12:00:00Z",
+      "expiry_date": "2025-05-10T00:00:00Z",
+      "is_active": true
+    }
+  }
+  ```
+
+- Error (Not Found):
+
+  ```json
+  {
+    "status": 404,
+    "message": "URL not found or inactive"
+  }
+  ```
+
+- Error (Rate Limit Exceeded):
+
+  ```json
+  {
+    "status": 429,
+    "message": "Rate limit exceeded. Please try again later."
+  }
+  ```
 
 ### QR Codes
 
