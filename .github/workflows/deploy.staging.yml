@@ -66,4 +66,4 @@ jobs:
           sed -i 's/^STAGING_//g' .env
 
           docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-staging -f docker-compose.yml -f docker-compose.staging.yml up -d --force-recreate --pull always
-          docker builder prune -af
+          docker system prune -af
