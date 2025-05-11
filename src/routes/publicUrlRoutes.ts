@@ -3,6 +3,7 @@ const router = require('express').Router();
 const urlController = require('../controllers/urlController');
 const validate = require('../utils/validator');
 const fields = require('../validators/urlValidator');
+const { publicApiRateLimiter } = require('../middlewares/rateLimitMiddleware');
 
 /**
  * Public URL Routes
@@ -98,5 +99,68 @@ router.post(
   validate({ fields: fields.createUrl, preserveBodyProps: true }),
   urlController.createAnonymousUrl,
 );
+
+/**
+ * @swagger
+ * /api/v1/public/urls/{shortCode}:
+ *   get:
+ *     summary: Get URL details by short code without authentication
+ *     tags: [Public URLs]
+ *     parameters:
+ *       - in: path
+ *         name: shortCode
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The short code of the URL
+ *         example: abc123
+ *     responses:
+ *       200:
+ *         description: URL details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: URL details retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     original_url:
+ *                       type: string
+ *                       example: https://example.com/very-long-url-path
+ *                     title:
+ *                       type: string
+ *                       example: Example Website - Optional Title
+ *                     short_code:
+ *                       type: string
+ *                       example: abc123
+ *                     short_url:
+ *                       type: string
+ *                       example: https://cylink.id/abc123
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-04-10T12:00:00Z
+ *                     expiry_date:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-05-10T00:00:00Z
+ *                     is_active:
+ *                       type: boolean
+ *                       example: true
+ *       404:
+ *         description: URL not found or inactive
+ *       429:
+ *         description: Rate limit exceeded
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/:shortCode', publicApiRateLimiter, urlController.getPublicUrlDetails);
 
 module.exports = router;
