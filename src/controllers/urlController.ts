@@ -10,6 +10,8 @@ import {
   updateUrl,
 } from './urls';
 
+import getPublicUrlDetails from './urls/getPublicUrlDetails';
+
 /**
  * URL Controller
  *
@@ -43,3 +45,6 @@ exports.getUrlsWithStatusFilter = getUrlsWithStatusFilter;
 
 // Export the refactored updateUrl function
 exports.updateUrl = updateUrl;
+
+// Export the getPublicUrlDetails function
+exports.getPublicUrlDetails = getPublicUrlDetails;
