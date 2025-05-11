@@ -66,4 +66,4 @@ jobs:
           sed -i 's/^DEV_//g' .env
 
           docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-dev -f docker-compose.yml -f docker-compose.dev.yml up -d --force-recreate --pull always
-          docker builder prune -af
+          docker system prune -af
