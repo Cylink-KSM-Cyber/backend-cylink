@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  api:
+    image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}:dev
+    container_name: ${DOCKERHUB_APP_ID}.api.dev
+  
+  database:
+    container_name: ${DOCKERHUB_APP_ID}.database.dev
+    volumes:
+      - dev-db-data:/var/lib/postgresql/data
+  
+  webserver:
+    container_name: ${DOCKERHUB_APP_ID}.webserver.dev
+
+volumes:
+  dev-db-data:
+    name: ${DOCKERHUB_APP_ID}.db.dev
+
+networks:
+  app:
+    driver: bridge
+    name: ${DOCKERHUB_APP_ID}.app.dev

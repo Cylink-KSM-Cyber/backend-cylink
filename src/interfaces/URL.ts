@@ -170,3 +170,137 @@ export interface UpdateUrlResponse {
   data?: UrlWithClicks;
   errors?: string[];
 }
+
+/**
+ * Recent click information interface
+ */
+export interface RecentClick {
+  clicked_at: Date;
+  device_type: string;
+}
+
+/**
+ * Analytics filter options interface
+ */
+export interface AnalyticsOptions {
+  startDate?: string;
+  endDate?: string;
+  groupBy?: unknown;
+}
+
+/**
+ * Response for total clicks analytics
+ */
+export interface TotalClicksAnalyticsResponse {
+  summary: {
+    total_clicks: number;
+    total_urls: number;
+    avg_clicks_per_url: number;
+    analysis_period: {
+      start_date: string;
+      end_date: string;
+      days: number;
+    };
+    comparison: {
+      period_days: number;
+      previous_period: {
+        start_date: string;
+        end_date: string;
+      };
+      total_clicks: {
+        current: number;
+        previous: number;
+        change: number;
+        change_percentage: number;
+      };
+      avg_clicks_per_url: {
+        current: number;
+        previous: number;
+        change: number;
+        change_percentage: number;
+      };
+      active_urls: {
+        current: number;
+        previous: number;
+        change: number;
+        change_percentage: number;
+      };
+    };
+  };
+  time_series: {
+    data: Array<{
+      date: string;
+      clicks: number;
+      urls_count: number;
+      avg_clicks: number;
+    }>;
+    pagination: {
+      total_items: number;
+      total_pages: number;
+      current_page: number;
+      limit: number;
+    };
+  };
+  top_performing_days: Array<{
+    date: string;
+    clicks: number;
+    urls_count: number;
+    avg_clicks: number;
+  }>;
+}
+
+/**
+ * Time series data point for analytics
+ */
+export interface TimeSeriesDataPoint {
+  date: string;
+  clicks: number;
+  urls_count: number;
+  avg_clicks: number;
+}
+
+/**
+ * Top performing day data for analytics
+ */
+export interface TopPerformingDay {
+  date: string;
+  clicks: number;
+  urls_count: number;
+  avg_clicks: number;
+}
+
+/**
+ * URL Analytics response for a specific URL
+ */
+export interface UrlAnalyticsResponse {
+  url_id: number;
+  short_code: string;
+  total_clicks: number;
+  unique_visitors: number;
+  time_series_data: Array<TimeSeriesDataPoint>;
+  browser_stats: Record<string, number>;
+  device_stats: Record<string, number>;
+  top_referrers: Array<{
+    referrer: string;
+    count: number;
+  }>;
+}
+
+/**
+ * Total clicks analytics options interface
+ */
+export interface TotalClicksAnalyticsOptions {
+  startDate?: Date;
+  endDate?: Date;
+  groupBy?: 'day' | 'week' | 'month';
+  limit?: number;
+  page?: number;
+}
+
+/**
+ * Click summary options interface
+ */
+export interface ClickSummaryOptions {
+  startDate?: Date;
+  endDate?: Date;
+}

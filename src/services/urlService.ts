@@ -7,6 +7,7 @@
 
 const bcrypt = require('bcrypt');
 import logger from '../utils/logger';
+import { AnalyticsOptions } from '../interfaces/URL';
 
 const clickModel = require('../models/clickModel');
 const urlModel = require('../models/urlModel');
@@ -353,16 +354,16 @@ exports.getUrlWithAnalytics = async (shortCode: string) => {
 };
 
 /**
- * Gets comprehensive URL analytics with filtering options
+ * Retrieves URL analytics with filters
  *
- * @param {number} urlId - The URL ID
- * @param {object} options - Analytics options
+ * @param {number} urlId - URL ID
+ * @param {AnalyticsOptions} options - Analytics options
  * @param {Date} [options.startDate] - Start date for filtering
  * @param {Date} [options.endDate] - End date for filtering
  * @param {string} [options.groupBy] - Group time series by ('day', 'week', 'month')
  * @returns {Promise<object>} Comprehensive analytics data
  */
-exports.getUrlAnalyticsWithFilters = async (urlId: number, options: any = {}) => {
+exports.getUrlAnalyticsWithFilters = async (urlId: number, options: AnalyticsOptions = {}) => {
   const { startDate, endDate, groupBy = 'day' } = options;
 
   // Get the URL details

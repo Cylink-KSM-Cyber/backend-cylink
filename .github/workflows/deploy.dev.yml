@@ -1,8 +1,8 @@
-name: Build and Push to Staging
+name: Build and Push to Development
 
 on:
   push:
-    branches: [ staging ]
+    branches: [ dev ]
   workflow_dispatch:
 
 jobs:
@@ -28,14 +28,14 @@ jobs:
         context: ./
         file: ./docker/api/Dockerfile
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:staging
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:dev
         no-cache: true
     
     - name: Create .env file from secrets
       uses: 0ndt/envfile@v2
       with:
         secrets: ${{ toJSON(secrets) }}
-        exclude: DEPLOYMENT_*, PRODUCTION_*, DEV_*
+        exclude: DEPLOYMENT_*, PRODUCTION_*, STAGING_*
     
     - name: Upload .env to VPS
       uses: appleboy/scp-action@v0.1.7
@@ -46,7 +46,7 @@ jobs:
         key: |
           ${{ secrets.DEPLOYMENT_SSH_KEY }}
         source: ".env"
-        target: "/opt/${{ secrets.DOCKERHUB_APP_ID }}/staging"
+        target: "/opt/${{ secrets.DOCKERHUB_APP_ID }}/dev"
     
     - name: Deploy to VPS
       uses: appleboy/ssh-action@v1.0.0
@@ -57,13 +57,13 @@ jobs:
         key: |
           ${{ secrets.DEPLOYMENT_SSH_KEY }}
         script: |
-          cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/staging
+          cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/dev
           git fetch origin
-          git reset --hard origin/staging
+          git reset --hard origin/dev
           git clean -fd
 
           # Remove prefix
-          sed -i 's/^STAGING_//g' .env
+          sed -i 's/^DEV_//g' .env
 
-          docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-staging -f docker-compose.yml -f docker-compose.staging.yml up -d --force-recreate --pull always
+          docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-dev -f docker-compose.yml -f docker-compose.dev.yml up -d --force-recreate --pull always
           docker system prune -af
