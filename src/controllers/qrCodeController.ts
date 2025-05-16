@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import {
-  generateQrCode,
   getQrCodeResponseById,
   getQrCodeResponseByUrlId,
   getQrCodeResponseByShortCode,
@@ -38,78 +37,6 @@ export const getQrCodeColorOptions = async (req: Request, res: Response): Promis
     return sendResponse(res, 200, 'Successfully retrieved QR code color options', colorOptions);
   } catch (error) {
     logger.error('Error retrieving QR code color options:', error);
-    return sendResponse(res, 500, 'Internal Server Error');
-  }
-};
-
-/**
- * Create a new QR code for a URL
- *
- * @param {Request} req - Express request object
- * @param {Response} res - Express response object
- * @returns {Promise<Response>} Response with generated QR code or error
- */
-export const createQrCode = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    const { url_id, short_code, color, background_color, include_logo, logo_size, size } = req.body;
-
-    // Deep clone the request body to avoid direct mutation
-    const qrCodeData = { ...req.body };
-
-    // Validate logo_size to ensure it matches database constraints
-    if (logo_size !== undefined) {
-      // Check if logo_size is a number
-      if (typeof logo_size !== 'number') {
-        return sendResponse(res, 400, 'Invalid QR code parameters', {
-          errors: ['logo_size must be a number'],
-        });
-      }
-
-      // If logo_size is greater than 1, assume it's a percentage and convert to decimal
-      const normalizedLogoSize = logo_size > 1 ? logo_size / 100 : logo_size;
-
-      // Check if normalized value is within the allowed range
-      if (normalizedLogoSize < 0.1 || normalizedLogoSize > 0.3) {
-        return sendResponse(res, 400, 'Invalid QR code parameters', {
-          errors: ['logo_size must be between 0.1 (10%) and 0.3 (30%)'],
-        });
-      }
-
-      // Update the processed data object, not the req.body
-      qrCodeData.logo_size = normalizedLogoSize;
-    }
-
-    // Generate QR code with the normalized data
-    const qrCode = await generateQrCode({
-      urlId: url_id,
-      shortCode: short_code,
-      color,
-      backgroundColor: background_color,
-      includeLogo: include_logo,
-      logoSize: qrCodeData.logo_size, // Use the normalized value
-      size,
-    });
-
-    logger.info(`Successfully generated QR code for URL ID: ${qrCode.url_id}`);
-    return sendResponse(res, 201, 'Successfully generated QR code', qrCode);
-  } catch (error) {
-    // Handle specific error conditions
-    if (error instanceof Error) {
-      if (error.message.includes('URL not found')) {
-        return sendResponse(res, 404, 'URL not found');
-      }
-
-      if (error.message.includes('invalid parameters')) {
-        return sendResponse(res, 400, 'Invalid QR code parameters', {
-          errors: [error.message],
-        });
-      }
-
-      logger.error('QR code generation error:', error.message);
-    } else {
-      logger.error('QR code generation error:', error);
-    }
-
     return sendResponse(res, 500, 'Internal Server Error');
   }
 };
