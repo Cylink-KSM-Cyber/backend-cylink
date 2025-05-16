@@ -217,7 +217,7 @@ export const getQrCodesByUser = async (req: Request, res: Response): Promise<Res
 
     // Return empty array with pagination if no results
     if (result.data.length === 0) {
-      return sendResponse(res, 200, 'No QR codes found', [], result.pagination);
+      return sendResponse(res, 200, 'No QR codes found', [], result.pagination as any);
     }
 
     logger.info(`Successfully retrieved ${result.data.length} QR codes for user ID: ${userId}`);
@@ -226,7 +226,7 @@ export const getQrCodesByUser = async (req: Request, res: Response): Promise<Res
       200,
       'QR codes retrieved successfully',
       result.data,
-      result.pagination,
+      result.pagination as any,
     );
   } catch (error) {
     // Handle specific error conditions
