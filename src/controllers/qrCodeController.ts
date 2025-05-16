@@ -1,9 +1,6 @@
 import { Request, Response } from 'express';
 import {
-  getQrCodeResponseById,
-  getQrCodeResponseByUrlId,
   getQrCodeResponseByShortCode,
-  updateQrCodeWithResponse,
   downloadQrCodeById,
   downloadQrCodeByShortCode,
   QrCodeFormat,
@@ -14,12 +11,22 @@ import {
 import logger from '../utils/logger';
 const { sendResponse } = require('../utils/response');
 
+// Import refactored controllers
+import { createQrCode, updateQrCode, getQrCodeById, getQrCodeByUrlId } from './qr-code';
+
 /**
  * QR Code Controller
  *
  * Handles QR code generation and management operations
+ * Note: This file is being refactored into smaller, modular controllers in src/controllers/qr-code/
  * @module controllers/qrCodeController
  */
+
+// Export refactored controllers
+exports.createQrCode = createQrCode;
+exports.updateQrCode = updateQrCode;
+exports.getQrCodeById = getQrCodeById;
+exports.getQrCodeByUrlId = getQrCodeByUrlId;
 
 /**
  * Get predefined QR code color options
@@ -28,7 +35,7 @@ const { sendResponse } = require('../utils/response');
  * @param {Response} res - Express response object
  * @returns {Promise<Response>} Response with color options or error
  */
-export const getQrCodeColorOptions = async (req: Request, res: Response): Promise<Response> => {
+const getQrCodeColorOptions = async (req: Request, res: Response): Promise<Response> => {
   try {
     // Get the predefined color options
     const colorOptions = getQrCodeColors();
@@ -42,96 +49,13 @@ export const getQrCodeColorOptions = async (req: Request, res: Response): Promis
 };
 
 /**
- * Update an existing QR code
- *
- * @param {Request} req - Express request object
- * @param {Response} res - Express response object
- * @returns {Promise<Response>} Response with updated QR code or error
- */
-export const updateQrCode = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    const id = parseInt(req.params.id);
-
-    if (isNaN(id)) {
-      return sendResponse(res, 400, 'Invalid QR code ID');
-    }
-
-    const { color, background_color, include_logo, logo_size, size } = req.body;
-
-    // Create a copy for our normalized data
-    let normalizedLogoSize = logo_size;
-
-    // Validate logo_size to ensure it matches database constraints
-    if (logo_size !== undefined) {
-      // Check if logo_size is a number
-      if (typeof logo_size !== 'number') {
-        return sendResponse(res, 400, 'Invalid QR code parameters', {
-          errors: ['logo_size must be a number'],
-        });
-      }
-
-      // If logo_size is greater than 1, assume it's a percentage and convert to decimal
-      normalizedLogoSize = logo_size > 1 ? logo_size / 100 : logo_size;
-
-      // Check if normalized value is within the allowed range
-      if (normalizedLogoSize < 0.1 || normalizedLogoSize > 0.3) {
-        return sendResponse(res, 400, 'Invalid QR code parameters', {
-          errors: ['logo_size must be between 0.1 (10%) and 0.3 (30%)'],
-        });
-      }
-    }
-
-    // Prepare update data with normalized values
-    const updateData = {
-      ...(color !== undefined && { color }),
-      ...(background_color !== undefined && { background_color }),
-      ...(include_logo !== undefined && { include_logo }),
-      ...(logo_size !== undefined && { logo_size: normalizedLogoSize }),
-      ...(size !== undefined && { size }),
-    };
-
-    // Update QR code
-    const updatedQrCode = await updateQrCodeWithResponse(id, updateData);
-
-    logger.info(`Successfully updated QR code with ID: ${id}`);
-    return sendResponse(res, 200, 'Successfully updated QR code', updatedQrCode);
-  } catch (error) {
-    // Handle specific error conditions
-    if (error instanceof Error) {
-      if (error.message.includes('QR code not found')) {
-        return sendResponse(res, 404, 'QR code not found');
-      }
-
-      if (error.message.includes('Associated URL not found')) {
-        return sendResponse(res, 404, 'Associated URL not found');
-      }
-
-      if (
-        error.message.includes('invalid parameters') ||
-        error.message.includes('Failed to update QR code')
-      ) {
-        return sendResponse(res, 400, 'Invalid QR code parameters', {
-          errors: [error.message],
-        });
-      }
-
-      logger.error('QR code update error:', error.message);
-    } else {
-      logger.error('QR code update error:', error);
-    }
-
-    return sendResponse(res, 500, 'Internal Server Error');
-  }
-};
-
-/**
  * Download QR code by ID in the specified format
  *
  * @param {Request} req - Express request object
  * @param {Response} res - Express response object
  * @returns {Promise<void>} Sends binary file response
  */
-export const downloadQrCodeByIdController = async (req: Request, res: Response): Promise<void> => {
+const downloadQrCodeByIdController = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = parseInt(req.params.id);
 
@@ -178,10 +102,7 @@ export const downloadQrCodeByIdController = async (req: Request, res: Response):
  * @param {Response} res - Express response object
  * @returns {Promise<void>} Sends binary file response
  */
-export const downloadQrCodeByShortCodeController = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
+const downloadQrCodeByShortCodeController = async (req: Request, res: Response): Promise<void> => {
   try {
     const shortCode = req.params.shortCode;
 
@@ -275,71 +196,13 @@ function handleDownloadError(res: Response, error: unknown): void {
 }
 
 /**
- * Get a QR code by its ID
- *
- * @param {Request} req - Express request object
- * @param {Response} res - Express response object
- * @returns {Promise<Response>} Response with QR code or error
- */
-export const getQrCodeById = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    const id = parseInt(req.params.id);
-
-    if (isNaN(id)) {
-      return sendResponse(res, 400, 'Invalid QR code ID');
-    }
-
-    const qrCode = await getQrCodeResponseById(id);
-
-    if (!qrCode) {
-      return sendResponse(res, 404, 'QR code not found');
-    }
-
-    logger.info(`Successfully retrieved QR code with ID: ${id}`);
-    return sendResponse(res, 200, 'Successfully retrieved QR code', qrCode);
-  } catch (error) {
-    logger.error('Error retrieving QR code:', error);
-    return sendResponse(res, 500, 'Internal Server Error');
-  }
-};
-
-/**
- * Get a QR code by URL ID
- *
- * @param {Request} req - Express request object
- * @param {Response} res - Express response object
- * @returns {Promise<Response>} Response with QR code or error
- */
-export const getQrCodeByUrlId = async (req: Request, res: Response): Promise<Response> => {
-  try {
-    const urlId = parseInt(req.params.url_id);
-
-    if (isNaN(urlId)) {
-      return sendResponse(res, 400, 'Invalid URL ID');
-    }
-
-    const qrCode = await getQrCodeResponseByUrlId(urlId);
-
-    if (!qrCode) {
-      return sendResponse(res, 404, 'QR code not found');
-    }
-
-    logger.info(`Successfully retrieved QR code for URL ID: ${urlId}`);
-    return sendResponse(res, 200, 'Successfully retrieved QR code', qrCode);
-  } catch (error) {
-    logger.error('Error retrieving QR code:', error);
-    return sendResponse(res, 500, 'Internal Server Error');
-  }
-};
-
-/**
  * Get a QR code by Short Code
  *
  * @param {Request} req - Express request object
  * @param {Response} res - Express response object
  * @returns {Promise<Response>} Response with QR code or error
  */
-export const getQrCodeByShortCode = async (req: Request, res: Response): Promise<Response> => {
+const getQrCodeByShortCode = async (req: Request, res: Response): Promise<Response> => {
   try {
     const shortCode = req.params.shortCode;
 
@@ -368,7 +231,7 @@ export const getQrCodeByShortCode = async (req: Request, res: Response): Promise
  * @param {Response} res - Express response object
  * @returns {Promise<Response>} Response with QR codes or error
  */
-export const getQrCodesByUser = async (req: Request, res: Response): Promise<Response> => {
+const getQrCodesByUser = async (req: Request, res: Response): Promise<Response> => {
   try {
     const userId = req.body.id; // User ID from auth middleware
 
@@ -531,7 +394,7 @@ export const getQrCodesByUser = async (req: Request, res: Response): Promise<Res
  * @param {Response} res - Express response object
  * @returns {Promise<Response>} Response with deletion confirmation or error
  */
-export const deleteQrCodeById = async (req: Request, res: Response): Promise<Response> => {
+const deleteQrCodeById = async (req: Request, res: Response): Promise<Response> => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
@@ -579,3 +442,11 @@ export const deleteQrCodeById = async (req: Request, res: Response): Promise<Res
     return sendResponse(res, 500, 'Internal Server Error');
   }
 };
+
+// Export remaining controller functions
+exports.getQrCodeColorOptions = getQrCodeColorOptions;
+exports.downloadQrCodeByIdController = downloadQrCodeByIdController;
+exports.downloadQrCodeByShortCodeController = downloadQrCodeByShortCodeController;
+exports.getQrCodeByShortCode = getQrCodeByShortCode;
+exports.getQrCodesByUser = getQrCodesByUser;
+exports.deleteQrCodeById = deleteQrCodeById;
