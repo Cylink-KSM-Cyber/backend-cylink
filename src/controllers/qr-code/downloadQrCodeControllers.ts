@@ -56,12 +56,7 @@ const validateSize = (sizeParam?: string): number | undefined => {
 const parseDownloadParams = (req: Request): DownloadParams => {
   const format = validateFormat(req.query.format?.toString());
 
-  let size: number | undefined;
-  try {
-    size = validateSize(req.query.size?.toString());
-  } catch (error) {
-    throw error;
-  }
+  const size = validateSize(req.query.size?.toString());
 
   return { format, size };
 };
@@ -70,11 +65,11 @@ const parseDownloadParams = (req: Request): DownloadParams => {
  * Sends the downloaded QR code to the client
  *
  * @param {Response} res - Express response object
- * @param {{ contentType: string; filename: string; data: Buffer }} qrCode - QR code data
+ * @param {{ contentType: string; filename: string; data: Buffer | string }} qrCode - QR code data
  */
 const sendQrCodeResponse = (
   res: Response,
-  qrCode: { contentType: string; filename: string; data: Buffer },
+  qrCode: { contentType: string; filename: string; data: Buffer | string },
 ): void => {
   // Set appropriate headers for file download
   res.setHeader('Content-Type', qrCode.contentType);
