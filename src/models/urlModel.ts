@@ -462,6 +462,7 @@ exports.getUrlsByUserWithFilters = async (userId: number, options: UrlFilterOpti
   const validColumns: Record<string, string> = {
     created_at: 'created_at',
     title: 'title',
+    expiry_date: 'expiry_date',
     // Note: both clicks and title sorting are fully handled in application logic after querying
     // Database-level sorting for title may not work correctly with null values or case sensitivity
   };
@@ -475,6 +476,15 @@ exports.getUrlsByUserWithFilters = async (userId: number, options: UrlFilterOpti
     // NOTE: Title sorting is done at application level for consistent null handling and case sensitivity
     // We'll sort at database level first but it will be overridden in the service layer
     orderClause = `ORDER BY title ${sortOrder === 'asc' ? 'ASC' : 'DESC'} NULLS LAST`;
+  } else if (sortBy === 'expiry_date') {
+    // Handle NULL expiry_date values in sorting logic
+    if (sortOrder === 'asc') {
+      // For ascending: NULL values should appear last (never expire)
+      orderClause = `ORDER BY expiry_date ASC NULLS LAST`;
+    } else {
+      // For descending: NULL values should appear first (never expire)
+      orderClause = `ORDER BY expiry_date DESC NULLS FIRST`;
+    }
   } else {
     const column = validColumns[sortBy] || 'created_at';
     orderClause = `ORDER BY ${column} ${sortOrder === 'asc' ? 'ASC' : 'DESC'}`;
