@@ -106,7 +106,7 @@ const fields = require('../validators/urlValidator');
  *         name: sortBy
  *         schema:
  *           type: string
- *           enum: [created_at, clicks, title, relevance]
+ *           enum: [created_at, clicks, title, relevance, expiry_date]
  *           default: created_at
  *         description: Field to sort by (defaults to 'relevance' when search parameter is provided)
  *       - in: query
