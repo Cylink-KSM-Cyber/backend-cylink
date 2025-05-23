@@ -31,7 +31,7 @@ module.exports = {
       sortBy: {
         type: 'string',
         optional: true,
-        enum: ['created_at', 'clicks', 'title', 'relevance'],
+        enum: ['created_at', 'clicks', 'title', 'relevance', 'expiry_date'],
       },
       sortOrder: {
         type: 'string',
