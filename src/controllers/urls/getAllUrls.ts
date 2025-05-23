@@ -286,6 +286,17 @@ const getAllAndSortUrls = async (
       comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
     } else if (sortBy === 'title') {
       comparison = (a.title ?? '').localeCompare(b.title ?? '');
+    } else if (sortBy === 'expiry_date') {
+      // Handle NULL expiry_date values in sorting logic
+      if (!a.expiry_date && !b.expiry_date) {
+        comparison = 0; // Both are null, they're equal
+      } else if (!a.expiry_date) {
+        comparison = sortOrder === 'asc' ? 1 : -1; // Null values appear last in ascending, first in descending
+      } else if (!b.expiry_date) {
+        comparison = sortOrder === 'asc' ? -1 : 1; // Null values appear last in ascending, first in descending
+      } else {
+        comparison = new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime();
+      }
     } else {
       // Default to sorting by created_at
       comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();

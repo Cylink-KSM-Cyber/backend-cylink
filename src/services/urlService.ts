@@ -553,6 +553,23 @@ exports.getUrlsWithStatusFilter = async (userId: number, options: UrlFilterOptio
       // Apply sort direction
       return sortOrder === 'asc' ? titleA.localeCompare(titleB) : titleB.localeCompare(titleA);
     });
+  } else if (sortBy === 'expiry_date') {
+    // Sort by expiry date
+    processedUrls.sort((a, b) => {
+      // Handle null expiry dates
+      if (!a.expiry_date && !b.expiry_date) {
+        return 0; // Both are null, they're equal
+      } else if (!a.expiry_date) {
+        return sortOrder === 'asc' ? 1 : -1; // Null values appear last in ascending, first in descending
+      } else if (!b.expiry_date) {
+        return sortOrder === 'asc' ? -1 : 1; // Null values appear last in ascending, first in descending
+      }
+
+      // Compare dates
+      const dateA = new Date(a.expiry_date).getTime();
+      const dateB = new Date(b.expiry_date).getTime();
+      return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
   }
 
   // Apply pagination manually for clicks sorting

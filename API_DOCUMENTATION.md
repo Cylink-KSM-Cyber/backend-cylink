@@ -108,6 +108,10 @@ This API documentation provides numerous benefits for both internal developers a
 ### URLs (Authenticated)
 
 - `GET /api/v1/urls` - Get all user's URLs
+  - Supports filtering by status with `status` parameter (all, active, inactive, expired, expiring-soon)
+  - Allows searching with `search` parameter (minimum 2 characters)
+  - Includes pagination with `page` and `limit` parameters
+  - Supports sorting with `sortBy` (created_at, clicks, title, relevance, expiry_date) and `sortOrder` (asc, desc)
 - `POST /api/v1/urls` - Create a new shortened URL
 - `GET /api/v1/urls/:id` - Get a specific URL by ID
 - `PUT /api/v1/urls/:id` - Update a URL
