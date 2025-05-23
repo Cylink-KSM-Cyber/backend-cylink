@@ -33,6 +33,7 @@ module.exports = {
     short_code: 'VARCHAR(10) UNIQUE NOT NULL',
     title: 'VARCHAR(255)',
     expiry_date: 'TIMESTAMP WITH TIME ZONE',
+    auto_expired_at: 'TIMESTAMP WITH TIME ZONE',
     is_active: 'BOOLEAN DEFAULT TRUE',
     has_password: 'BOOLEAN DEFAULT FALSE',
     password_hash: 'VARCHAR(255)',
