@@ -276,4 +276,108 @@ router.post('/statistics/reset', accessToken, jobController.resetJobStats);
  */
 router.get('/expiration/statistics', accessToken, jobController.getExpirationStats);
 
+/**
+ * @swagger
+ * /api/v1/jobs/cache/statistics:
+ *   get:
+ *     summary: Get cache statistics for monitoring (Admin only)
+ *     tags: [Jobs]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cache statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Cache statistics retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     cache_statistics:
+ *                       type: object
+ *                       properties:
+ *                         timezone_cache:
+ *                           type: object
+ *                           properties:
+ *                             hits:
+ *                               type: integer
+ *                               example: 150
+ *                             misses:
+ *                               type: integer
+ *                               example: 25
+ *                             hitRate:
+ *                               type: number
+ *                               example: 85.7
+ *                             size:
+ *                               type: integer
+ *                               example: 45
+ *                         user_cache:
+ *                           type: object
+ *                         url_expiration_cache:
+ *                           type: object
+ *                     generated_at:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-04-22T10:30:00Z"
+ *                     generated_by:
+ *                       type: string
+ *                       example: admin@cylink.id
+ *       403:
+ *         description: Access denied - Admin role required
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/cache/statistics', accessToken, jobController.getCacheStatistics);
+
+/**
+ * @swagger
+ * /api/v1/jobs/cache/clear:
+ *   post:
+ *     summary: Clear all caches (Admin only)
+ *     tags: [Jobs]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All caches cleared successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: All caches cleared successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     cleared_at:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-04-22T10:30:00Z"
+ *                     cleared_by:
+ *                       type: string
+ *                       example: admin@cylink.id
+ *       403:
+ *         description: Access denied - Admin role required
+ *       401:
+ *         description: Unauthorized - Authentication required
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/cache/clear', accessToken, jobController.clearCaches);
+
 module.exports = router;
