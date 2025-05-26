@@ -14,6 +14,7 @@ module.exports = {
     password: 'VARCHAR(255) NOT NULL',
     username: 'VARCHAR(255)',
     role: `ENUM('user', 'admin')`,
+    timezone: `VARCHAR(50) DEFAULT 'UTC'`,
     verification_token: 'VARCHAR(255)',
     email_verified_at: 'TIMESTAMP',
     last_email_verify_requested_at: 'TIMESTAMP',
