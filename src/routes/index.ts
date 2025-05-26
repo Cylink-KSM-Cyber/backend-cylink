@@ -7,6 +7,7 @@ const qrCodeRoutes = require('../routes/qrCodeRoutes');
 const conversionRoutes = require('../routes/conversionRoutes');
 const ctrRoutes = require('../routes/ctrRoutes');
 const jobRoutes = require('../routes/jobRoutes');
+const userProfileRoutes = require('../routes/userProfileRoutes');
 
 /**
  * Main router
@@ -35,5 +36,8 @@ router.use('/ctr', ctrRoutes);
 
 // Job management routes (admin only)
 router.use('/jobs', jobRoutes);
+
+// User profile management routes
+router.use('/profile', userProfileRoutes);
 
 module.exports = router;
