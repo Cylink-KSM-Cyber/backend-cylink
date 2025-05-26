@@ -12,6 +12,7 @@ require('dotenv').config();
 
 import express, { json, urlencoded, Request, Response } from 'express';
 import { setupSwagger } from './middlewares/swagger';
+import { startScheduler } from './jobs/jobScheduler';
 import cors from 'cors';
 
 const app = express();
@@ -69,4 +70,7 @@ app.listen(port, () => {
   /* eslint-disable no-console */
   console.log(`App listening on port ${port}`);
   /* eslint-enable no-console */
+
+  // Start background job scheduler
+  startScheduler();
 });

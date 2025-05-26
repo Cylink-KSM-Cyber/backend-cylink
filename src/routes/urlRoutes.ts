@@ -4,6 +4,7 @@ const { getQrCodeByUrlId } = require('../controllers/qrCodeController');
 const urlController = require('../controllers/urlController');
 const ctrController = require('../controllers/ctrController');
 const { accessToken } = require('../middlewares/authMiddleware');
+const { urlExpirationMiddleware } = require('../middlewares/urlExpirationMiddleware');
 const validate = require('../utils/validator');
 const fields = require('../validators/urlValidator');
 
@@ -233,6 +234,7 @@ const fields = require('../validators/urlValidator');
 router.get(
   '/',
   accessToken,
+  urlExpirationMiddleware,
   validate({ query: fields.getUrls, preserveBodyProps: true }),
   urlController.getUrlsWithStatusFilter,
 );
@@ -599,7 +601,7 @@ router.get(
  *       500:
  *         description: Internal server error
  */
-router.get('/:identifier', accessToken, urlController.getUrlDetails);
+router.get('/:identifier', accessToken, urlExpirationMiddleware, urlController.getUrlDetails);
 
 /**
  * @swagger

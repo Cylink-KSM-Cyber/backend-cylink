@@ -19,6 +19,9 @@ exports.createIndexes = (): string => {
   query += 'CREATE INDEX IF NOT EXISTS idx_urls_expiry_date ON urls(expiry_date);\n';
   query += 'CREATE INDEX IF NOT EXISTS idx_urls_deleted_at ON urls(deleted_at);\n';
   query += 'CREATE INDEX IF NOT EXISTS idx_urls_is_active ON urls(is_active);\n';
+  // Composite index for URL expiration queries
+  query +=
+    'CREATE INDEX IF NOT EXISTS idx_urls_expiry_active_deleted ON urls(expiry_date, is_active, deleted_at) WHERE expiry_date IS NOT NULL;\n';
   query +=
     'CREATE INDEX IF NOT EXISTS idx_urls_is_active_deleted_at ON urls(is_active, deleted_at);\n';
   query +=
@@ -105,6 +108,7 @@ exports.dropIndexes = (): string => {
   query += 'DROP INDEX IF EXISTS idx_urls_expiry_date;\n';
   query += 'DROP INDEX IF EXISTS idx_urls_deleted_at;\n';
   query += 'DROP INDEX IF EXISTS idx_urls_is_active;\n';
+  query += 'DROP INDEX IF EXISTS idx_urls_expiry_active_deleted;\n';
   query += 'DROP INDEX IF EXISTS idx_urls_is_active_deleted_at;\n';
   query += 'DROP INDEX IF EXISTS idx_urls_user_id_is_active_deleted_at;\n';
   query += 'DROP INDEX IF EXISTS idx_urls_lower_title;\n';
