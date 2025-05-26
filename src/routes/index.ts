@@ -6,6 +6,7 @@ const urlRoutes = require('../routes/urlRoutes');
 const qrCodeRoutes = require('../routes/qrCodeRoutes');
 const conversionRoutes = require('../routes/conversionRoutes');
 const ctrRoutes = require('../routes/ctrRoutes');
+const jobRoutes = require('../routes/jobRoutes');
 
 /**
  * Main router
@@ -31,5 +32,8 @@ router.use('/', conversionRoutes);
 
 // CTR (Click-Through Rate) routes
 router.use('/ctr', ctrRoutes);
+
+// Job management routes (admin only)
+router.use('/jobs', jobRoutes);
 
 module.exports = router;
