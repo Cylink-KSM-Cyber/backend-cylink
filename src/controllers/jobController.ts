@@ -13,6 +13,7 @@ import {
   resetJobStatistics,
 } from '../jobs/jobScheduler';
 import { getJobStatistics } from '../jobs/urlExpirationJob';
+import { getCacheStats, clearAllCaches } from '../utils/cache';
 
 const { sendResponse } = require('../utils/response');
 
@@ -163,5 +164,68 @@ export const getExpirationStats = async (
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(`Error getting expiration statistics: ${errorMessage}`);
     return sendResponse(res, 500, 'Failed to retrieve expiration statistics');
+  }
+};
+
+/**
+ * Get cache statistics for monitoring
+ *
+ * @param {ExtendedRequest} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Express response
+ */
+export const getCacheStatistics = async (
+  req: ExtendedRequest,
+  res: Response,
+): Promise<Response> => {
+  try {
+    // Check if user is admin
+    if (req.user?.role !== 'admin') {
+      return sendResponse(res, 403, 'Access denied. Admin role required.');
+    }
+
+    const cacheStats = getCacheStats();
+
+    const response = {
+      cache_statistics: cacheStats,
+      generated_at: new Date().toISOString(),
+      generated_by: req.user.email,
+    };
+
+    return sendResponse(res, 200, 'Cache statistics retrieved successfully', response);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Error getting cache statistics: ${errorMessage}`);
+    return sendResponse(res, 500, 'Failed to retrieve cache statistics');
+  }
+};
+
+/**
+ * Clear all caches
+ *
+ * @param {ExtendedRequest} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Express response
+ */
+export const clearCaches = async (req: ExtendedRequest, res: Response): Promise<Response> => {
+  try {
+    // Check if user is admin
+    if (req.user?.role !== 'admin') {
+      return sendResponse(res, 403, 'Access denied. Admin role required.');
+    }
+
+    clearAllCaches();
+
+    const response = {
+      cleared_at: new Date().toISOString(),
+      cleared_by: req.user.email,
+    };
+
+    logger.info(`All caches cleared by admin user: ${req.user.email}`);
+    return sendResponse(res, 200, 'All caches cleared successfully', response);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Error clearing caches: ${errorMessage}`);
+    return sendResponse(res, 500, 'Failed to clear caches');
   }
 };
