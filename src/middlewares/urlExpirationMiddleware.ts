@@ -8,6 +8,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import logger from '../utils/logger';
+import { timezoneCache, cacheKeys } from '../utils/cache';
 
 /**
  * Extended Request interface to include user timezone information
@@ -49,7 +50,7 @@ interface ResponseData {
  */
 const extractTimezone = (req: ExtendedRequest): string => {
   // Priority order for timezone detection:
-  // 1. User profile timezone (if available)
+  // 1. User profile timezone (if available in JWT)
   // 2. Request timezone header
   // 3. Accept-Language header parsing
   // 4. Default to UTC
@@ -120,18 +121,33 @@ const getCurrentDateInTimezone = (timezone: string): Date => {
 };
 
 /**
- * Get timezone offset in minutes
+ * Get timezone offset in minutes (with caching)
  *
  * @param {string} timezone - Timezone string
  * @returns {number} Offset in minutes
  */
 const getTimezoneOffset = (timezone: string): number => {
+  // Check cache first
+  const cacheKey = cacheKeys.timezoneOffset(timezone);
+  const cachedOffset = timezoneCache.get<number>(cacheKey);
+
+  if (cachedOffset !== null) {
+    return cachedOffset;
+  }
+
   try {
     const now = new Date();
     const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
     const targetDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
-    return (targetDate.getTime() - utcDate.getTime()) / (1000 * 60);
+    const offset = (targetDate.getTime() - utcDate.getTime()) / (1000 * 60);
+
+    // Cache the offset for 1 hour
+    timezoneCache.set(cacheKey, offset, 3600000);
+
+    return offset;
   } catch (error) {
+    // Cache UTC offset even for errors
+    timezoneCache.set(cacheKey, 0, 3600000);
     return 0; // UTC offset
   }
 };
