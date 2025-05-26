@@ -23,6 +23,17 @@ exports.getUserByEmail = async (email: string): Promise<User | undefined> => {
 };
 
 /**
+ * Retrieves a user by ID
+ * @param {number} id - User ID to search for
+ * @returns {Promise<User|undefined>} User object or undefined if not found
+ */
+exports.getUserById = async (id: number): Promise<User | undefined> => {
+  const res = await pool.query('SELECT * FROM users WHERE id = $1 AND deleted_at IS NULL', [id]);
+
+  return res.rows[0];
+};
+
+/**
  * Creates a new user
  * @param {User} user - User data to create
  * @returns {Promise<User>} Created user
