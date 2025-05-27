@@ -12,7 +12,6 @@ const config: Knex.Config = {
   searchPath: process.env.DATABASE_SCHEMA?.split(',') || ['public'],
   migrations: {
     directory: __dirname + '/../database/scripts/migrations',
-    extension: isProduction ? 'js' : 'ts',
   },
   seeds: {
     directory: __dirname + '/../database/scripts/seeders',
