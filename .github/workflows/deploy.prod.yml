@@ -65,5 +65,9 @@ jobs:
           # Remove prefix
           sed -i 's/^PRODUCTION_//g' .env
 
+          # Re-run container (clean)
           docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-prod -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate --pull always
           docker system prune -af
+
+          # Migrate database (if any)
+          docker exec -it ${{ secrets.DOCKERHUB_APP_ID }}.api npm run db migrate:latest
