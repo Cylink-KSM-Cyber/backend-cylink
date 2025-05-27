@@ -48,9 +48,12 @@ export const getPublicUrlDetails = async (shortCode: string): Promise<any | null
     const baseUrl = process.env.SHORT_URL_BASE ?? 'https://cylink.id/';
     const shortUrl = baseUrl + url.short_code;
 
+    // Generate redirect URL with UTM campaigns
+    const redirectUrl = `${url.original_url}?${generateUtmParameters(url.short_code)}`;
+
     // Return only the required fields for public consumption
     return {
-      original_url: url.original_url,
+      original_url: redirectUrl,
       title: url.title ?? null,
       short_code: url.short_code,
       short_url: shortUrl,
@@ -64,6 +67,22 @@ export const getPublicUrlDetails = async (shortCode: string): Promise<any | null
     logger.error(`Error retrieving public URL details for ${shortCode}: ${errorMessage}`);
     throw new Error('Failed to retrieve URL details');
   }
+};
+
+/**
+ * Generate UTM parameters
+ * @param {string} shortCode - The short code for tracking
+ * @returns {string} - The query string with UTM parameters
+ */
+const generateUtmParameters = (shortCode: string): string => {
+  const searchParams = new URLSearchParams({
+    utm_source: 'cylink',
+    utm_medium: 'shortlink',
+    utm_campaign: 'conversion',
+    utm_content: encodeURIComponent(shortCode),
+  });
+
+  return searchParams.toString();
 };
 
 export default { getPublicUrlDetails };
