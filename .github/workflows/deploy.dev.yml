@@ -70,4 +70,4 @@ jobs:
           docker system prune -af
 
           # Migrate database (if any)
-          docker exec ${{ secrets.DOCKERHUB_APP_ID }}.api.dev npm run db migrate:latest
+          docker exec ${{ secrets.DOCKERHUB_APP_ID }}.api.dev npm run db:deploy migrate:latest
