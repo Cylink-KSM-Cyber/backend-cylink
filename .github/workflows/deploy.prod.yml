@@ -81,6 +81,4 @@ jobs:
     - name: Run database migrations
       run: npx knex migrate:latest --knexfile src/config/knex.ts
       env:
-        DATABASE_URL: >
-          postgresql://${{ secrets.PRODUCTION_DATABASE_USER }}:${{ secrets.PRODUCTION_DATABASE_PASSWORD }}
-          @${{ secrets.DEPLOYMENT_HOST }}:${{ secrets.PRODUCTION_DATABASE_PORT }}/${{ secrets.PRODUCTION_DATABASE_NAME }}
+        DATABASE_URL: postgresql://${{ secrets.PRODUCTION_DATABASE_USER }}:${{ secrets.PRODUCTION_DATABASE_PASSWORD }}@${{ secrets.DEPLOYMENT_HOST }}:${{ secrets.PRODUCTION_DATABASE_PORT }}/${{ secrets.PRODUCTION_DATABASE_NAME }}
