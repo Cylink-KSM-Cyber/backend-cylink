@@ -11,6 +11,7 @@
     "build": "tsc",
     "dev": "nodemon",
     "db": "knex --knexfile src/config/knex.ts",
+    "db:deploy": "knex --knexfile dist/config/knex.js",
     "db:migrate": "ts-node -r tsconfig-paths/register src/database/migrations.ts",
     "db:seed": "ts-node -r tsconfig-paths/register src/database/seed.ts",
     "db:seed:admin": "ts-node -r tsconfig-paths/register src/database/seed.ts admin",
