@@ -166,6 +166,7 @@ router.get(
   '/:shortCode',
   publicApiRateLimiter,
   clickTracker,
+  urlExpirationMiddleware,
   urlController.getPublicUrlDetails,
 );
 

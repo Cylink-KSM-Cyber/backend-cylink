@@ -110,6 +110,27 @@ module.exports = {
       required: false,
       enum: ['day', 'week', 'month'],
     },
+    {
+      name: 'comparison',
+      type: 'string',
+      required: false,
+      enum: ['7', '14', '30', '90', 'custom'],
+    },
+    { name: 'custom_comparison_start', type: 'string', required: false },
+    { name: 'custom_comparison_end', type: 'string', required: false },
+    {
+      name: 'page',
+      type: 'integer',
+      required: false,
+      min: 1,
+    },
+    {
+      name: 'limit',
+      type: 'integer',
+      required: false,
+      min: 1,
+      max: 90,
+    },
   ],
 
   /**

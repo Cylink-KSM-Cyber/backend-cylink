@@ -15,6 +15,7 @@ interface User {
   email: string;
   password?: string;
   role?: string;
+  timezone?: string;
   verification_token?: string;
   email_verified_at?: Date | null;
   last_email_verify_requested_at?: Date | null;

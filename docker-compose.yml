@@ -4,6 +4,7 @@ services:
   api:
     image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}:prod
     environment:
+      NODE_ENV: ${NODE_ENV}
       PORT: ${PORT}
       ENABLE_LOG: ${ENABLE_LOG}
       DATABASE_URL: postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@database:5432/${DATABASE_NAME}

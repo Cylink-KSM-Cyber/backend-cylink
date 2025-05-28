@@ -189,6 +189,19 @@ export interface AnalyticsOptions {
 }
 
 /**
+ * Enhanced analytics options for comprehensive URL analytics
+ * Extends the base AnalyticsOptions with additional options for comparison periods and pagination
+ */
+export interface EnhancedAnalyticsOptions extends Omit<AnalyticsOptions, 'groupBy'> {
+  groupBy?: 'day' | 'week' | 'month';
+  comparison?: string;
+  customComparisonStart?: string;
+  customComparisonEnd?: string;
+  page?: number;
+  limit?: number;
+}
+
+/**
  * Response for total clicks analytics
  */
 export interface TotalClicksAnalyticsResponse {
