@@ -14,3 +14,4 @@ export { default as getUrlAnalytics } from './getUrlAnalytics';
 export { default as getTotalClicksAnalytics } from './getTotalClicksAnalytics';
 export { default as getUrlsWithStatusFilter } from './getUrlsWithStatusFilter';
 export { default as updateUrl } from './updateUrl';
+export { default as recordUrlClick } from './recordUrlClick';

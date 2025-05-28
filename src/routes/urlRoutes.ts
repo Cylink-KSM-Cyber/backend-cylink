@@ -1056,4 +1056,11 @@ router.put(
   urlController.updateUrl,
 );
 
+// undocumented yet
+router.get(
+  '/click/:short_code',
+  accessToken,
+  urlController.recordUrlClick,
+);
+
 module.exports = router;

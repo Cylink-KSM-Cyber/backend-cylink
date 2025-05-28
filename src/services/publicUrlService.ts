@@ -6,6 +6,7 @@
  */
 
 import logger from '../utils/logger';
+import { ClickInfo } from '../interfaces/ClickInfo';
 
 const urlModel = require('../models/urlModel');
 
@@ -28,7 +29,10 @@ const urlModel = require('../models/urlModel');
  * @param {string} shortCode - Short code for the URL
  * @returns {Promise<any|null>} Public URL details or null if not found/inactive
  */
-export const getPublicUrlDetails = async (shortCode: string): Promise<any | null> => {
+export const getPublicUrlDetails = async (
+  shortCode: string,
+  clickInfo: ClickInfo,
+): Promise<any | null> => {
   try {
     // Get URL from database, ensuring it's active and not deleted
     const url = await urlModel.getUrlByShortCode(shortCode);
@@ -49,7 +53,7 @@ export const getPublicUrlDetails = async (shortCode: string): Promise<any | null
     const shortUrl = baseUrl + url.short_code;
 
     // Generate redirect URL with UTM campaigns
-    const redirectUrl = `${url.original_url}?${generateUtmParameters(url.short_code)}`;
+    const redirectUrl = generateRedirectUrl(url.original_url, clickInfo);
 
     // Return only the required fields for public consumption
     return {
@@ -70,19 +74,36 @@ export const getPublicUrlDetails = async (shortCode: string): Promise<any | null
 };
 
 /**
- * Generate UTM parameters
+ * Generate Redirect URL
  * @param {string} shortCode - The short code for tracking
  * @returns {string} - The query string with UTM parameters
  */
-const generateUtmParameters = (shortCode: string): string => {
-  const searchParams = new URLSearchParams({
+const generateRedirectUrl = (
+  originalUrl: string,
+  clickInfo: ClickInfo,
+): string => {
+  const clickInfoEncoded = Buffer.from(JSON.stringify(clickInfo)).toString('base64');
+
+  const utmParams = new URLSearchParams({
     utm_source: 'cylink',
     utm_medium: 'shortlink',
     utm_campaign: 'conversion',
-    utm_content: encodeURIComponent(shortCode),
-  });
+    utm_content: clickInfoEncoded,
+  }).toString();
 
-  return searchParams.toString();
+  // Edge cases with an existing '?' and '#' symbol
+  if (originalUrl.includes('?')) {
+    if (originalUrl.includes('#')) {
+      const [baseUrl, queryAndHash] = originalUrl.split('?');
+      const [queryString, hash] = queryAndHash.split('#');
+      
+      return `${baseUrl}?${queryString}&${utmParams}#${hash}`;
+    } else {
+      return `${originalUrl}&${utmParams}`;
+    }
+  } else {
+    return `${originalUrl}?${utmParams}`;
+  }
 };
 
 export default { getPublicUrlDetails };

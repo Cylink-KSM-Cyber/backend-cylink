@@ -4,6 +4,7 @@ const urlController = require('../controllers/urlController');
 const validate = require('../utils/validator');
 const fields = require('../validators/urlValidator');
 const { publicApiRateLimiter } = require('../middlewares/rateLimitMiddleware');
+const clickTracker = require('../middlewares/clickTracker');
 
 /**
  * Public URL Routes
@@ -161,6 +162,11 @@ router.post(
  *       500:
  *         description: Internal server error
  */
-router.get('/:shortCode', publicApiRateLimiter, urlController.getPublicUrlDetails);
+router.get(
+  '/:shortCode',
+  publicApiRateLimiter,
+  clickTracker,
+  urlController.getPublicUrlDetails,
+);
 
 module.exports = router;
