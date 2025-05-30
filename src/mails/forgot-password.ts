@@ -13,9 +13,9 @@
  * @returns {string} HTML email template
  */
 export default (resetToken: string, username?: string): string => {
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
   const resetUrl = `${frontendUrl}reset-password?token=${resetToken}`;
-  const userDisplayName = username || 'there';
+  const userDisplayName = username ?? 'there';
 
   return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
