@@ -6,7 +6,8 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import rateLimit from 'express-rate-limit';
+import { rateLimit } from 'express-rate-limit';
+
 import logger from '../utils/logger';
 
 /**
@@ -24,7 +25,7 @@ exports.passwordResetRateLimit = rateLimit({
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   handler: (req: Request, res: Response, _next: NextFunction) => {
-    const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+    const clientIp = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
     logger.warn(
       `Password reset rate limit exceeded for IP: ${clientIp} - ${req.method} ${req.originalUrl}`,
     );
@@ -56,7 +57,7 @@ exports.passwordResetValidationRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req: Request, res: Response, _next: NextFunction) => {
-    const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+    const clientIp = req.ip ?? req.socket?.remoteAddress ?? 'unknown';
     logger.warn(
       `Password reset validation rate limit exceeded for IP: ${clientIp} - ${req.method} ${req.originalUrl}`,
     );
