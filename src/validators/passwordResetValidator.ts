@@ -5,9 +5,19 @@
  * @module validators/passwordResetValidator
  */
 
-import { body, query, validationResult } from 'express-validator';
 import { Request, Response, NextFunction } from 'express';
+import { body, query, validationResult } from 'express-validator';
+
 import { validatePassword, validatePasswordConfirmation } from '../utils/passwordValidator';
+
+/**
+ * Interface for validation error with proper typing
+ */
+interface ValidatorError {
+  param?: string;
+  path?: string;
+  msg: string;
+}
 
 /**
  * Validation rules for reset password endpoint
@@ -55,11 +65,11 @@ exports.resetPasswordValidation = [
 
     if (!errors.isEmpty()) {
       const errorArray = errors.array();
-      const errorMessages = errorArray.map((error: any) => error.msg);
+      const errorMessages = errorArray.map((error: ValidatorError) => error.msg);
 
       // Check for token errors
       const tokenErrors = errorArray.filter(
-        (error: any) => error.param === 'token' || (error as any).path === 'token',
+        (error: ValidatorError) => error.param === 'token' || error.path === 'token',
       );
 
       if (tokenErrors.length > 0) {
@@ -72,11 +82,11 @@ exports.resetPasswordValidation = [
 
       // Check for password validation errors
       const passwordErrors = errorArray.filter(
-        (error: any) =>
+        (error: ValidatorError) =>
           error.param === 'password' ||
           error.param === 'password_confirmation' ||
-          (error as any).path === 'password' ||
-          (error as any).path === 'password_confirmation',
+          error.path === 'password' ||
+          error.path === 'password_confirmation',
       );
 
       if (passwordErrors.length > 0) {
