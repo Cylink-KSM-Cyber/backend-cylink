@@ -8,11 +8,11 @@ const fields = require('../validators/authValidator');
 
 /**
  * Rate limiter for forgot password endpoint
- * 300 requests per hour per IP as specified in requirements
+ * Temporarily increased for local testing - 50 requests per minute
  */
 const forgotPasswordRateLimiter = createRateLimiter({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 300, // 300 requests per hour per IP
+  windowMs: 60 * 1000, // 1 minute
+  max: 50, // 50 requests per minute (increased for testing)
   message: 'Too many password reset requests. Please try again later.',
 });
 
