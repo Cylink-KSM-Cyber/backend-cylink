@@ -12,6 +12,13 @@
 exports.createIndexes = (): string => {
   let query = '';
 
+  // Indexes for Users table
+  query += 'CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);\n';
+  query +=
+    'CREATE INDEX IF NOT EXISTS idx_users_password_reset_token ON users(password_reset_token) WHERE password_reset_token IS NOT NULL;\n';
+  query +=
+    'CREATE INDEX IF NOT EXISTS idx_users_password_reset_expires ON users(password_reset_expires_at) WHERE password_reset_expires_at IS NOT NULL;\n';
+
   // Indexes for URLs table
   query += 'CREATE INDEX IF NOT EXISTS idx_urls_short_code ON urls(short_code);\n';
   query += 'CREATE INDEX IF NOT EXISTS idx_urls_user_id ON urls(user_id);\n';
@@ -100,6 +107,11 @@ exports.createIndexes = (): string => {
  */
 exports.dropIndexes = (): string => {
   let query = '';
+
+  // Drop indexes for Users table
+  query += 'DROP INDEX IF EXISTS idx_users_email;\n';
+  query += 'DROP INDEX IF EXISTS idx_users_password_reset_token;\n';
+  query += 'DROP INDEX IF EXISTS idx_users_password_reset_expires;\n';
 
   // Drop indexes for URLs table
   query += 'DROP INDEX IF EXISTS idx_urls_short_code;\n';
