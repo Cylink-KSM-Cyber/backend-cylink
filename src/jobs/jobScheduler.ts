@@ -7,6 +7,8 @@
  */
 
 import logger from '../utils/logger';
+
+import { executePasswordResetCleanupJob, getCleanupJobStats } from './passwordResetCleanupJob';
 import { executeUrlExpirationJob, getJobStatistics, JobResult } from './urlExpirationJob';
 
 /**
@@ -15,6 +17,7 @@ import { executeUrlExpirationJob, getJobStatistics, JobResult } from './urlExpir
 interface ScheduleConfig {
   enabled: boolean;
   intervalMinutes: number;
+  passwordResetCleanupIntervalMinutes: number;
   maxConcurrentJobs: number;
   retryOnFailure: boolean;
   retryDelayMinutes: number;
@@ -41,8 +44,10 @@ interface JobStatus {
 interface SchedulerState {
   isStarted: boolean;
   urlExpirationJob: JobStatus;
+  passwordResetCleanupJob: JobStatus;
   timers: {
     urlExpiration: NodeJS.Timeout | null;
+    passwordResetCleanup: NodeJS.Timeout | null;
     healthCheck: NodeJS.Timeout | null;
   };
 }
@@ -52,7 +57,10 @@ interface SchedulerState {
  */
 const DEFAULT_SCHEDULE_CONFIG: ScheduleConfig = {
   enabled: process.env.NODE_ENV !== 'test', // Disable in test environment
-  intervalMinutes: parseInt(process.env.URL_EXPIRATION_JOB_INTERVAL || '60'), // 1 hour default
+  intervalMinutes: parseInt(process.env.URL_EXPIRATION_JOB_INTERVAL ?? '60'), // 1 hour default
+  passwordResetCleanupIntervalMinutes: parseInt(
+    process.env.PASSWORD_RESET_CLEANUP_JOB_INTERVAL ?? '60',
+  ), // 1 hour default
   maxConcurrentJobs: 1,
   retryOnFailure: true,
   retryDelayMinutes: 15,
@@ -79,8 +87,10 @@ const createJobStatus = (): JobStatus => ({
 const schedulerState: SchedulerState = {
   isStarted: false,
   urlExpirationJob: createJobStatus(),
+  passwordResetCleanupJob: createJobStatus(),
   timers: {
     urlExpiration: null,
+    passwordResetCleanup: null,
     healthCheck: null,
   },
 };
@@ -135,7 +145,7 @@ const executeUrlExpirationJobWithTracking = async (config: ScheduleConfig): Prom
 
   try {
     const result = await executeUrlExpirationJob({
-      batchSize: parseInt(process.env.URL_EXPIRATION_BATCH_SIZE || '1000'),
+      batchSize: parseInt(process.env.URL_EXPIRATION_BATCH_SIZE ?? '1000'),
     });
 
     updateJobStatus(jobStatus, result);
@@ -189,6 +199,10 @@ const performHealthCheck = async (): Promise<void> => {
     const stats = await getJobStatistics();
     logger.info(`URL Statistics: ${JSON.stringify(stats)}`);
 
+    // Get password reset cleanup statistics
+    const cleanupStats = getCleanupJobStats();
+    logger.info(`Password Reset Cleanup Statistics: ${JSON.stringify(cleanupStats)}`);
+
     // Log scheduler status
     const status = getSchedulerStatus();
     logger.info(`Scheduler Status: ${JSON.stringify(status)}`);
@@ -197,6 +211,13 @@ const performHealthCheck = async (): Promise<void> => {
     const urlJob = schedulerState.urlExpirationJob;
     if (urlJob.consecutiveFailures >= 3) {
       logger.warn(`URL expiration job has ${urlJob.consecutiveFailures} consecutive failures`);
+    }
+
+    const passwordResetJob = schedulerState.passwordResetCleanupJob;
+    if (passwordResetJob.consecutiveFailures >= 3) {
+      logger.warn(
+        `Password reset cleanup job has ${passwordResetJob.consecutiveFailures} consecutive failures`,
+      );
     }
 
     if (urlJob.lastExecution && Date.now() - urlJob.lastExecution.getTime() > 2 * 60 * 60 * 1000) {
@@ -359,3 +380,13 @@ process.on('SIGINT', gracefulShutdown);
  * Export configuration and types for external use
  */
 export { ScheduleConfig, JobStatus, SchedulerState };
+
+/**
+ * Execute password reset cleanup job manually
+ *
+ * @returns {Promise<boolean>} True if successful
+ */
+export const triggerPasswordResetCleanupJob = async (): Promise<boolean> => {
+  logger.info('Manually triggering password reset cleanup job');
+  return await executePasswordResetCleanupJob();
+};

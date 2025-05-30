@@ -18,6 +18,9 @@ module.exports = {
     verification_token: 'VARCHAR(255)',
     email_verified_at: 'TIMESTAMP',
     last_email_verify_requested_at: 'TIMESTAMP',
+    password_reset_token: 'VARCHAR(255)',
+    password_reset_expires_at: 'TIMESTAMP WITH TIME ZONE',
+    password_reset_requested_at: 'TIMESTAMP WITH TIME ZONE',
     timestamps: true,
   },
 
