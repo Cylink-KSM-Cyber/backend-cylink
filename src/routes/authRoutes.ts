@@ -216,16 +216,16 @@ router.post(
  * @swagger
  * /api/v1/auth/reset-password:
  *   post:
- *     summary: Reset user password with verification token
+ *     summary: Reset user password with secure token from query parameter
  *     tags: [Authentication]
  *     parameters:
- *       - in: header
- *         name: Authorization
+ *       - in: query
+ *         name: token
  *         required: true
  *         schema:
  *           type: string
- *         description: Verification token received in email
- *         example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *         description: Password reset token received in email
+ *         example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *     requestBody:
  *       required: true
  *       content:
@@ -234,13 +234,19 @@ router.post(
  *             type: object
  *             required:
  *               - password
+ *               - password_confirmation
  *             properties:
  *               password:
  *                 type: string
  *                 format: password
  *                 minLength: 8
- *                 description: New password
- *                 example: NewPassword123!
+ *                 description: New password (must meet security requirements)
+ *                 example: "newSecurePassword123!"
+ *               password_confirmation:
+ *                 type: string
+ *                 format: password
+ *                 description: Password confirmation (must match password)
+ *                 example: "newSecurePassword123!"
  *     responses:
  *       200:
  *         description: Password reset successful
@@ -254,19 +260,119 @@ router.post(
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: Password reset successful
+ *                   example: "Password has been reset successfully. You can now log in with your new password."
  *       400:
- *         description: Invalid input
- *       401:
- *         description: Invalid or expired verification token
+ *         description: Bad request - various validation errors
+ *         content:
+ *           application/json:
+ *             oneOf:
+ *               - schema:
+ *                   type: object
+ *                   properties:
+ *                     status:
+ *                       type: integer
+ *                       example: 400
+ *                     message:
+ *                       type: string
+ *                       example: "Reset token is required in query parameter."
+ *                     error_code:
+ *                       type: string
+ *                       example: "MISSING_TOKEN"
+ *               - schema:
+ *                   type: object
+ *                   properties:
+ *                     status:
+ *                       type: integer
+ *                       example: 400
+ *                     message:
+ *                       type: string
+ *                       example: "Invalid or malformed reset token."
+ *                     error_code:
+ *                       type: string
+ *                       example: "INVALID_TOKEN"
+ *               - schema:
+ *                   type: object
+ *                   properties:
+ *                     status:
+ *                       type: integer
+ *                       example: 400
+ *                     message:
+ *                       type: string
+ *                       example: "Reset token has expired. Please request a new password reset."
+ *                     error_code:
+ *                       type: string
+ *                       example: "TOKEN_EXPIRED"
+ *               - schema:
+ *                   type: object
+ *                   properties:
+ *                     status:
+ *                       type: integer
+ *                       example: 400
+ *                     message:
+ *                       type: string
+ *                       example: "Password does not meet security requirements"
+ *                     errors:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       example: ["Password must be at least 8 characters long", "Password must contain at least one uppercase letter"]
+ *                     error_code:
+ *                       type: string
+ *                       example: "WEAK_PASSWORD"
+ *               - schema:
+ *                   type: object
+ *                   properties:
+ *                     status:
+ *                       type: integer
+ *                       example: 400
+ *                     message:
+ *                       type: string
+ *                       example: "New password cannot be the same as your current password."
+ *                     error_code:
+ *                       type: string
+ *                       example: "SAME_PASSWORD"
+ *       429:
+ *         description: Rate limit exceeded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 429
+ *                 message:
+ *                   type: string
+ *                   example: "Too many password reset attempts. Please try again in 15 minutes."
+ *                 error_code:
+ *                   type: string
+ *                   example: "RATE_LIMIT_EXCEEDED"
  *       500:
  *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Internal server error. Please try again later."
+ *                 error_code:
+ *                   type: string
+ *                   example: "INTERNAL_ERROR"
  */
+const { resetPasswordValidation } = require('../validators/passwordResetValidator');
+const { passwordResetRateLimit } = require('../middlewares/passwordResetRateLimit');
+const passwordResetController = require('../controllers/passwordResetController');
+
 router.post(
   '/reset-password',
-  verificationToken,
-  validate({ fields: fields.resetPassword }),
-  authController.resetPassword,
+  passwordResetRateLimit,
+  ...resetPasswordValidation,
+  passwordResetController.resetPassword,
 );
 
 /**
@@ -476,106 +582,6 @@ router.post(
   forgotPasswordRateLimiter,
   validate({ fields: fields.forgotPassword }),
   authController.forgotPassword,
-);
-
-/**
- * @swagger
- * /api/v1/auth/reset-password/validate/{token}:
- *   get:
- *     summary: Validate password reset token
- *     tags: [Authentication]
- *     parameters:
- *       - in: path
- *         name: token
- *         required: true
- *         schema:
- *           type: string
- *         description: Password reset token
- *         example: abc123def456ghi789
- *     responses:
- *       200:
- *         description: Token is valid
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: Token is valid
- *                 data:
- *                   type: object
- *                   properties:
- *                     valid:
- *                       type: boolean
- *                       example: true
- *                     email:
- *                       type: string
- *                       example: user@example.com
- *       400:
- *         description: Invalid or expired token
- *       500:
- *         description: Internal server error
- */
-router.get('/reset-password/validate/:token', authController.validateResetToken);
-
-/**
- * @swagger
- * /api/v1/auth/reset-password/confirm:
- *   post:
- *     summary: Reset password using token
- *     tags: [Authentication]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - token
- *               - password
- *             properties:
- *               token:
- *                 type: string
- *                 description: Password reset token from email
- *                 example: abc123def456ghi789
- *               password:
- *                 type: string
- *                 format: password
- *                 minLength: 6
- *                 description: New password
- *                 example: NewPassword123!
- *     responses:
- *       200:
- *         description: Password reset successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: Password has been reset successfully
- *       400:
- *         description: Invalid token or password
- *       500:
- *         description: Internal server error
- */
-router.post(
-  '/reset-password/confirm',
-  validate({
-    fields: [
-      { name: 'token', type: 'string', min: 1 },
-      { name: 'password', type: 'string', min: 6 },
-    ],
-  }),
-  authController.resetPasswordWithToken,
 );
 
 module.exports = router;
