@@ -11,6 +11,8 @@ import { validatePasswordNotSame } from '../utils/passwordValidator';
 
 const userModel = require('../models/userModel');
 const { hash } = require('../utils/crypto');
+const mailer = require('../config/mailer');
+const passwordChangeConfirmationMail = require('../mails/password-change-confirmation');
 
 /**
  * Password reset request interface
@@ -114,6 +116,28 @@ exports.resetPassword = async (req: Request, res: Response): Promise<Response> =
 
     // Log successful password reset for security monitoring
     logger.info(`Password successfully reset for user: ${user.email}`);
+
+    // Send password change confirmation email
+    try {
+      const emailHtml = passwordChangeConfirmationMail(user.email);
+
+      await mailer.sendMail({
+        from: process.env.SMTP_FROM_EMAIL || 'noreply@cylink.id',
+        to: user.email,
+        subject: 'Your CyLink password has been changed',
+        html: emailHtml,
+      });
+
+      logger.info(`Password change confirmation email sent to: ${user.email}`);
+    } catch (emailError) {
+      // Don't fail the password reset if email sending fails
+      const emailErrorMessage =
+        emailError instanceof Error ? emailError.message : String(emailError);
+      logger.error(
+        `Failed to send password change confirmation email to ${user.email}:`,
+        emailErrorMessage,
+      );
+    }
 
     return res.status(200).json({
       status: 200,
