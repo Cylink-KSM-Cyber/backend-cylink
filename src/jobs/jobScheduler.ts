@@ -7,8 +7,9 @@
  */
 
 import logger from '../utils/logger';
-import { executeUrlExpirationJob, getJobStatistics, JobResult } from './urlExpirationJob';
+
 import { executePasswordResetCleanupJob, getCleanupJobStats } from './passwordResetCleanupJob';
+import { executeUrlExpirationJob, getJobStatistics, JobResult } from './urlExpirationJob';
 
 /**
  * Job schedule configuration interface
@@ -56,9 +57,9 @@ interface SchedulerState {
  */
 const DEFAULT_SCHEDULE_CONFIG: ScheduleConfig = {
   enabled: process.env.NODE_ENV !== 'test', // Disable in test environment
-  intervalMinutes: parseInt(process.env.URL_EXPIRATION_JOB_INTERVAL || '60'), // 1 hour default
+  intervalMinutes: parseInt(process.env.URL_EXPIRATION_JOB_INTERVAL ?? '60'), // 1 hour default
   passwordResetCleanupIntervalMinutes: parseInt(
-    process.env.PASSWORD_RESET_CLEANUP_JOB_INTERVAL || '60',
+    process.env.PASSWORD_RESET_CLEANUP_JOB_INTERVAL ?? '60',
   ), // 1 hour default
   maxConcurrentJobs: 1,
   retryOnFailure: true,
@@ -144,7 +145,7 @@ const executeUrlExpirationJobWithTracking = async (config: ScheduleConfig): Prom
 
   try {
     const result = await executeUrlExpirationJob({
-      batchSize: parseInt(process.env.URL_EXPIRATION_BATCH_SIZE || '1000'),
+      batchSize: parseInt(process.env.URL_EXPIRATION_BATCH_SIZE ?? '1000'),
     });
 
     updateJobStatus(jobStatus, result);
