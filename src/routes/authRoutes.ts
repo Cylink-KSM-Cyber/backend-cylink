@@ -2,8 +2,19 @@ const router = require('express').Router();
 
 const authController = require('../controllers/authController');
 const { accessToken, refreshToken, verificationToken } = require('../middlewares/authMiddleware');
+const { createRateLimiter } = require('../middlewares/rateLimitMiddleware');
 const validate = require('../utils/validator');
 const fields = require('../validators/authValidator');
+
+/**
+ * Rate limiter for forgot password endpoint
+ * 300 requests per hour per IP as specified in requirements
+ */
+const forgotPasswordRateLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 300, // 300 requests per hour per IP
+  message: 'Too many password reset requests. Please try again later.',
+});
 
 /**
  * Authentication Routes
@@ -418,5 +429,153 @@ router.post('/login', validate({ fields: fields.login }), authController.login);
  *         description: Internal server error
  */
 router.post('/refresh', accessToken, refreshToken, authController.refresh);
+
+/**
+ * @swagger
+ * /api/v1/auth/forgot-password:
+ *   post:
+ *     summary: Request password reset email
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User email address
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: Password reset email sent (consistent response regardless of email existence)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: If an account with that email exists, we have sent a password reset link.
+ *       400:
+ *         description: Invalid email format
+ *       429:
+ *         description: Too many requests (rate limited)
+ *       500:
+ *         description: Internal server error
+ */
+router.post(
+  '/forgot-password',
+  forgotPasswordRateLimiter,
+  validate({ fields: fields.forgotPassword }),
+  authController.forgotPassword,
+);
+
+/**
+ * @swagger
+ * /api/v1/auth/reset-password/validate/{token}:
+ *   get:
+ *     summary: Validate password reset token
+ *     tags: [Authentication]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Password reset token
+ *         example: abc123def456ghi789
+ *     responses:
+ *       200:
+ *         description: Token is valid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Token is valid
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     valid:
+ *                       type: boolean
+ *                       example: true
+ *                     email:
+ *                       type: string
+ *                       example: user@example.com
+ *       400:
+ *         description: Invalid or expired token
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/reset-password/validate/:token', authController.validateResetToken);
+
+/**
+ * @swagger
+ * /api/v1/auth/reset-password/confirm:
+ *   post:
+ *     summary: Reset password using token
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - password
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Password reset token from email
+ *                 example: abc123def456ghi789
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 minLength: 6
+ *                 description: New password
+ *                 example: NewPassword123!
+ *     responses:
+ *       200:
+ *         description: Password reset successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Password has been reset successfully
+ *       400:
+ *         description: Invalid token or password
+ *       500:
+ *         description: Internal server error
+ */
+router.post(
+  '/reset-password/confirm',
+  validate({
+    fields: [
+      { name: 'token', type: 'string', min: 1 },
+      { name: 'password', type: 'string', min: 6 },
+    ],
+  }),
+  authController.resetPasswordWithToken,
+);
 
 module.exports = router;
