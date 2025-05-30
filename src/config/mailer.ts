@@ -29,4 +29,4 @@ mailer.verify((error: Error | null, _success: boolean) => {
   }
 });
 
-export default mailer;
+module.exports = mailer;
