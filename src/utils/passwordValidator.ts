@@ -69,7 +69,7 @@ export const validatePassword = (
   }
 
   // Check for number
-  if (requirements.requireNumbers && !/[0-9]/.test(password)) {
+  if (requirements.requireNumbers && !/\d/.test(password)) {
     errors.push('Password must contain at least one number');
   }
 
