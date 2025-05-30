@@ -66,7 +66,7 @@ exports.createUser = async (user: User): Promise<User> => {
     user.email,
     user.password,
     user.username,
-    user.role || 'user',
+    user.role ?? 'user',
     user.verification_token,
   ]);
 
@@ -197,7 +197,7 @@ exports.cleanupExpiredPasswordResetTokens = async (): Promise<number> => {
   `;
 
   const res = await pool.query(query);
-  return res.rowCount || 0;
+  return res.rowCount ?? 0;
 };
 
 /**
