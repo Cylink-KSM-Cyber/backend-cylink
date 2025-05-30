@@ -6,8 +6,9 @@
  */
 
 import { Request, Response } from 'express';
-import logger from '../utils/logger';
+
 import { User } from '../collections/userCollection';
+import logger from '../utils/logger';
 
 const authService = require('../services/authService');
 const { sendResponse } = require('../utils/response');
