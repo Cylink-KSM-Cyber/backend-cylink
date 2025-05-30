@@ -5,8 +5,9 @@
  * @module utils/mailer
  */
 
-const mailer = require('../config/mailer');
 import logger from './logger';
+
+const mailer = require('../config/mailer');
 
 /**
  * Sends user registration verification to email.
@@ -22,7 +23,7 @@ exports.sendMail = async (
 ): Promise<void> => {
   try {
     const mailOptions = {
-      from: process.env.MAILER_SENDER || 'noreply@cylink.app',
+      from: process.env.MAILER_SENDER ?? 'noreply@cylink.app',
       to,
       subject,
       text,
