@@ -6,12 +6,12 @@
  */
 
 import { User } from '../collections/userCollection';
+import forgotPasswordMail from '../mails/forgot-password';
+import logger from '../utils/logger';
 import {
   generatePasswordResetToken,
   generatePasswordResetExpiration,
 } from '../utils/tokenGenerator';
-import forgotPasswordMail from '../mails/forgot-password';
-import logger from '../utils/logger';
 
 const userCollection = require('../collections/userCollection');
 const registerMail = require('../mails/register');
@@ -216,8 +216,12 @@ const verifyVerificationToken = async (
 ): Promise<Record<string, unknown> | boolean> => {
   try {
     const decoded = jwt.verification.verify(verificationToken);
-    return decoded || false;
+    return decoded ?? false;
   } catch (error) {
+    logger.error(
+      'Failed to verify verification token:',
+      error instanceof Error ? error.message : String(error),
+    );
     return false;
   }
 };
@@ -329,7 +333,7 @@ exports.resetPasswordWithToken = async (resetData: {
 exports.validatePasswordResetToken = async (token: string): Promise<User | null> => {
   try {
     const user = await userModel.getUserByPasswordResetToken(token);
-    return user || null;
+    return user ?? null;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(`Failed to validate password reset token: ${errorMessage}`);
