@@ -22,14 +22,14 @@ export const generatePasswordResetToken = (length: number = 32): string => {
 };
 
 /**
- * Generates expiration timestamp for password reset token (1 hour from now)
+ * Generates expiration timestamp for password reset token (10 minutes from now)
  *
  * @returns {Date} Expiration timestamp
  */
 export const generatePasswordResetExpiration = (): Date => {
   const now = new Date();
-  const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
-  return new Date(now.getTime() + oneHour);
+  const tenMinutes = 10 * 60 * 1000; // 10 minutes in milliseconds
+  return new Date(now.getTime() + tenMinutes);
 };
 
 /**
