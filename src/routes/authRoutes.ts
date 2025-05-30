@@ -1,10 +1,13 @@
 const router = require('express').Router();
 
 const authController = require('../controllers/authController');
+const passwordResetController = require('../controllers/passwordResetController');
 const { accessToken, refreshToken, verificationToken } = require('../middlewares/authMiddleware');
+const { passwordResetRateLimit } = require('../middlewares/passwordResetRateLimit');
 const { createRateLimiter } = require('../middlewares/rateLimitMiddleware');
 const validate = require('../utils/validator');
 const fields = require('../validators/authValidator');
+const { resetPasswordValidation } = require('../validators/passwordResetValidator');
 
 /**
  * Rate limiter for forgot password endpoint
@@ -364,10 +367,6 @@ router.post(
  *                   type: string
  *                   example: "INTERNAL_ERROR"
  */
-const { resetPasswordValidation } = require('../validators/passwordResetValidator');
-const { passwordResetRateLimit } = require('../middlewares/passwordResetRateLimit');
-const passwordResetController = require('../controllers/passwordResetController');
-
 router.post(
   '/reset-password',
   passwordResetRateLimit,
