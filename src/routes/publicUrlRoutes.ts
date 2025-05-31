@@ -5,6 +5,7 @@ const validate = require('../utils/validator');
 const fields = require('../validators/urlValidator');
 const { publicApiRateLimiter } = require('../middlewares/rateLimitMiddleware');
 const clickTracker = require('../middlewares/clickTracker');
+const { urlExpirationMiddleware } = require('../middlewares/urlExpirationMiddleware');
 
 /**
  * Public URL Routes
