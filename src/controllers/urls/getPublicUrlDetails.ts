@@ -151,9 +151,11 @@ const recordTrackingData = async (
       })
       .then(() => {
         logger.info(`Recorded impression for URL ${urlId}`);
+        return undefined;
       })
       .catch((error: Error) => {
         logger.error(`Failed to record impression for URL ${urlId}: ${error.message}`);
+        return undefined;
       });
   } catch (impressionError) {
     logger.error(`Error tracking impression: ${impressionError}`);
