@@ -8,6 +8,7 @@ import {
   getTotalClicksAnalytics,
   getUrlsWithStatusFilter,
   updateUrl,
+  recordUrlClick,
 } from './urls';
 
 import getPublicUrlDetails from './urls/getPublicUrlDetails';
@@ -48,3 +49,6 @@ exports.updateUrl = updateUrl;
 
 // Export the getPublicUrlDetails function
 exports.getPublicUrlDetails = getPublicUrlDetails;
+
+// Export the recordUrlClick function
+exports.recordUrlClick = recordUrlClick;

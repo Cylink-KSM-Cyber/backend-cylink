@@ -7,9 +7,10 @@
  * @module controllers/urls/getPublicUrlDetails
  */
 
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import logger from '../../utils/logger';
 import { sendResponse } from '../../utils/response';
+import { ClickTrackingRequest } from '../../interfaces/ClickInfo';
 
 const publicUrlService = require('../../services/publicUrlService');
 
@@ -38,7 +39,10 @@ const handleError = (error: unknown, res: Response): Response => {
  * @param {Response} res - Express response object
  * @returns {Promise<Response>} Response with URL details or error
  */
-export const getPublicUrlDetails = async (req: Request, res: Response): Promise<Response> => {
+export const getPublicUrlDetails = async (
+  req: ClickTrackingRequest,
+  res: Response,
+): Promise<Response> => {
   try {
     // Extract short code from request parameters
     const { shortCode } = req.params;
@@ -49,7 +53,7 @@ export const getPublicUrlDetails = async (req: Request, res: Response): Promise<
     }
 
     // Get URL details from service
-    const urlDetails = await publicUrlService.getPublicUrlDetails(shortCode);
+    const urlDetails = await publicUrlService.getPublicUrlDetails(shortCode, req.clickInfo);
 
     // URL not found or inactive
     if (!urlDetails) {

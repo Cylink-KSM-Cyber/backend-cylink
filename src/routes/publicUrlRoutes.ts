@@ -4,7 +4,7 @@ const urlController = require('../controllers/urlController');
 const validate = require('../utils/validator');
 const fields = require('../validators/urlValidator');
 const { publicApiRateLimiter } = require('../middlewares/rateLimitMiddleware');
-const { urlExpirationMiddleware } = require('../middlewares/urlExpirationMiddleware');
+const clickTracker = require('../middlewares/clickTracker');
 
 /**
  * Public URL Routes
@@ -165,6 +165,7 @@ router.post(
 router.get(
   '/:shortCode',
   publicApiRateLimiter,
+  clickTracker,
   urlExpirationMiddleware,
   urlController.getPublicUrlDetails,
 );
