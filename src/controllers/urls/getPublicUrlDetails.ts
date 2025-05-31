@@ -8,15 +8,52 @@
  */
 
 import { Response } from 'express';
+
+import { ClickTrackingRequest } from '../../interfaces/ClickInfo';
 import logger from '../../utils/logger';
 import { sendResponse } from '../../utils/response';
-import { ClickTrackingRequest } from '../../interfaces/ClickInfo';
 
+const clickModel = require('../../models/clickModel');
+const conversionModel = require('../../models/conversionModel');
+const impressionModel = require('../../models/impressionModel');
 const publicUrlService = require('../../services/publicUrlService');
 const urlService = require('../../services/urlService');
-const clickModel = require('../../models/clickModel');
-const impressionModel = require('../../models/impressionModel');
-const conversionModel = require('../../models/conversionModel');
+
+/**
+ * Click information interface for tracking data
+ */
+interface ClickInfo {
+  ipAddress: string | string[] | undefined;
+  userAgent: string | undefined;
+  referrer: string | null;
+  country: string | null;
+  deviceType: string;
+  browser: string;
+  clickId?: number;
+  trackingId?: string;
+}
+
+/**
+ * URL entity interface from database
+ */
+interface UrlEntity {
+  id: number;
+  user_id: number | null;
+  original_url: string;
+  short_code: string;
+  title: string | null;
+  expiry_date: Date | null;
+  is_active: boolean;
+  deleted_at: Date | null;
+}
+
+/**
+ * Tracking data result interface
+ */
+interface TrackingResult {
+  clickId?: number;
+  trackingId?: string;
+}
 
 /**
  * Handles errors that occur during public URL details retrieval
@@ -39,15 +76,15 @@ const handleError = (error: unknown, res: Response): Response => {
  * Records tracking data (click, impression, conversion) for URL access
  *
  * @param {string} shortCode - The short code that was accessed
- * @param {any} clickInfo - Information about the click/access
+ * @param {ClickInfo} clickInfo - Information about the click/access
  * @param {number} urlId - The URL ID from database
- * @returns {Promise<{clickId?: number, trackingId?: string}>} Tracking information
+ * @returns {Promise<TrackingResult>} Tracking information
  */
 const recordTrackingData = async (
   shortCode: string,
-  clickInfo: any,
+  clickInfo: ClickInfo,
   urlId: number,
-): Promise<{ clickId?: number; trackingId?: string }> => {
+): Promise<TrackingResult> => {
   let clickId: number | undefined;
   let trackingId: string | undefined;
 
@@ -130,7 +167,7 @@ const recordTrackingData = async (
  * This endpoint doesn't require authentication and returns limited URL information
  * It also records tracking data (clicks, impressions) for analytics
  *
- * @param {Request} req - Express request object
+ * @param {ClickTrackingRequest} req - Express request object
  * @param {Response} res - Express response object
  * @returns {Promise<Response>} Response with URL details or error
  */
@@ -148,7 +185,7 @@ export const getPublicUrlDetails = async (
     }
 
     // First, get URL from database to validate it exists and is active
-    const url = await urlService.getUrlByShortCode(shortCode);
+    const url: UrlEntity = await urlService.getUrlByShortCode(shortCode);
 
     // Check if URL exists, is active, and not deleted
     if (!url || !url.is_active || url.deleted_at) {
