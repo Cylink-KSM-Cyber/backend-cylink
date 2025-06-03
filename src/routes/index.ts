@@ -1,11 +1,13 @@
 const router = require('express').Router();
 
 const authRoutes = require('../routes/authRoutes');
-const publicUrlRoutes = require('../routes/publicUrlRoutes');
-const urlRoutes = require('../routes/urlRoutes');
-const qrCodeRoutes = require('../routes/qrCodeRoutes');
 const conversionRoutes = require('../routes/conversionRoutes');
 const ctrRoutes = require('../routes/ctrRoutes');
+const jobRoutes = require('../routes/jobRoutes');
+const publicUrlRoutes = require('../routes/publicUrlRoutes');
+const qrCodeRoutes = require('../routes/qrCodeRoutes');
+const urlRoutes = require('../routes/urlRoutes');
+const userProfileRoutes = require('../routes/userProfileRoutes');
 
 /**
  * Main router
@@ -31,5 +33,11 @@ router.use('/', conversionRoutes);
 
 // CTR (Click-Through Rate) routes
 router.use('/ctr', ctrRoutes);
+
+// Job management routes (admin only)
+router.use('/jobs', jobRoutes);
+
+// User profile management routes
+router.use('/profile', userProfileRoutes);
 
 module.exports = router;

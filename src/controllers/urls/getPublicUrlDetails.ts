@@ -7,11 +7,16 @@
  * @module controllers/urls/getPublicUrlDetails
  */
 
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import logger from '../../utils/logger';
 import { sendResponse } from '../../utils/response';
+import { ClickTrackingRequest } from '../../interfaces/ClickInfo';
 
 const publicUrlService = require('../../services/publicUrlService');
+const urlService = require('../../services/urlService');
+const clickModel = require('../../models/clickModel');
+const impressionModel = require('../../models/impressionModel');
+const conversionModel = require('../../models/conversionModel');
 
 /**
  * Handles errors that occur during public URL details retrieval
@@ -31,14 +36,108 @@ const handleError = (error: unknown, res: Response): Response => {
 };
 
 /**
+ * Records tracking data (click, impression, conversion) for URL access
+ *
+ * @param {string} shortCode - The short code that was accessed
+ * @param {any} clickInfo - Information about the click/access
+ * @param {number} urlId - The URL ID from database
+ * @returns {Promise<{clickId?: number, trackingId?: string}>} Tracking information
+ */
+const recordTrackingData = async (
+  shortCode: string,
+  clickInfo: any,
+  urlId: number,
+): Promise<{ clickId?: number; trackingId?: string }> => {
+  let clickId: number | undefined;
+  let trackingId: string | undefined;
+
+  try {
+    // Record the click
+    const clickRecord = await clickModel.recordClick({
+      url_id: urlId,
+      ip_address: clickInfo.ipAddress,
+      user_agent: clickInfo.userAgent,
+      referrer: clickInfo.referrer,
+      country: clickInfo.country,
+      device_type: clickInfo.deviceType,
+      browser: clickInfo.browser,
+    });
+
+    if (clickRecord) {
+      clickId = clickRecord.id;
+
+      // Generate tracking ID for conversion tracking
+      trackingId = conversionModel.generateTrackingId({
+        clickId,
+        urlId,
+      });
+
+      logger.info(
+        `Recorded click for ${shortCode}: click_id=${clickId}, tracking_id=${trackingId}`,
+      );
+    }
+  } catch (error) {
+    // Log error but continue - don't fail the request if click recording fails
+    logger.error(`Failed to record click for ${shortCode}:`, error);
+  }
+
+  try {
+    // Record impression
+    const ipAddress = clickInfo.ipAddress;
+    const userAgent = clickInfo.userAgent || '';
+    const referrer = clickInfo.referrer || '';
+    let source = '';
+
+    // Extract source from referrer if available
+    if (referrer && typeof referrer === 'string') {
+      try {
+        const url = new URL(referrer);
+        source = url.hostname;
+      } catch (error) {
+        // Invalid URL, use referrer as is
+        source = referrer;
+      }
+    }
+
+    // Check if this IP has viewed this URL recently (for unique impressions)
+    const isUnique = !(await impressionModel.hasRecentImpression(urlId, ipAddress));
+
+    // Record impression asynchronously
+    impressionModel
+      .recordImpression({
+        url_id: urlId,
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        referrer: typeof referrer === 'string' ? referrer : '',
+        is_unique: isUnique,
+        source,
+      })
+      .then(() => {
+        logger.info(`Recorded impression for URL ${urlId}`);
+      })
+      .catch((error: Error) => {
+        logger.error(`Failed to record impression for URL ${urlId}: ${error.message}`);
+      });
+  } catch (impressionError) {
+    logger.error(`Error tracking impression: ${impressionError}`);
+  }
+
+  return { clickId, trackingId };
+};
+
+/**
  * Get public URL details by short code
  * This endpoint doesn't require authentication and returns limited URL information
+ * It also records tracking data (clicks, impressions) for analytics
  *
  * @param {Request} req - Express request object
  * @param {Response} res - Express response object
  * @returns {Promise<Response>} Response with URL details or error
  */
-export const getPublicUrlDetails = async (req: Request, res: Response): Promise<Response> => {
+export const getPublicUrlDetails = async (
+  req: ClickTrackingRequest,
+  res: Response,
+): Promise<Response> => {
   try {
     // Extract short code from request parameters
     const { shortCode } = req.params;
@@ -48,10 +147,36 @@ export const getPublicUrlDetails = async (req: Request, res: Response): Promise<
       return sendResponse(res, 400, 'Invalid short code');
     }
 
-    // Get URL details from service
-    const urlDetails = await publicUrlService.getPublicUrlDetails(shortCode);
+    // First, get URL from database to validate it exists and is active
+    const url = await urlService.getUrlByShortCode(shortCode);
 
-    // URL not found or inactive
+    // Check if URL exists, is active, and not deleted
+    if (!url || !url.is_active || url.deleted_at) {
+      return sendResponse(res, 404, 'URL not found or inactive');
+    }
+
+    // Check if URL has expired
+    if (url.expiry_date && new Date(url.expiry_date) < new Date()) {
+      logger.info(`URL with short code ${shortCode} has expired`);
+
+      // Mark URL as inactive since it's expired
+      await urlService.updateUrl(url.id, { is_active: false });
+      return sendResponse(res, 404, 'URL not found or inactive');
+    }
+
+    // Record tracking data (clicks, impressions) for analytics
+    const { clickId, trackingId } = await recordTrackingData(shortCode, req.clickInfo, url.id);
+
+    // Update clickInfo with tracking data for UTM parameter generation
+    if (clickId && trackingId) {
+      req.clickInfo.clickId = clickId;
+      req.clickInfo.trackingId = trackingId;
+    }
+
+    // Get URL details from service with updated tracking info
+    const urlDetails = await publicUrlService.getPublicUrlDetails(shortCode, req.clickInfo);
+
+    // URL not found or inactive (double check after tracking)
     if (!urlDetails) {
       return sendResponse(res, 404, 'URL not found or inactive');
     }
