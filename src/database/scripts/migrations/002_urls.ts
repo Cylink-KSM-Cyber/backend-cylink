@@ -115,6 +115,11 @@ export async function up(knex: Knex): Promise<void> {
   
     await knex.raw(query);
   }
+
+  // prevent duplicate key error
+  await knex.raw(`
+    SELECT setval('${tableName}_id_seq', (SELECT MAX(id) FROM ${tableName}), true);
+  `);
 }
 
 export async function down(knex: Knex): Promise<void> {
