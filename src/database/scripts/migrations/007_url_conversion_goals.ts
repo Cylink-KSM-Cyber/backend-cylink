@@ -22,7 +22,7 @@ const indexes = [
 ];
 
 export async function up(knex: Knex): Promise<void> {
-  return knex.schema.createTable(tableName, table => {
+  await knex.schema.createTable(tableName, table => {
     table.increments('id');
     
     // loop through foreigns
@@ -41,6 +41,11 @@ export async function up(knex: Knex): Promise<void> {
       table.index(column, `idx_${tableName}_${column}`);
     });
   });
+
+  // prevent duplicate key error
+  await knex.raw(`
+    SELECT setval('${tableName}_id_seq', (SELECT MAX(id) FROM ${tableName}), true);
+  `);
 }
 
 export async function down(knex: Knex): Promise<void> {
