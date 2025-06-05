@@ -49,7 +49,7 @@ export async function up(knex: Knex): Promise<void> {
 
   // prevent duplicate key error
   await knex.raw(`
-    SELECT setval('${tableName}_id_seq', (SELECT MAX(id) FROM ${tableName}), true);
+    SELECT setval('${tableName}_id_seq', COALESCE((SELECT MAX(id) FROM ${tableName}), 0) + 1, false);
   `);
 }
 
