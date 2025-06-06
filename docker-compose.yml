@@ -19,6 +19,10 @@ services:
       WEB_VERIFICATOR_URL: ${WEB_VERIFICATOR_URL}
       FRONTEND_URL: ${FRONTEND_URL}
       SHORT_URL_BASE: ${SHORT_URL_BASE}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
     networks:
       - app
     depends_on:
