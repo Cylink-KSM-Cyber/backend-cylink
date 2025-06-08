@@ -14,7 +14,7 @@ import {
  */
 
 /**
- * Create a new QR code
+ * Create a new QR code with automatic sequence synchronization
  *
  * @param {QrCodeCreateData} qrCodeData - The QR code data
  * @returns {Promise<QrCode>} The created QR code object
@@ -42,15 +42,59 @@ export const createQrCode = async (qrCodeData: QrCodeCreateData): Promise<QrCode
     finalLogoSize = 0.2;
   }
 
-  const result = await pool.query(
-    `INSERT INTO qr_codes 
-    (url_id, color, background_color, include_logo, logo_size, size)
-    VALUES ($1, $2, $3, $4, $5, $6)
-    RETURNING *`,
-    [url_id, color, background_color, include_logo, finalLogoSize, size],
-  );
+  // Retry mechanism for handling duplicate key errors
+  const maxRetries = 3;
+  let lastError;
 
-  return result.rows[0];
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await pool.query(
+        `INSERT INTO qr_codes 
+        (url_id, color, background_color, include_logo, logo_size, size)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING *`,
+        [url_id, color, background_color, include_logo, finalLogoSize, size],
+      );
+
+      return result.rows[0];
+    } catch (error: any) {
+      lastError = error;
+
+      // Check if this is a duplicate key error on the primary key
+      if (error.code === '23505' && error.constraint === 'qr_codes_pkey') {
+        console.warn(`Duplicate key error on attempt ${attempt}, attempting to fix sequence...`);
+
+        try {
+          // Synchronize the sequence with the current max ID
+          await pool.query(`
+            SELECT setval('qr_codes_id_seq', 
+              COALESCE((SELECT MAX(id) FROM qr_codes), 0) + 1, false);
+          `);
+
+          console.log('Sequence synchronized, retrying...');
+
+          // If this is the last attempt, don't retry
+          if (attempt === maxRetries) {
+            break;
+          }
+
+          // Add a small delay before retry to avoid race conditions
+          await new Promise(resolve => setTimeout(resolve, 100 * attempt));
+          continue;
+        } catch (seqError) {
+          console.error('Failed to synchronize sequence:', seqError);
+          break;
+        }
+      } else {
+        // For other types of errors, don't retry
+        break;
+      }
+    }
+  }
+
+  // If we get here, all retries failed
+  console.error('Failed to create QR code after retries:', lastError);
+  throw lastError;
 };
 
 /**
