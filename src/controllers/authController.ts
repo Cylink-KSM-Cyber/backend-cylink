@@ -6,8 +6,9 @@
  */
 
 import { Request, Response } from 'express';
-import logger from '../utils/logger';
+
 import { User } from '../collections/userCollection';
+import logger from '../utils/logger';
 
 const authService = require('../services/authService');
 const { sendResponse } = require('../utils/response');
@@ -29,12 +30,18 @@ interface RegistrationRequest {
 }
 
 /**
- * Password reset request interface
+ * Forgot password request interface
  */
-interface PasswordResetRequest {
+interface ForgotPasswordRequest {
   email: string;
+}
+
+/**
+ * Token-based password reset request interface
+ */
+interface TokenPasswordResetRequest {
+  token: string;
   password: string;
-  token?: string;
 }
 
 /**
@@ -181,7 +188,107 @@ exports.sendPasswordResetVerification = async (req: Request, res: Response): Pro
 };
 
 /**
- * Resets a user's password
+ * Handles forgot password requests by sending reset email
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Express response
+ */
+exports.forgotPassword = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const requestData: ForgotPasswordRequest = req.body;
+
+    // Send password reset email (always returns consistent response)
+    const emailSent = await authService.sendForgotPasswordEmail(requestData);
+
+    if (!emailSent) {
+      // Only return error for internal server issues, not user enumeration
+      logger.error('Failed to process password reset request due to internal error');
+      return sendResponse(res, 500, 'Internal server error');
+    }
+
+    // Always return the same response regardless of whether email exists
+    // This prevents email enumeration attacks
+    logger.info(`Password reset requested for email: ${requestData.email}`);
+    return sendResponse(
+      res,
+      200,
+      'If an account with that email exists, we have sent a password reset link.',
+    );
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error('Auth error: Failed to process forgot password request:', errorMessage);
+    return sendResponse(res, 500, 'Internal server error');
+  }
+};
+
+/**
+ * Validates a password reset token
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Express response
+ */
+exports.validateResetToken = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const { token } = req.params;
+
+    if (!token) {
+      return sendResponse(res, 400, 'Token is required');
+    }
+
+    const user = await authService.validatePasswordResetToken(token);
+
+    if (!user) {
+      return sendResponse(res, 400, 'Invalid or expired token');
+    }
+
+    return sendResponse(res, 200, 'Token is valid', {
+      valid: true,
+      email: user.email, // Can show email since token is already validated
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error('Auth error: Failed to validate reset token:', errorMessage);
+    return sendResponse(res, 500, 'Internal server error');
+  }
+};
+
+/**
+ * Resets user password using secure token
+ *
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} Express response
+ */
+exports.resetPasswordWithToken = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    const resetData: TokenPasswordResetRequest = req.body;
+
+    if (!resetData.token || !resetData.password) {
+      return sendResponse(res, 400, 'Token and password are required');
+    }
+
+    const success = await authService.resetPasswordWithToken({
+      token: resetData.token,
+      newPassword: resetData.password,
+    });
+
+    if (!success) {
+      return sendResponse(res, 400, 'Invalid or expired token');
+    }
+
+    logger.info('Password successfully reset using token');
+    return sendResponse(res, 200, 'Password has been reset successfully');
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error('Auth error: Failed to reset password with token:', errorMessage);
+    return sendResponse(res, 500, 'Internal server error');
+  }
+};
+
+/**
+ * Resets a user's password (legacy function for backward compatibility)
  *
  * @param {Request} req - Express request object
  * @param {Response} res - Express response object
@@ -189,19 +296,7 @@ exports.sendPasswordResetVerification = async (req: Request, res: Response): Pro
  */
 exports.resetPassword = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const passwordResetData: PasswordResetRequest = req.body;
-
-    // Commented out for now, but type-safe
-    // const { token: verificationToken } = req.query;
-    // if (!verificationToken) {
-    //   return sendResponse(res, 400, 'Token is required!');
-    // }
-
-    // const user = await authService.verifyVerificationToken(verificationToken as string);
-    // if (!user || typeof user === 'boolean' || !user.email) {
-    //   return sendResponse(res, 400, 'Invalid token');
-    // }
-    // passwordResetData.email = user.email;
+    const passwordResetData = req.body;
 
     const data = await authService.resetPassword(passwordResetData);
     if (!data) {

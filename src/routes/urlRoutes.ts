@@ -4,6 +4,7 @@ const { getQrCodeByUrlId } = require('../controllers/qrCodeController');
 const urlController = require('../controllers/urlController');
 const ctrController = require('../controllers/ctrController');
 const { accessToken } = require('../middlewares/authMiddleware');
+const { urlExpirationMiddleware } = require('../middlewares/urlExpirationMiddleware');
 const validate = require('../utils/validator');
 const fields = require('../validators/urlValidator');
 
@@ -106,7 +107,7 @@ const fields = require('../validators/urlValidator');
  *         name: sortBy
  *         schema:
  *           type: string
- *           enum: [created_at, clicks, title, relevance]
+ *           enum: [created_at, clicks, title, relevance, expiry_date]
  *           default: created_at
  *         description: Field to sort by (defaults to 'relevance' when search parameter is provided)
  *       - in: query
@@ -233,6 +234,7 @@ const fields = require('../validators/urlValidator');
 router.get(
   '/',
   accessToken,
+  urlExpirationMiddleware,
   validate({ query: fields.getUrls, preserveBodyProps: true }),
   urlController.getUrlsWithStatusFilter,
 );
@@ -599,7 +601,7 @@ router.get(
  *       500:
  *         description: Internal server error
  */
-router.get('/:identifier', accessToken, urlController.getUrlDetails);
+router.get('/:identifier', accessToken, urlExpirationMiddleware, urlController.getUrlDetails);
 
 /**
  * @swagger
@@ -655,7 +657,8 @@ router.delete('/:id', accessToken, urlController.deleteUrl);
  * @swagger
  * /api/v1/urls/{id}/analytics:
  *   get:
- *     summary: Get analytics for a specific URL
+ *     summary: Get comprehensive analytics for a specific URL
+ *     description: Retrieves all analytics data for a URL including historical clicks, CTR statistics, and time series data
  *     tags: [URLs]
  *     security:
  *       - BearerAuth: []
@@ -685,9 +688,41 @@ router.delete('/:id', accessToken, urlController.deleteUrl);
  *           enum: [day, week, month]
  *           default: day
  *         description: Grouping for time series data
+ *       - in: query
+ *         name: comparison
+ *         schema:
+ *           type: string
+ *           enum: ['7', '14', '30', '90', 'custom']
+ *         description: Comparison period in days for historical analysis
+ *       - in: query
+ *         name: custom_comparison_start
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Custom comparison period start date (required when comparison=custom)
+ *       - in: query
+ *         name: custom_comparison_end
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Custom comparison period end date (required when comparison=custom)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *           minimum: 1
+ *         description: Page number for time series data pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 30
+ *           maximum: 90
+ *         description: Number of time series data points per page
  *     responses:
  *       200:
- *         description: URL analytics data
+ *         description: Comprehensive URL analytics data
  *         content:
  *           application/json:
  *             schema:
@@ -698,7 +733,7 @@ router.delete('/:id', accessToken, urlController.deleteUrl);
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: Successfully retrieved URL analytics
+ *                   example: Successfully retrieved comprehensive URL analytics
  *                 data:
  *                   type: object
  *                   properties:
@@ -733,6 +768,10 @@ router.delete('/:id', accessToken, urlController.deleteUrl);
  *                       type: object
  *                       additionalProperties:
  *                         type: integer
+ *                     country_stats:
+ *                       type: object
+ *                       additionalProperties:
+ *                         type: integer
  *                     top_referrers:
  *                       type: array
  *                       items:
@@ -744,6 +783,239 @@ router.delete('/:id', accessToken, urlController.deleteUrl);
  *                           count:
  *                             type: integer
  *                             example: 10
+ *                     historical_analysis:
+ *                       type: object
+ *                       properties:
+ *                         summary:
+ *                           type: object
+ *                           properties:
+ *                             analysis_period:
+ *                               type: object
+ *                               properties:
+ *                                 start_date:
+ *                                   type: string
+ *                                   format: date
+ *                                   example: 2025-03-19
+ *                                 end_date:
+ *                                   type: string
+ *                                   format: date
+ *                                   example: 2025-04-18
+ *                                 days:
+ *                                   type: integer
+ *                                   example: 30
+ *                             comparison:
+ *                               type: object
+ *                               properties:
+ *                                 period_days:
+ *                                   type: integer
+ *                                   example: 30
+ *                                 previous_period:
+ *                                   type: object
+ *                                   properties:
+ *                                     start_date:
+ *                                       type: string
+ *                                       format: date
+ *                                       example: 2025-02-17
+ *                                     end_date:
+ *                                       type: string
+ *                                       format: date
+ *                                       example: 2025-03-18
+ *                                 total_clicks:
+ *                                   type: object
+ *                                   properties:
+ *                                     current:
+ *                                       type: integer
+ *                                       example: 14256
+ *                                     previous:
+ *                                       type: integer
+ *                                       example: 12105
+ *                                     change:
+ *                                       type: integer
+ *                                       example: 2151
+ *                                     change_percentage:
+ *                                       type: number
+ *                                       format: float
+ *                                       example: 17.77
+ *                         time_series:
+ *                           type: object
+ *                           properties:
+ *                             data:
+ *                               type: array
+ *                               items:
+ *                                 type: object
+ *                                 properties:
+ *                                   date:
+ *                                     type: string
+ *                                     example: 2025-03-20
+ *                                   clicks:
+ *                                     type: integer
+ *                                     example: 486
+ *                             pagination:
+ *                               type: object
+ *                               properties:
+ *                                 page:
+ *                                   type: integer
+ *                                   example: 1
+ *                                 limit:
+ *                                   type: integer
+ *                                   example: 30
+ *                                 total:
+ *                                   type: integer
+ *                                   example: 30
+ *                                 total_pages:
+ *                                   type: integer
+ *                                   example: 1
+ *                         top_performing_days:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               date:
+ *                                 type: string
+ *                                 example: 2025-04-01
+ *                               clicks:
+ *                                 type: integer
+ *                                 example: 856
+ *                     ctr_statistics:
+ *                       type: object
+ *                       properties:
+ *                         overall:
+ *                           type: object
+ *                           properties:
+ *                             total_impressions:
+ *                               type: string
+ *                               example: 115
+ *                             total_clicks:
+ *                               type: string
+ *                               example: 43
+ *                             ctr:
+ *                               type: string
+ *                               example: 37.39
+ *                             unique_impressions:
+ *                               type: string
+ *                               example: 78
+ *                             unique_ctr:
+ *                               type: string
+ *                               example: 55.13
+ *                         comparison:
+ *                           type: object
+ *                           properties:
+ *                             period_days:
+ *                               type: integer
+ *                               example: 30
+ *                             previous_period:
+ *                               type: object
+ *                               properties:
+ *                                 start_date:
+ *                                   type: string
+ *                                   format: date
+ *                                   example: 2025-02-17
+ *                                 end_date:
+ *                                   type: string
+ *                                   format: date
+ *                                   example: 2025-03-18
+ *                             metrics:
+ *                               type: object
+ *                               properties:
+ *                                 impressions:
+ *                                   type: object
+ *                                   properties:
+ *                                     current:
+ *                                       type: string
+ *                                       example: 115
+ *                                     previous:
+ *                                       type: string
+ *                                       example: 98
+ *                                     change:
+ *                                       type: string
+ *                                       example: 17
+ *                                     change_percentage:
+ *                                       type: string
+ *                                       example: 17.35
+ *                                 clicks:
+ *                                   type: object
+ *                                   properties:
+ *                                     current:
+ *                                       type: string
+ *                                       example: 43
+ *                                     previous:
+ *                                       type: string
+ *                                       example: 31
+ *                                     change:
+ *                                       type: string
+ *                                       example: 12
+ *                                     change_percentage:
+ *                                       type: string
+ *                                       example: 38.71
+ *                                 ctr:
+ *                                   type: object
+ *                                   properties:
+ *                                     current:
+ *                                       type: string
+ *                                       example: 37.39
+ *                                     previous:
+ *                                       type: string
+ *                                       example: 31.63
+ *                                     change:
+ *                                       type: string
+ *                                       example: 5.76
+ *                                     change_percentage:
+ *                                       type: string
+ *                                       example: 18.21
+ *                         time_series:
+ *                           type: object
+ *                           properties:
+ *                             data:
+ *                               type: array
+ *                               items:
+ *                                 type: object
+ *                                 properties:
+ *                                   date:
+ *                                     type: string
+ *                                     example: 2025-03-20
+ *                                   impressions:
+ *                                     type: string
+ *                                     example: 12
+ *                                   clicks:
+ *                                     type: string
+ *                                     example: 5
+ *                                   ctr:
+ *                                     type: string
+ *                                     example: 41.67
+ *                         top_performing_days:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               date:
+ *                                 type: string
+ *                                 example: 2025-03-21
+ *                               impressions:
+ *                                 type: string
+ *                                 example: 15
+ *                               clicks:
+ *                                 type: string
+ *                                 example: 11
+ *                               ctr:
+ *                                 type: string
+ *                                 example: 73.33
+ *                         ctr_by_source:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               source:
+ *                                 type: string
+ *                                 example: direct
+ *                               impressions:
+ *                                 type: string
+ *                                 example: 42
+ *                               clicks:
+ *                                 type: string
+ *                                 example: 21
+ *                               ctr:
+ *                                 type: string
+ *                                 example: 50.00
  *       401:
  *         description: Unauthorized, authentication required
  *       404:
@@ -1054,6 +1326,13 @@ router.put(
   accessToken,
   validate({ fields: fields.updateUrl.body, preserveBodyProps: true }),
   urlController.updateUrl,
+);
+
+// undocumented yet
+router.get(
+  '/click/:short_code',
+  accessToken,
+  urlController.recordUrlClick,
 );
 
 module.exports = router;

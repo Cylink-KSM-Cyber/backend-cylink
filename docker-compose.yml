@@ -4,6 +4,7 @@ services:
   api:
     image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}:prod
     environment:
+      NODE_ENV: ${NODE_ENV}
       PORT: ${PORT}
       ENABLE_LOG: ${ENABLE_LOG}
       DATABASE_URL: postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@database:5432/${DATABASE_NAME}
@@ -18,6 +19,10 @@ services:
       WEB_VERIFICATOR_URL: ${WEB_VERIFICATOR_URL}
       FRONTEND_URL: ${FRONTEND_URL}
       SHORT_URL_BASE: ${SHORT_URL_BASE}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
     networks:
       - app
     depends_on:
