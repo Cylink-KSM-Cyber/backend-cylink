@@ -1,4 +1,5 @@
 import type { Knex } from 'knex';
+import logger from '../../../utils/logger';
 
 const tableName = 'users';
 
@@ -53,9 +54,9 @@ export async function up(knex: Knex): Promise<void> {
       WHERE password_reset_expires_at IS NOT NULL;
     `);
 
-    console.log('Password reset columns and indexes added to users table');
+    logger.info('Password reset columns and indexes added to users table');
   } else {
-    console.log('Users table does not exist, skipping password reset column migration');
+    logger.warn('Users table does not exist, skipping password reset column migration');
   }
 }
 
@@ -88,6 +89,6 @@ export async function down(knex: Knex): Promise<void> {
       }
     });
 
-    console.log('Password reset columns and indexes removed from users table');
+    logger.info('Password reset columns and indexes removed from users table');
   }
 }
