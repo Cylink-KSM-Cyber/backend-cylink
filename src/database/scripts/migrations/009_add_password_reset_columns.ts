@@ -8,12 +8,11 @@ export async function up(knex: Knex): Promise<void> {
 
   if (tableExists) {
     // Check if password_reset_token column already exists
-    const tokenColumnExists = await knex.schema.hasColumn(tableName, 'password_reset_token');
-    const expiresColumnExists = await knex.schema.hasColumn(tableName, 'password_reset_expires_at');
-    const requestedColumnExists = await knex.schema.hasColumn(
-      tableName,
-      'password_reset_requested_at',
-    );
+    const [tokenColumnExists, expiresColumnExists, requestedColumnExists] = await Promise.all([
+      knex.schema.hasColumn(tableName, 'password_reset_token'),
+      knex.schema.hasColumn(tableName, 'password_reset_expires_at'),
+      knex.schema.hasColumn(tableName, 'password_reset_requested_at'),
+    ]);
 
     await knex.schema.alterTable(tableName, table => {
       // Add password reset token column if it doesn't exist
