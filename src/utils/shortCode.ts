@@ -5,13 +5,12 @@
  * @module utils/shortCode
  */
 
-const { shortCodeExists } = require("../models/urlModel");
+const { shortCodeExists } = require('../models/urlModel');
 
 /**
  * Default character set for generating short codes
  */
-const DEFAULT_CHARS =
-  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const DEFAULT_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
 /**
  * Configuration options for short code generation
@@ -31,7 +30,7 @@ interface ShortCodeOptions {
  * @returns {string} Generated short code
  */
 const generateRandomCode = (length: number, chars: string): string => {
-  let result = "";
+  let result = '';
   const charLength = chars.length;
 
   for (let i = 0; i < length; i++) {
@@ -48,15 +47,8 @@ const generateRandomCode = (length: number, chars: string): string => {
  * @returns {Promise<string>} A unique short code
  * @throws {Error} If unable to generate a unique code after max attempts
  */
-exports.generateUniqueShortCode = async (
-  options: ShortCodeOptions = {}
-): Promise<string> => {
-  const {
-    length = 6,
-    chars = DEFAULT_CHARS,
-    prefix = "",
-    maxAttempts = 10,
-  } = options;
+exports.generateUniqueShortCode = async (options: ShortCodeOptions = {}): Promise<string> => {
+  const { length = 6, chars = DEFAULT_CHARS, prefix = '', maxAttempts = 10 } = options;
 
   let attempts = 0;
 
@@ -71,9 +63,7 @@ exports.generateUniqueShortCode = async (
     attempts++;
   }
 
-  throw new Error(
-    `Failed to generate a unique short code after ${maxAttempts} attempts`
-  );
+  throw new Error(`Failed to generate a unique short code after ${maxAttempts} attempts`);
 };
 
 /**
@@ -87,11 +77,7 @@ exports.isValidShortCode = (shortCode: string): boolean => {
   const validCharsRegex = new RegExp(`^[${DEFAULT_CHARS}]+$`);
 
   // Check that the short code is an appropriate length and only contains valid characters
-  return (
-    shortCode.length >= 3 &&
-    shortCode.length <= 10 &&
-    validCharsRegex.test(shortCode)
-  );
+  return shortCode.length >= 3 && shortCode.length <= 30 && validCharsRegex.test(shortCode);
 };
 
 /**
@@ -102,8 +88,8 @@ exports.isValidShortCode = (shortCode: string): boolean => {
  */
 exports.sanitizeShortCode = (shortCode: string): string => {
   // Remove any characters that aren't in our allowed set
-  const validCharsRegex = new RegExp(`[^${DEFAULT_CHARS}]`, "g");
+  const validCharsRegex = new RegExp(`[^${DEFAULT_CHARS}]`, 'g');
 
   // Replace invalid characters and truncate if necessary
-  return shortCode.replace(validCharsRegex, "").substring(0, 10);
+  return shortCode.replace(validCharsRegex, '').substring(0, 30);
 };
