@@ -80,7 +80,7 @@ export async function up(knex: Knex): Promise<void> {
 
       // url fields
       table.text('original_url').notNullable();
-      table.string('short_code', 10).notNullable().unique();
+      table.string('short_code', 30).notNullable().unique();
       table.string('title', 255),
         // expiry and activity tracking
         table.timestamp('expiry_date', { useTz: true });
