@@ -134,9 +134,63 @@ NODE_ENV=development
 
 ### Database Migration
 
+This project uses Knex.js for database migrations. The migration system provides a structured approach to database schema changes.
+
 ```bash
 # Run database migrations
 npm run db:migrate
+
+# Check migration status
+npm run db:migrate:status
+
+# Rollback the last migration
+npm run db:migrate:rollback
+
+# Create a new migration
+npm run db:migrate:make <migration_name>
+```
+
+#### Migration Files
+
+Migration files are located in `/src/database/scripts/migrations/` and follow a structured naming convention:
+
+- `001_users.ts` - User table and authentication
+- `002_urls.ts` - URL shortening core tables
+- `003_clicks.ts` - Click tracking analytics
+- `004_impressions.ts` - Impression tracking for CTR
+- `005_qr_codes.ts` - QR code generation tables
+- `006_conversion_goals.ts` - Conversion tracking goals
+- `007_url_conversion_goals.ts` - URL-to-goal associations
+- `008_conversions.ts` - Conversion event tracking
+- `009_add_password_reset_columns.ts` - Password reset functionality
+- `010_add_search_indexes.ts` - Search performance optimization
+- `011_add_unique_constraint_url_conversion_goals.ts` - Data integrity constraint
+
+#### Creating New Migrations
+
+When creating new migrations, follow these best practices:
+
+1. **Use descriptive names**: `npm run db:migrate:make add_user_preferences_table`
+2. **Include both up and down functions**: Ensure migrations are reversible
+3. **Test thoroughly**: Run migration and rollback in development
+4. **Document changes**: Add comments explaining complex schema changes
+
+Example migration structure:
+
+```typescript
+import { Knex } from 'knex';
+
+export async function up(knex: Knex): Promise<void> {
+  return knex.schema.createTable('table_name', table => {
+    table.increments('id').primary();
+    table.string('name').notNullable();
+    table.timestamps(true, true);
+  });
+}
+
+export async function down(knex: Knex): Promise<void> {
+  return knex.schema.dropTable('table_name');
+}
 ```
 
 ### Database Seeding
