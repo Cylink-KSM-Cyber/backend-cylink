@@ -1,4 +1,5 @@
 import type { Knex } from 'knex';
+import logger from '../../../utils/logger';
 
 /**
  * Migration: Fix short_code column length from VARCHAR(10) to VARCHAR(30)
