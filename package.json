@@ -10,7 +10,7 @@
     "start": "node dist/index.js",
     "build": "tsc",
     "dev": "nodemon",
-    "db": "knex --knexfile src/config/knex.ts",
+    "db": "npx knex migrate:latest --knexfile src/config/knex.ts",
     "db:migrate": "ts-node -r tsconfig-paths/register src/database/migrations.ts",
     "db:seed": "ts-node -r tsconfig-paths/register src/database/seed.ts",
     "db:seed:admin": "ts-node -r tsconfig-paths/register src/database/seed.ts admin",
