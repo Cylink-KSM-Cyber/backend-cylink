@@ -22,7 +22,7 @@ export async function up(knex: Knex): Promise<void> {
 
   // Only alter if current length is less than 30
   if (currentLength && currentLength < 30) {
-    console.log(`Altering short_code column from VARCHAR(${currentLength}) to VARCHAR(30)`);
+    logger.info(`Altering short_code column from VARCHAR(${currentLength}) to VARCHAR(30)`);
 
     await knex.raw('ALTER TABLE urls ALTER COLUMN short_code TYPE VARCHAR(30)');
 
