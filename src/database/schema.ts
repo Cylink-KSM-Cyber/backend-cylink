@@ -34,7 +34,7 @@ module.exports = {
     id: 'SERIAL PRIMARY KEY',
     user_id: 'INTEGER REFERENCES users(id) ON DELETE SET NULL',
     original_url: 'TEXT NOT NULL',
-    short_code: 'VARCHAR(10) UNIQUE NOT NULL',
+    short_code: 'VARCHAR(30) UNIQUE NOT NULL',
     title: 'VARCHAR(255)',
     expiry_date: 'TIMESTAMP WITH TIME ZONE',
     auto_expired_at: 'TIMESTAMP WITH TIME ZONE',
