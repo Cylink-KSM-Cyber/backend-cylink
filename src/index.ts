@@ -5,6 +5,9 @@
  * @module index
  */
 
+// IMPORTANT: Import Sentry instrument at the very top - must be first
+require('./instrument');
+
 // Set up module aliases before anything else
 // import './moduleAlias';
 
