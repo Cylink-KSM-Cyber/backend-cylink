@@ -4,6 +4,7 @@
  * Sets up middleware, routes, and starts the server
  * @module index
  */
+require('dotenv').config();
 
 // IMPORTANT: Import Sentry instrument at the very top - must be first
 require('./instrument');
@@ -11,13 +12,13 @@ require('./instrument');
 // Set up module aliases before anything else
 // import './moduleAlias';
 
-require('dotenv').config();
-
 import express, { json, urlencoded, Request, Response } from 'express';
 import { setupSwagger } from './middlewares/swagger';
 import { startScheduler } from './jobs/jobScheduler';
 import cors from 'cors';
+import logger from './utils/logger';
 
+const Sentry = require('@sentry/node');
 const app = express();
 const port = process.env.PORT || 3000;
 const clickTrackerMiddleware = require('./middlewares/clickTracker');
@@ -39,6 +40,13 @@ app.use(
 app.use(json());
 app.use(urlencoded({ extended: true }));
 
+// sentry debug
+app.get('/debug-sentry', (req: Request, res: Response) => {
+  logger.error('test error', 'caiuciau');
+  // res.status(404).json({ message: 'debug' });
+  throw new Error('This is a test error for Sentry.');
+});
+
 // Track information about clicks for analytics
 app.use(clickTrackerMiddleware);
 
@@ -47,6 +55,10 @@ setupSwagger(app);
 
 // API routes
 app.use('/api/v1', routes);
+
+// Sentry middleware
+Sentry.setupExpressErrorHandler(app);
+// app.use(Sentry.Handlers.errorHandler());
 
 // Handle URL redirects for shortened URLs
 // This should be after the API routes to avoid conflicting with them

@@ -43,6 +43,7 @@ function getSamplingRates() {
 function initializeSentry() {
   const environment = process.env.NODE_ENV || 'development';
   const dsn = process.env.SENTRY_DSN;
+  console.log(dsn);
 
   // Skip Sentry initialization in test environment or if DSN is not provided
   if (environment === 'test' || !dsn) {
