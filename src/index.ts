@@ -16,9 +16,8 @@ import express, { json, urlencoded, Request, Response } from 'express';
 import { setupSwagger } from './middlewares/swagger';
 import { startScheduler } from './jobs/jobScheduler';
 import cors from 'cors';
-import logger from './utils/logger';
 
-const Sentry = require('@sentry/node');
+import * as Sentry from '@sentry/node'; 
 const app = express();
 const port = process.env.PORT || 3000;
 const clickTrackerMiddleware = require('./middlewares/clickTracker');
@@ -39,13 +38,6 @@ app.use(
 // Basic middleware
 app.use(json());
 app.use(urlencoded({ extended: true }));
-
-// sentry debug
-app.get('/debug-sentry', (req: Request, res: Response) => {
-  logger.error('test error', 'caiuciau');
-  // res.status(404).json({ message: 'debug' });
-  throw new Error('This is a test error for Sentry.');
-});
 
 // Track information about clicks for analytics
 app.use(clickTrackerMiddleware);
