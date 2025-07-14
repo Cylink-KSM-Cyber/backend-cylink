@@ -50,7 +50,6 @@ app.use('/api/v1', routes);
 
 // Sentry middleware
 Sentry.setupExpressErrorHandler(app);
-// app.use(Sentry.Handlers.errorHandler());
 
 // Handle URL redirects for shortened URLs
 // This should be after the API routes to avoid conflicting with them
