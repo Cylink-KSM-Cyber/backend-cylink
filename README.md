@@ -186,13 +186,11 @@ Migration files are located in `/src/database/scripts/migrations/` and follow a 
 - `008_conversions.ts` - Conversion event tracking
 - `009_add_password_reset_columns.ts` - Password reset functionality
 - `010_add_search_indexes.ts` - Search performance optimization
-- `011_add_unique_constraint_url_conversion_goals.ts` - Data integrity constraint
-
 #### Creating New Migrations
 
 When creating new migrations, follow these best practices:
 
-1. **Use descriptive names**: `npm run db:migrate:make add_user_preferences_table`
+1. **Use descriptive names**: `npm run db:migrate:make` is retained only for *legacy* or emergency scenarios (e.g., quick hotfixes in CI). Prefer `npm run migration:new` during normal development.
 2. **Include both up and down functions**: Ensure migrations are reversible
 3. **Test thoroughly**: Run migration and rollback in development
 4. **Document changes**: Add comments explaining complex schema changes

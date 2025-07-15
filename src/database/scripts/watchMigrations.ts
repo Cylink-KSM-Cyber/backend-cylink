@@ -10,6 +10,8 @@ function isLocked(): boolean {
   return fs.existsSync(LOCK_PATH);
 }
 
+const emitted = new Set<string>();
+
 const watcher = chokidar.watch(MIGRATIONS_DIR, {
   ignoreInitial: true,
 });
@@ -17,6 +19,8 @@ const watcher = chokidar.watch(MIGRATIONS_DIR, {
 watcher.on('add', (filePath) => {
   if (isLocked()) return; // event triggered by generator
   const rel = path.relative(process.cwd(), filePath);
+  if (emitted.has(rel)) return; // already warned
+  emitted.add(rel);
   // eslint-disable-next-line no-console
   console.error(
     colors.red.bold(`\n[WARNING] Detected manual migration file creation: ${rel}`),

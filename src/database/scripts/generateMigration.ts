@@ -23,12 +23,19 @@ async function withLock(fn: () => Promise<void>): Promise<void> {
   try {
     await fn();
   } finally {
+    if (fs.existsSync(LOCK_PATH)) {
     fs.unlinkSync(LOCK_PATH);
+  }
   }
 }
 
 async function main(): Promise<void> {
   const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
+
+// Ensure migrations directory exists
+if (!fs.existsSync(MIGRATIONS_DIR)) {
+  fs.mkdirSync(MIGRATIONS_DIR, { recursive: true });
+}
 
   const { action } = await inquirer.prompt<{ action: 'create' | 'alter' }>([
     {
@@ -55,14 +62,17 @@ async function handleCreateTable(dir: string): Promise<void> {
       type: 'input',
       name: 'tableName',
       message: 'Masukkan nama tabel:',
-      validate: (v: string) => v.trim() !== '' || 'Nama tabel tidak boleh kosong',
+      validate: (v: string) => {
+        const valid = /^\w+$/.test(v.trim()) && /^[a-zA-Z_]/.test(v.trim());
+        return valid || 'Gunakan huruf/angka/underscore dan tidak diawali angka';
+      },
     },
   ]);
 
   // Compute next incremental id (3-digit)
   const files = fs.readdirSync(dir);
   const ids = files
-    .map((f: string) => /^(\d{3})_/.exec(f))
+    .map((f: string) => /^(\d{3})_\w+\.ts$/.exec(f))
     .filter((m: RegExpExecArray | null): m is RegExpExecArray => Boolean(m))
     .map((m: RegExpExecArray) => parseInt(m[1], 10));
 
@@ -81,7 +91,10 @@ async function handleAlterTable(dir: string): Promise<void> {
       type: 'input',
       name: 'purpose',
       message: 'Deskripsikan tujuan alter (snake_case):',
-      validate: (v: string) => v.trim() !== '' || 'Tujuan alter tidak boleh kosong',
+      validate: (v: string) => {
+        const valid = /^\w+$/.test(v.trim()) && /^[a-zA-Z_]/.test(v.trim());
+        return valid || 'Gunakan huruf/angka/underscore dan tidak diawali angka';
+      },
     },
   ]);
 
