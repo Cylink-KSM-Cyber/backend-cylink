@@ -19,21 +19,18 @@ const defaultFormat = [
   winston.format.printf(({ timestamp, level, message, ...args }: any) => {
     let log = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
 
-    if (args) {
+    const keys = Object.keys(args);
+    if (keys.length > 0) {
       log += ': ';
 
-      const keys = Object.keys(args);
       if (
         // if stack is type of object-string
-        keys.length > 0
-        && keys.every(k => /^\d+$/.test(k)
+        keys.every(k => /^\d+$/.test(k)
         && typeof args[k] === 'string'
         && args[k].length === 1)
       ) {
-        const reconstructed = Object.keys(args)
-          .sort((a, b) => Number(a) - Number(b))
-          .map(key => args[key])
-          .join('');
+        const sortedKeys = [...keys].sort((a, b) => Number(a) - Number(b));
+        const reconstructed = sortedKeys.map(key => args[key]).join('');
         log += reconstructed;
       } else {
         log += JSON.stringify(args);
