@@ -134,6 +134,28 @@ NODE_ENV=development
 
 ### Database Migration
 
+> **Migration workflow update (July 2025)**  
+> Migrations are now managed via an interactive generator plus a live watcher.
+>
+> 1. Run `npm run dev` – this starts both the REST API (via `nodemon`) **and** a file-system watcher that monitors `src/database/scripts/migrations/`.
+> 2. When you need a new migration **always** execute:
+>
+>    ```bash
+>    npm run migration:new
+>    ```
+>
+>    • Choose between *create table* or *alter table*.
+>    • The script generates the correctly named file (`NNN_<table>.ts` or `YYYYMMDDHHmmss_<purpose>_table.ts`).
+>
+> 3. If you attempt to create a file manually in that folder while the watcher is running, the terminal will print a red warning:
+>
+>    `Please use "npm run migration:new" to generate migration files.`
+>
+>    The file will still be created (in case of emergency edits), but you are urged to delete it and rerun the generator.
+>
+> 4. Normal Knex commands (`npm run db:migrate`, etc.) work unchanged.
+
+
 This project uses Knex.js for database migrations. The migration system provides a structured approach to database schema changes.
 
 ```bash
