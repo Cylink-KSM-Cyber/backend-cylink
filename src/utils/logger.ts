@@ -16,8 +16,28 @@ const defaultFormat = [
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
   winston.format.splat(),
-  winston.format.printf(({ timestamp, level, message, stack }: any) => {
-    return `[${timestamp}] ${level.toUpperCase()}: ${message} ${stack || ''}`;
+  winston.format.printf(({ timestamp, level, message, ...args }: any) => {
+    let log = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
+
+    const keys = Object.keys(args);
+    if (keys.length > 0) {
+      log += ': ';
+
+      if (
+        // if stack is type of object-string
+        keys.every(k => /^\d+$/.test(k)
+        && typeof args[k] === 'string'
+        && args[k].length === 1)
+      ) {
+        const sortedKeys = [...keys].sort((a, b) => Number(a) - Number(b));
+        const reconstructed = sortedKeys.map(key => args[key]).join('');
+        log += reconstructed;
+      } else {
+        log += JSON.stringify(args);
+      }
+    }
+
+    return log;
   }),
 ];
 const logFormat = winston.format.combine(...defaultFormat);

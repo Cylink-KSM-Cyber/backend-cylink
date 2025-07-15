@@ -16,6 +16,7 @@ import express, { json, urlencoded, Request, Response } from 'express';
 import { setupSwagger } from './middlewares/swagger';
 import { startScheduler } from './jobs/jobScheduler';
 import cors from 'cors';
+import logger from './utils/logger';
 
 import * as Sentry from '@sentry/node'; 
 const app = express();
@@ -47,6 +48,11 @@ setupSwagger(app);
 
 // API routes
 app.use('/api/v1', routes);
+
+app.get('/test', (req: any, res: any) => {
+  logger.error('test error', 'test error json');
+  return res.status(200).json({ message: 'test' });
+});
 
 // Sentry middleware
 Sentry.setupExpressErrorHandler(app);
