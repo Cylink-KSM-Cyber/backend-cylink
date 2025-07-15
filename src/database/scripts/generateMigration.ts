@@ -61,10 +61,10 @@ async function handleCreateTable(dir: string): Promise<void> {
     {
       type: 'input',
       name: 'tableName',
-      message: 'Masukkan nama tabel:',
+      message: 'Masukkan nama tabel (snake_case, lowercase):',
       validate: (v: string) => {
-        const valid = /^\w+$/.test(v.trim()) && /^[a-zA-Z_]/.test(v.trim());
-        return valid || 'Gunakan huruf/angka/underscore dan tidak diawali angka';
+        const valid = /^[a-z_][a-z0-9_]*$/.test(v.trim());
+        return valid || 'Gunakan huruf kecil, angka, underscore dan tidak diawali angka';
       },
     },
   ]);
@@ -90,10 +90,10 @@ async function handleAlterTable(dir: string): Promise<void> {
     {
       type: 'input',
       name: 'purpose',
-      message: 'Deskripsikan tujuan alter (snake_case):',
+      message: 'Deskripsikan tujuan alter (snake_case, lowercase):',
       validate: (v: string) => {
-        const valid = /^\w+$/.test(v.trim()) && /^[a-zA-Z_]/.test(v.trim());
-        return valid || 'Gunakan huruf/angka/underscore dan tidak diawali angka';
+        const valid = /^[a-z_][a-z0-9_]*$/.test(v.trim());
+        return valid || 'Gunakan huruf kecil, angka, underscore dan tidak diawali angka';
       },
     },
   ]);
