@@ -12,14 +12,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // Define log format
-const logFormat = winston.format.combine(
+const defaultFormat = [
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
   winston.format.splat(),
   winston.format.printf(({ timestamp, level, message, stack }: any) => {
     return `[${timestamp}] ${level.toUpperCase()}: ${message} ${stack || ''}`;
   }),
-);
+];
+const logFormat = winston.format.combine(...defaultFormat);
 
 // Get the log directory from environment or use default
 const LOG_DIR = process.env.LOG_DIR || 'logs';
@@ -32,7 +33,11 @@ const logger = winston.createLogger({
   transports: [
     // Console transport
     new winston.transports.Console({
-      format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
+      // format: winston.format.combine(
+        // ...defaultFormat,
+        // winston.format.colorize(),
+        // winston.format.simple(),
+      // ),
       handleExceptions: true,
     }),
     // File transport for errors

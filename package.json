@@ -8,7 +8,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "start": "node dist/index.js",
-    "build": "tsc",
+    "build": "tsc && npm run sentry:sourcemaps",
     "dev": "nodemon",
     "db": "npx knex migrate:latest --knexfile src/config/knex.ts",
     "db:migrate": "npx knex migrate:latest --knexfile src/config/knex.ts",
@@ -25,7 +25,8 @@
     "db:seed:conversions": "ts-node -r tsconfig-paths/register src/database/seed.ts conversions",
     "db:seed:all": "npm run db:seed:admin && npm run db:seed:urls && npm run db:seed:qrcodes && npm run db:seed:clicks && npm run db:seed:impressions && npm run db:seed:goals && npm run db:seed:conversions",
     "lint": "eslint \"**/*.{js,ts}\"",
-    "lint:fix": "eslint \"**/*.{js,ts}\" --fix"
+    "lint:fix": "eslint \"**/*.{js,ts}\" --fix",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org nugraha-adhitama --project api-cylink ./dist && sentry-cli sourcemaps upload --org nugraha-adhitama --project api-cylink ./dist"
   },
   "repository": {
     "type": "git",
@@ -40,6 +41,9 @@
   "homepage": "https://github.com/haikalrafifas/test-cylink#readme",
   "dependencies": {
     "@faker-js/faker": "^9.7.0",
+    "@sentry/cli": "^2.47.0",
+    "@sentry/node": "^9.38.0",
+    "@sentry/profiling-node": "^9.38.0",
     "@types/cors": "^2.8.17",
     "@types/winston": "^2.4.4",
     "bcrypt": "^5.1.1",
