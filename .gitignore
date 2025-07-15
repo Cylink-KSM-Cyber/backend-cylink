@@ -8,3 +8,5 @@ coverage/
 TODO.md
 memory.md
 logs/
+# Sentry Config File
+.sentryclirc

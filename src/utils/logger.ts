@@ -12,14 +12,35 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // Define log format
-const logFormat = winston.format.combine(
+const defaultFormat = [
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
   winston.format.splat(),
-  winston.format.printf(({ timestamp, level, message, stack }: any) => {
-    return `[${timestamp}] ${level.toUpperCase()}: ${message} ${stack || ''}`;
+  winston.format.printf(({ timestamp, level, message, ...args }: any) => {
+    let log = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
+
+    const keys = Object.keys(args);
+    if (keys.length > 0) {
+      log += ': ';
+
+      if (
+        // if stack is type of object-string
+        keys.every(k => /^\d+$/.test(k)
+        && typeof args[k] === 'string'
+        && args[k].length === 1)
+      ) {
+        const sortedKeys = [...keys].sort((a, b) => Number(a) - Number(b));
+        const reconstructed = sortedKeys.map(key => args[key]).join('');
+        log += reconstructed;
+      } else {
+        log += JSON.stringify(args);
+      }
+    }
+
+    return log;
   }),
-);
+];
+const logFormat = winston.format.combine(...defaultFormat);
 
 // Get the log directory from environment or use default
 const LOG_DIR = process.env.LOG_DIR || 'logs';
@@ -32,7 +53,11 @@ const logger = winston.createLogger({
   transports: [
     // Console transport
     new winston.transports.Console({
-      format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
+      // format: winston.format.combine(
+        // ...defaultFormat,
+        // winston.format.colorize(),
+        // winston.format.simple(),
+      // ),
       handleExceptions: true,
     }),
     // File transport for errors
