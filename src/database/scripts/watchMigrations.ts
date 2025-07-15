@@ -22,7 +22,7 @@ watcher.on('add', (filePath) => {
   if (emitted.has(rel)) return; // already warned
   emitted.add(rel);
   // eslint-disable-next-line no-console
-  console.error(
+  console.warn(
     colors.red.bold(`\n[WARNING] Detected manual migration file creation: ${rel}`),
     '\nPlease use "npm run migration:new" to generate migration files.\n',
   );
