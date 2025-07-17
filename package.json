@@ -8,8 +8,10 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "start": "node dist/index.js",
-    "build": "tsc",
-    "dev": "nodemon",
+    "build": "tsc && npm run sentry:sourcemaps",
+    "dev": "concurrently -k -n api,watch -c green,cyan \"nodemon\" \"npm run migration:watch\"",
+    "migration:new": "ts-node -r tsconfig-paths/register src/database/scripts/generateMigration.ts",
+    "migration:watch": "ts-node -r tsconfig-paths/register src/database/scripts/watchMigrations.ts",
     "db": "npx knex migrate:latest --knexfile src/config/knex.ts",
     "db:migrate": "npx knex migrate:latest --knexfile src/config/knex.ts",
     "db:migrate:rollback": "npx knex migrate:rollback --knexfile src/config/knex.ts",
@@ -25,7 +27,8 @@
     "db:seed:conversions": "ts-node -r tsconfig-paths/register src/database/seed.ts conversions",
     "db:seed:all": "npm run db:seed:admin && npm run db:seed:urls && npm run db:seed:qrcodes && npm run db:seed:clicks && npm run db:seed:impressions && npm run db:seed:goals && npm run db:seed:conversions",
     "lint": "eslint \"**/*.{js,ts}\"",
-    "lint:fix": "eslint \"**/*.{js,ts}\" --fix"
+    "lint:fix": "eslint \"**/*.{js,ts}\" --fix",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org nugraha-adhitama --project api-cylink ./dist && sentry-cli sourcemaps upload --org nugraha-adhitama --project api-cylink ./dist"
   },
   "repository": {
     "type": "git",
@@ -40,6 +43,9 @@
   "homepage": "https://github.com/haikalrafifas/test-cylink#readme",
   "dependencies": {
     "@faker-js/faker": "^9.7.0",
+    "@sentry/cli": "^2.47.0",
+    "@sentry/node": "^9.38.0",
+    "@sentry/profiling-node": "^9.38.0",
     "@types/cors": "^2.8.17",
     "@types/winston": "^2.4.4",
     "bcrypt": "^5.1.1",
@@ -57,7 +63,8 @@
     "qrcode": "^1.5.4",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^4.6.2",
-    "winston": "^3.17.0"
+    "winston": "^3.17.0",
+    "concurrently": "^8.0.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",
@@ -85,6 +92,12 @@
     "ts-jest": "^29.3.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@types/inquirer": "^9.0.7",
+    "@types/ansi-colors": "^3.0.1",
+    "inquirer": "^9.2.1",
+    "date-fns": "^3.6.0",
+    "chokidar": "^3.6.0",
+    "ansi-colors": "^4.1.3"
   }
 }
