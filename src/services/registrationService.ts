@@ -15,7 +15,7 @@ const userModel = require('../models/userModel');
 const { hash } = require('../utils/crypto');
 const jwt = require('../utils/jwt');
 const { sendMail } = require('../utils/mailer');
-import registerMail from '../mails/register';
+import { registrationVerificationHtml, registrationVerificationText } from '../mails/register';
 
 const VERIFICATION_TOKEN_LENGTH = 255;
 
@@ -55,13 +55,20 @@ const registerUser = async (userData: RegistrationRequest): Promise<Partial<User
   // Save user to DB
   const createdUser = await userModel.createUser(newUser);
 
-  // Send verification email
-  await sendMail(
-    createdUser.email,
-    'User Registration Verification',
-    'User Registration Verification',
-    registerMail(createdUser.username, createdUser.verification_token),
-  );
+  // Send verification email (HTML + plain text)
+  try {
+    await sendMail(
+      createdUser.email,
+      'User Registration Verification',
+      registrationVerificationText(createdUser.username, createdUser.verification_token),
+      registrationVerificationHtml(createdUser.username, createdUser.verification_token),
+    );
+  } catch (err) {
+    // Optionally: rollback user creation if email fails, or mark as unverified
+    throw new Error(
+      'Failed to send verification email: ' + (err instanceof Error ? err.message : String(err)),
+    );
+  }
 
   // Return safe user data
   return {
