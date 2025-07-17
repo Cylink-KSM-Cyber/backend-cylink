@@ -9,15 +9,17 @@
  * @module services/registrationService
  */
 
-import { RegistrationRequest } from '../interfaces/RegistrationRequest';
 import { User } from '../collections/userCollection';
+import { RegistrationRequest } from '../interfaces/RegistrationRequest';
+import { registrationVerificationHtml, registrationVerificationText } from '../mails/register';
+
 const userModel = require('../models/userModel');
 const { hash } = require('../utils/crypto');
 const jwt = require('../utils/jwt');
 const { sendMail } = require('../utils/mailer');
-import { registrationVerificationHtml, registrationVerificationText } from '../mails/register';
 
 const VERIFICATION_TOKEN_LENGTH = 255;
+const EMAIL_SUBJECT_REGISTRATION = 'User Registration Verification';
 
 /**
  * Registers a new user, hashes password, generates verification token, and sends email
@@ -59,11 +61,12 @@ const registerUser = async (userData: RegistrationRequest): Promise<Partial<User
   try {
     await sendMail(
       createdUser.email,
-      'User Registration Verification',
+      EMAIL_SUBJECT_REGISTRATION,
       registrationVerificationText(createdUser.username, createdUser.verification_token),
       registrationVerificationHtml(createdUser.username, createdUser.verification_token),
     );
   } catch (err) {
+    // Consider implementing a cleanup job for unverified users if email delivery fails.
     // Optionally: rollback user creation if email fails, or mark as unverified
     throw new Error(
       'Failed to send verification email: ' + (err instanceof Error ? err.message : String(err)),
