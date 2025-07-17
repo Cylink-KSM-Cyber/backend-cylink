@@ -13,7 +13,7 @@ import { User } from '../collections/userCollection';
 import { RegistrationRequest } from '../interfaces/RegistrationRequest';
 import { registrationVerificationHtml, registrationVerificationText } from '../mails/register';
 
-const userModel = require('../models/userModel');
+import { getUserByEmail, createUser } from '../models/userModel';
 const { hash } = require('../utils/crypto');
 const jwt = require('../utils/jwt');
 const { sendMail } = require('../utils/mailer');
@@ -29,7 +29,7 @@ const EMAIL_SUBJECT_REGISTRATION = 'User Registration Verification';
  */
 const registerUser = async (userData: RegistrationRequest): Promise<Partial<User>> => {
   // Check for duplicate email
-  const existingUser = await userModel.getUserByEmail(userData.email);
+  const existingUser = await getUserByEmail(userData.email);
   if (existingUser) {
     throw new Error('Email already taken');
   }
@@ -55,15 +55,26 @@ const registerUser = async (userData: RegistrationRequest): Promise<Partial<User
   };
 
   // Save user to DB
-  const createdUser = await userModel.createUser(newUser);
+  const createdUser = await createUser({
+    ...newUser,
+    email: String(newUser.email),
+    password: String(newUser.password),
+    username: String(newUser.username),
+  });
 
   // Send verification email (HTML + plain text)
   try {
     await sendMail(
       createdUser.email,
       EMAIL_SUBJECT_REGISTRATION,
-      registrationVerificationText(createdUser.username, createdUser.verification_token),
-      registrationVerificationHtml(createdUser.username, createdUser.verification_token),
+      registrationVerificationText(
+        String(createdUser.username),
+        String(createdUser.verification_token),
+      ),
+      registrationVerificationHtml(
+        String(createdUser.username),
+        String(createdUser.verification_token),
+      ),
     );
   } catch (err) {
     // Consider implementing a cleanup job for unverified users if email delivery fails.
