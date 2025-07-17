@@ -7,11 +7,14 @@
  * @module __tests__/validators/registrationValidator.test
  */
 
+require('dotenv').config();
+
 import {
   registrationValidationRules,
   registrationValidator,
 } from '../../validators/registrationValidator';
-import { createMockReqRes } from '../utils/testUtils';
+
+const TEST_PASSWORD = process.env.TEST_PASSWORD || 'TestPassword!123';
 
 async function setupAndRunValidation(body: Record<string, unknown>, res: any, next: any) {
   const req: any = { body };
@@ -31,12 +34,12 @@ describe('registrationValidator', () => {
   });
 
   it('should pass validation for valid input', async () => {
-    const req = await setupAndRunValidation(
+    await setupAndRunValidation(
       {
         username: 'testuser',
         email: 'test@example.com',
-        password: 'Password123!',
-        password_confirmation: 'Password123!',
+        password: TEST_PASSWORD,
+        password_confirmation: TEST_PASSWORD,
       },
       res,
       next,
@@ -61,8 +64,8 @@ describe('registrationValidator', () => {
       {
         username: 'testuser',
         email: 'invalid-email',
-        password: 'Password123!',
-        password_confirmation: 'Password123!',
+        password: TEST_PASSWORD,
+        password_confirmation: TEST_PASSWORD,
       },
       res,
       next,
@@ -95,8 +98,8 @@ describe('registrationValidator', () => {
       {
         username: 'testuser',
         email: 'test@example.com',
-        password: 'Password123!',
-        password_confirmation: 'Password321!',
+        password: TEST_PASSWORD,
+        password_confirmation: 'notmatching',
       },
       res,
       next,
@@ -112,8 +115,8 @@ describe('registrationValidator', () => {
       {
         username: '  testuser  ',
         email: '  test@example.com  ',
-        password: '  Password123!  ',
-        password_confirmation: '  Password123!  ',
+        password: `  ${TEST_PASSWORD}  `,
+        password_confirmation: `  ${TEST_PASSWORD}  `,
       },
       res,
       next,
@@ -121,7 +124,7 @@ describe('registrationValidator', () => {
     expect(next).toHaveBeenCalled();
     expect(req.body.username).toBe('testuser');
     expect(req.body.email).toBe('test@example.com');
-    expect(req.body.password).toBe('Password123!');
-    expect(req.body.password_confirmation).toBe('Password123!');
+    expect(req.body.password).toBe(TEST_PASSWORD);
+    expect(req.body.password_confirmation).toBe(TEST_PASSWORD);
   });
 });
