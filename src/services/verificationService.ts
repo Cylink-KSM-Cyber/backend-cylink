@@ -9,19 +9,25 @@
  */
 
 import { User } from '../collections/userCollection';
+import logger from '../utils/logger';
+
 const userModel = require('../models/userModel');
 const jwt = require('../utils/jwt');
-import logger from '../utils/logger';
+
+export interface VerificationTokenPayload {
+  email: string;
+  [key: string]: unknown;
+}
 
 /**
  * Validates a verification token and returns the decoded payload if valid
  * @param {string} token - Verification token
- * @returns {object} Decoded payload if valid
+ * @returns {VerificationTokenPayload} Decoded payload if valid
  * @throws {Error} If token is invalid or expired
  */
-export async function validateVerificationToken(token: string): Promise<any> {
+export async function validateVerificationToken(token: string): Promise<VerificationTokenPayload> {
   try {
-    const decoded = jwt.verification.verify(token);
+    const decoded = jwt.verification.verify(token) as VerificationTokenPayload;
     if (!decoded || typeof decoded !== 'object' || !decoded.email) {
       throw new Error('Invalid token payload');
     }

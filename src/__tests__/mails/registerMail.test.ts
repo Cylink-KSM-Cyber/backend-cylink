@@ -12,8 +12,8 @@ describe('registrationVerificationHtml', () => {
   it('should include username, verification link, and Cylink logo', () => {
     const username = 'testuser';
     const token = 'abc123';
-    const frontendUrl = 'http://localhost:3000';
-    const expectedLink = `${frontendUrl}register?verification_token=${token}`;
+    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+    const expectedLink = `${frontendUrl.replace(/\/?$/, '/')}register?verification_token=${token}`;
     const html = registrationVerificationHtml(username, token);
     expect(html).toContain(username);
     expect(html).toContain(expectedLink);
@@ -27,8 +27,8 @@ describe('registrationVerificationText', () => {
   it('should include username and verification link', () => {
     const username = 'testuser';
     const token = 'abc123';
-    const WEB_VERIFICATOR_URL = process.env.WEB_VERIFICATOR_URL || '';
-    const expectedLink = WEB_VERIFICATOR_URL + token;
+    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+    const expectedLink = `${frontendUrl.replace(/\/?$/, '/')}register?verification_token=${token}`;
     const text = registrationVerificationText(username, token);
     expect(text).toContain(username);
     expect(text).toContain(expectedLink);
