@@ -33,7 +33,7 @@ describe('registrationValidator', () => {
     for (const rule of registrationValidationRules) {
       await rule.run(req);
     }
-    await registrationValidator(req, res, next);
+    registrationValidator(req, res, next);
     expect(next).toHaveBeenCalled();
   });
 
@@ -42,7 +42,7 @@ describe('registrationValidator', () => {
     for (const rule of registrationValidationRules) {
       await rule.run(req);
     }
-    await registrationValidator(req, res, next);
+    registrationValidator(req, res, next);
     expect(res.status).toHaveBeenCalledWith(422);
     const jsonCall = res.json.mock.calls[0][0];
     expect(jsonCall).toHaveProperty('message', 'Validation failed');
@@ -64,7 +64,7 @@ describe('registrationValidator', () => {
     for (const rule of registrationValidationRules) {
       await rule.run(req);
     }
-    await registrationValidator(req, res, next);
+    registrationValidator(req, res, next);
     expect(res.status).toHaveBeenCalledWith(422);
     const jsonCall = res.json.mock.calls[0][0];
     expect(jsonCall).toHaveProperty('message', 'Validation failed');
@@ -81,7 +81,7 @@ describe('registrationValidator', () => {
     for (const rule of registrationValidationRules) {
       await rule.run(req);
     }
-    await registrationValidator(req, res, next);
+    registrationValidator(req, res, next);
     expect(res.status).toHaveBeenCalledWith(422);
     const jsonCall = res.json.mock.calls[0][0];
     expect(jsonCall).toHaveProperty('message', 'Validation failed');
@@ -98,7 +98,7 @@ describe('registrationValidator', () => {
     for (const rule of registrationValidationRules) {
       await rule.run(req);
     }
-    await registrationValidator(req, res, next);
+    registrationValidator(req, res, next);
     expect(res.status).toHaveBeenCalledWith(422);
     const jsonCall = res.json.mock.calls[0][0];
     expect(jsonCall).toHaveProperty('message', 'Validation failed');
@@ -115,7 +115,7 @@ describe('registrationValidator', () => {
     for (const rule of registrationValidationRules) {
       await rule.run(req);
     }
-    await registrationValidator(req, res, next);
+    registrationValidator(req, res, next);
     expect(next).toHaveBeenCalled();
     // express-validator mutates req.body in-place for .trim(), .escape(), .normalizeEmail()
     expect(req.body.username).toBe('testuser');
