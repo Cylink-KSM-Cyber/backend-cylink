@@ -7,6 +7,8 @@
  * @module __tests__/controllers/registrationController.test
  */
 
+require('dotenv').config();
+
 import { Express } from 'express';
 import { createTestApp, createTestRequest } from '../utils/testUtils';
 import { register } from '../../controllers/registrationController';
@@ -20,6 +22,8 @@ jest.mock('../../services/verificationService');
 
 const mockRegisterUser = registrationService.registerUser as jest.Mock;
 const mockVerifyUserByToken = verificationService.verifyUserByToken as jest.Mock;
+
+const TEST_PASSWORD = process.env.TEST_PASSWORD || 'TestPassword!123';
 
 describe('Registration & Verification Controller', () => {
   let app: Express;
@@ -37,8 +41,8 @@ describe('Registration & Verification Controller', () => {
       const reqBody: RegistrationRequest = {
         username: 'testuser',
         email: 'test@example.com',
-        password: 'Password123!',
-        password_confirmation: 'Password123!',
+        password: TEST_PASSWORD,
+        password_confirmation: TEST_PASSWORD,
       };
       mockRegisterUser.mockResolvedValue({ id: 1, ...reqBody });
 
@@ -54,8 +58,8 @@ describe('Registration & Verification Controller', () => {
       const reqBody: RegistrationRequest = {
         username: 'testuser',
         email: 'duplicate@example.com',
-        password: 'Password123!',
-        password_confirmation: 'Password123!',
+        password: TEST_PASSWORD,
+        password_confirmation: TEST_PASSWORD,
       };
       mockRegisterUser.mockImplementation(() => {
         throw new Error('Email already taken');
@@ -71,8 +75,8 @@ describe('Registration & Verification Controller', () => {
       const reqBody: RegistrationRequest = {
         username: 'testuser',
         email: 'error@example.com',
-        password: 'Password123!',
-        password_confirmation: 'Password123!',
+        password: TEST_PASSWORD,
+        password_confirmation: TEST_PASSWORD,
       };
       mockRegisterUser.mockImplementation(() => {
         throw new Error('Some internal error');
