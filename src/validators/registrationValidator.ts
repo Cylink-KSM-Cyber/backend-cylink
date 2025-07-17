@@ -10,8 +10,15 @@
  * @module validators/registrationValidator
  */
 
-import { check, validationResult } from 'express-validator';
 import { Request, Response, NextFunction } from 'express';
+import { check, validationResult, Meta } from 'express-validator';
+
+function passwordConfirmationMatch(value: string, { req }: Meta) {
+  if (value !== req.body.password) {
+    throw new Error('Password confirmation does not match password.');
+  }
+  return true;
+}
 
 /**
  * Validation rules for user registration
@@ -58,12 +65,7 @@ export const registrationValidationRules = [
     .trim()
     .notEmpty()
     .withMessage('Password confirmation is required.')
-    .custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error('Password confirmation does not match password.');
-      }
-      return true;
-    }),
+    .custom(passwordConfirmationMatch),
 ];
 
 /**
@@ -75,6 +77,7 @@ export function registrationValidator(req: Request, res: Response, next: NextFun
   if (!errors.isEmpty()) {
     return res.status(422).json({
       status: 422,
+      code: 'VALIDATION_ERROR',
       message: 'Validation failed',
       errors: errors.array(),
     });
