@@ -134,6 +134,28 @@ NODE_ENV=development
 
 ### Database Migration
 
+> **Migration workflow update (July 2025)**  
+> Migrations are now managed via an interactive generator plus a live watcher.
+>
+> 1. Run `npm run dev` – this starts both the REST API (via `nodemon`) **and** a file-system watcher that monitors `src/database/scripts/migrations/`.
+> 2. When you need a new migration **always** execute:
+>
+>    ```bash
+>    npm run migration:new
+>    ```
+>
+>    • Choose between *create table* or *alter table*.
+>    • The script generates the correctly named file (`NNN_<table>.ts` or `YYYYMMDDHHmmss_<purpose>_table.ts`).
+>
+> 3. If you attempt to create a file manually in that folder while the watcher is running, the terminal will print a red warning:
+>
+>    `Please use "npm run migration:new" to generate migration files.`
+>
+>    The file will still be created (in case of emergency edits), but you are urged to delete it and rerun the generator.
+>
+> 4. Normal Knex commands (`npm run db:migrate`, etc.) work unchanged.
+
+
 This project uses Knex.js for database migrations. The migration system provides a structured approach to database schema changes.
 
 ```bash
@@ -164,13 +186,11 @@ Migration files are located in `/src/database/scripts/migrations/` and follow a 
 - `008_conversions.ts` - Conversion event tracking
 - `009_add_password_reset_columns.ts` - Password reset functionality
 - `010_add_search_indexes.ts` - Search performance optimization
-- `011_add_unique_constraint_url_conversion_goals.ts` - Data integrity constraint
-
 #### Creating New Migrations
 
 When creating new migrations, follow these best practices:
 
-1. **Use descriptive names**: `npm run db:migrate:make add_user_preferences_table`
+1. **Use descriptive names**: `npm run db:migrate:make` is retained only for *legacy* or emergency scenarios (e.g., quick hotfixes in CI). Prefer `npm run migration:new` during normal development.
 2. **Include both up and down functions**: Ensure migrations are reversible
 3. **Test thoroughly**: Run migration and rollback in development
 4. **Document changes**: Add comments explaining complex schema changes
