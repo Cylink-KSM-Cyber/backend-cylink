@@ -8,7 +8,7 @@
  */
 
 import { Express } from 'express';
-import { createTestApp, createTestRequest, createMockReqRes } from '../utils/testUtils';
+import { createTestApp, createTestRequest } from '../utils/testUtils';
 import { register } from '../../controllers/registrationController';
 import { verify } from '../../controllers/verificationController';
 import registrationService from '../../services/registrationService';
