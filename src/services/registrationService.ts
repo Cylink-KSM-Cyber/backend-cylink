@@ -12,8 +12,8 @@
 import { User } from '../collections/userCollection';
 import { RegistrationRequest } from '../interfaces/RegistrationRequest';
 import { registrationVerificationHtml, registrationVerificationText } from '../mails/register';
-
 import { getUserByEmail, createUser } from '../models/userModel';
+
 const { hash } = require('../utils/crypto');
 const jwt = require('../utils/jwt');
 const { sendMail } = require('../utils/mailer');
