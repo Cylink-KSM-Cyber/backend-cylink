@@ -2,10 +2,10 @@
  * User Registration Validator
  *
  * Provides validation rules and custom logic for user registration requests,
- * ensuring all required fields are present, properly formatted, and that
- * password and password_confirmation match. Designed for modularity and reuse
- * within the authentication system, following best practices for maintainability
- * and extensibility.
+ * ensuring all required fields are present, properly formatted, sanitized,
+ * and that password and password_confirmation match. Designed for modularity
+ * and reuse within the authentication system, following best practices for
+ * maintainability and extensibility.
  *
  * @module validators/registrationValidator
  */
@@ -15,9 +15,9 @@ import { Request, Response, NextFunction } from 'express';
 
 /**
  * Validation rules for user registration
- * - username: required, string, max 255
- * - email: required, valid email, max 255
- * - password: required, string, min 6, max 255
+ * - username: required, string, max 255, trimmed, escaped
+ * - email: required, valid email, max 255, trimmed, normalized
+ * - password: required, string, min 6, max 255, trimmed
  * - password_confirmation: required, must match password
  */
 export const registrationValidationRules = [
@@ -25,6 +25,7 @@ export const registrationValidationRules = [
     .isString()
     .withMessage('Username must be a string.')
     .trim()
+    .escape()
     .notEmpty()
     .withMessage('Username is required.')
     .isLength({ max: 255 })
@@ -34,6 +35,7 @@ export const registrationValidationRules = [
     .isString()
     .withMessage('Email must be a string.')
     .trim()
+    .normalizeEmail()
     .notEmpty()
     .withMessage('Email is required.')
     .isEmail()
@@ -44,6 +46,7 @@ export const registrationValidationRules = [
   check('password')
     .isString()
     .withMessage('Password must be a string.')
+    .trim()
     .notEmpty()
     .withMessage('Password is required.')
     .isLength({ min: 6 })
@@ -52,6 +55,7 @@ export const registrationValidationRules = [
     .withMessage('Password must be no more than 255 characters.'),
 
   check('password_confirmation')
+    .trim()
     .notEmpty()
     .withMessage('Password confirmation is required.')
     .custom((value, { req }) => {

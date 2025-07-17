@@ -21,6 +21,17 @@ const forgotPasswordRateLimiter = createRateLimiter({
   message: 'Too many password reset requests. Please try again later.',
 });
 
+const registerRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5,
+  message: 'Too many registration attempts. Please try again in a minute.',
+});
+const verifyRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10,
+  message: 'Too many verification attempts. Please try again in a minute.',
+});
+
 /**
  * Authentication Routes
  *
@@ -127,6 +138,7 @@ const forgotPasswordRateLimiter = createRateLimiter({
  */
 router.post(
   '/register',
+  registerRateLimiter,
   registrationController.registrationValidationRules,
   registrationController.registrationValidator,
   registrationController.register,
@@ -630,6 +642,6 @@ router.post(
  *       500:
  *         description: Internal server error
  */
-router.get('/verify', verificationController.verify);
+router.get('/verify', verifyRateLimiter, verificationController.verify);
 
 module.exports = router;
