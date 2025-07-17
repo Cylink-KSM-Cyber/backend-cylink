@@ -8,6 +8,7 @@ const { createRateLimiter } = require('../middlewares/rateLimitMiddleware');
 const validate = require('../utils/validator');
 const fields = require('../validators/authValidator');
 const { resetPasswordValidation } = require('../validators/passwordResetValidator');
+const registrationController = require('../controllers/registrationController');
 
 /**
  * Rate limiter for forgot password endpoint
@@ -72,10 +73,15 @@ const forgotPasswordRateLimiter = createRateLimiter({
  *           schema:
  *             type: object
  *             required:
+ *               - username
  *               - email
  *               - password
- *               - name
+ *               - password_confirmation
  *             properties:
+ *               username:
+ *                 type: string
+ *                 description: User's username
+ *                 example: johndoe
  *               email:
  *                 type: string
  *                 format: email
@@ -84,13 +90,14 @@ const forgotPasswordRateLimiter = createRateLimiter({
  *               password:
  *                 type: string
  *                 format: password
- *                 minLength: 8
+ *                 minLength: 6
  *                 description: User password
  *                 example: Password123!
- *               name:
+ *               password_confirmation:
  *                 type: string
- *                 description: User's full name
- *                 example: John Doe
+ *                 format: password
+ *                 description: Password confirmation (must match password)
+ *                 example: Password123!
  *     responses:
  *       201:
  *         description: Registration successful, verification email sent
@@ -110,9 +117,6 @@ const forgotPasswordRateLimiter = createRateLimiter({
  *                   properties:
  *                     user:
  *                       $ref: '#/components/schemas/User'
- *                     verification_token:
- *                       type: string
- *                       description: Token for email verification
  *       400:
  *         description: Invalid input
  *       409:
@@ -120,7 +124,12 @@ const forgotPasswordRateLimiter = createRateLimiter({
  *       500:
  *         description: Internal server error
  */
-router.post('/register', validate({ fields: fields.register }), authController.register);
+router.post(
+  '/register',
+  registrationController.registrationValidationRules,
+  registrationController.registrationValidator,
+  registrationController.register,
+);
 
 /**
  * @swagger
