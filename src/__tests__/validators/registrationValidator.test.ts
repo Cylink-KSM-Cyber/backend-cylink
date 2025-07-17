@@ -13,40 +13,42 @@ import {
 } from '../../validators/registrationValidator';
 import { createMockReqRes } from '../utils/testUtils';
 
+async function setupAndRunValidation(body: Record<string, unknown>, res: any, next: any) {
+  const req: any = { body };
+  for (const rule of registrationValidationRules) {
+    await rule.run(req);
+  }
+  registrationValidator(req, res, next);
+  return req;
+}
+
 describe('registrationValidator', () => {
-  let req: any, res: any, next: any;
+  let res: any, next: any;
 
   beforeEach(() => {
-    ({ req, res, next } = createMockReqRes());
-    res.status = jest.fn().mockReturnThis();
-    res.json = jest.fn().mockReturnThis();
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() };
     next = jest.fn();
   });
 
   it('should pass validation for valid input', async () => {
-    req.body = {
-      username: 'testuser',
-      email: 'test@example.com',
-      password: 'Password123!',
-      password_confirmation: 'Password123!',
-    };
-    for (const rule of registrationValidationRules) {
-      await rule.run(req);
-    }
-    registrationValidator(req, res, next);
+    const req = await setupAndRunValidation(
+      {
+        username: 'testuser',
+        email: 'test@example.com',
+        password: 'Password123!',
+        password_confirmation: 'Password123!',
+      },
+      res,
+      next,
+    );
     expect(next).toHaveBeenCalled();
   });
 
   it('should fail if required fields are missing', async () => {
-    req.body = {};
-    for (const rule of registrationValidationRules) {
-      await rule.run(req);
-    }
-    registrationValidator(req, res, next);
+    await setupAndRunValidation({}, res, next);
     expect(res.status).toHaveBeenCalledWith(422);
     const jsonCall = res.json.mock.calls[0][0];
     expect(jsonCall).toHaveProperty('message', 'Validation failed');
-    // Check that at least one error for each field exists
     const errorPaths = jsonCall.errors.map((e: any) => e.path);
     expect(errorPaths).toContain('username');
     expect(errorPaths).toContain('email');
@@ -55,16 +57,16 @@ describe('registrationValidator', () => {
   });
 
   it('should fail for invalid email format', async () => {
-    req.body = {
-      username: 'testuser',
-      email: 'invalid-email',
-      password: 'Password123!',
-      password_confirmation: 'Password123!',
-    };
-    for (const rule of registrationValidationRules) {
-      await rule.run(req);
-    }
-    registrationValidator(req, res, next);
+    await setupAndRunValidation(
+      {
+        username: 'testuser',
+        email: 'invalid-email',
+        password: 'Password123!',
+        password_confirmation: 'Password123!',
+      },
+      res,
+      next,
+    );
     expect(res.status).toHaveBeenCalledWith(422);
     const jsonCall = res.json.mock.calls[0][0];
     expect(jsonCall).toHaveProperty('message', 'Validation failed');
@@ -72,16 +74,16 @@ describe('registrationValidator', () => {
   });
 
   it('should fail for short password', async () => {
-    req.body = {
-      username: 'testuser',
-      email: 'test@example.com',
-      password: '123',
-      password_confirmation: '123',
-    };
-    for (const rule of registrationValidationRules) {
-      await rule.run(req);
-    }
-    registrationValidator(req, res, next);
+    await setupAndRunValidation(
+      {
+        username: 'testuser',
+        email: 'test@example.com',
+        password: '123',
+        password_confirmation: '123',
+      },
+      res,
+      next,
+    );
     expect(res.status).toHaveBeenCalledWith(422);
     const jsonCall = res.json.mock.calls[0][0];
     expect(jsonCall).toHaveProperty('message', 'Validation failed');
@@ -89,16 +91,16 @@ describe('registrationValidator', () => {
   });
 
   it('should fail if password and confirmation do not match', async () => {
-    req.body = {
-      username: 'testuser',
-      email: 'test@example.com',
-      password: 'Password123!',
-      password_confirmation: 'Password321!',
-    };
-    for (const rule of registrationValidationRules) {
-      await rule.run(req);
-    }
-    registrationValidator(req, res, next);
+    await setupAndRunValidation(
+      {
+        username: 'testuser',
+        email: 'test@example.com',
+        password: 'Password123!',
+        password_confirmation: 'Password321!',
+      },
+      res,
+      next,
+    );
     expect(res.status).toHaveBeenCalledWith(422);
     const jsonCall = res.json.mock.calls[0][0];
     expect(jsonCall).toHaveProperty('message', 'Validation failed');
@@ -106,18 +108,17 @@ describe('registrationValidator', () => {
   });
 
   it('should sanitize and trim input fields', async () => {
-    req.body = {
-      username: '  testuser  ',
-      email: '  test@example.com  ',
-      password: '  Password123!  ',
-      password_confirmation: '  Password123!  ',
-    };
-    for (const rule of registrationValidationRules) {
-      await rule.run(req);
-    }
-    registrationValidator(req, res, next);
+    const req = await setupAndRunValidation(
+      {
+        username: '  testuser  ',
+        email: '  test@example.com  ',
+        password: '  Password123!  ',
+        password_confirmation: '  Password123!  ',
+      },
+      res,
+      next,
+    );
     expect(next).toHaveBeenCalled();
-    // express-validator mutates req.body in-place for .trim(), .escape(), .normalizeEmail()
     expect(req.body.username).toBe('testuser');
     expect(req.body.email).toBe('test@example.com');
     expect(req.body.password).toBe('Password123!');
