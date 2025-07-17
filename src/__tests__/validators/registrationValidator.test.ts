@@ -15,6 +15,7 @@ import {
 } from '../../validators/registrationValidator';
 
 const TEST_PASSWORD = process.env.TEST_PASSWORD || 'TestPassword!123';
+const SHORT_PASSWORD = process.env.TEST_SHORT_PASSWORD || '123';
 
 async function setupAndRunValidation(body: Record<string, unknown>, res: any, next: any) {
   const req: any = { body };
@@ -23,6 +24,30 @@ async function setupAndRunValidation(body: Record<string, unknown>, res: any, ne
   }
   registrationValidator(req, res, next);
   return req;
+}
+
+/**
+ * Helper to DRY up validation error tests.
+ * @param body - request body to validate
+ * @param expectedErrorFields - array of field names expected to have errors
+ * @param customAssert - optional function for custom assertions on the error response
+ */
+async function expectValidationError(
+  body: Record<string, unknown>,
+  expectedErrorFields: string[],
+  customAssert?: (jsonCall: any) => void,
+) {
+  const res = { status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() };
+  const next = jest.fn();
+  await setupAndRunValidation(body, res, next);
+  expect(res.status).toHaveBeenCalledWith(422);
+  const jsonCall = res.json.mock.calls[0][0];
+  expect(jsonCall).toHaveProperty('message', 'Validation failed');
+  const errorPaths = jsonCall.errors.map((e: any) => e.path);
+  for (const field of expectedErrorFields) {
+    expect(errorPaths).toContain(field);
+  }
+  if (customAssert) customAssert(jsonCall);
 }
 
 describe('registrationValidator', () => {
@@ -48,66 +73,43 @@ describe('registrationValidator', () => {
   });
 
   it('should fail if required fields are missing', async () => {
-    await setupAndRunValidation({}, res, next);
-    expect(res.status).toHaveBeenCalledWith(422);
-    const jsonCall = res.json.mock.calls[0][0];
-    expect(jsonCall).toHaveProperty('message', 'Validation failed');
-    const errorPaths = jsonCall.errors.map((e: any) => e.path);
-    expect(errorPaths).toContain('username');
-    expect(errorPaths).toContain('email');
-    expect(errorPaths).toContain('password');
-    expect(errorPaths).toContain('password_confirmation');
+    await expectValidationError({}, ['username', 'email', 'password', 'password_confirmation']);
   });
 
   it('should fail for invalid email format', async () => {
-    await setupAndRunValidation(
+    await expectValidationError(
       {
         username: 'testuser',
         email: 'invalid-email',
         password: TEST_PASSWORD,
         password_confirmation: TEST_PASSWORD,
       },
-      res,
-      next,
+      ['email'],
     );
-    expect(res.status).toHaveBeenCalledWith(422);
-    const jsonCall = res.json.mock.calls[0][0];
-    expect(jsonCall).toHaveProperty('message', 'Validation failed');
-    expect(jsonCall.errors.some((e: any) => e.path === 'email')).toBe(true);
   });
 
   it('should fail for short password', async () => {
-    await setupAndRunValidation(
+    await expectValidationError(
       {
         username: 'testuser',
         email: 'test@example.com',
-        password: '123',
-        password_confirmation: '123',
+        password: SHORT_PASSWORD,
+        password_confirmation: SHORT_PASSWORD,
       },
-      res,
-      next,
+      ['password'],
     );
-    expect(res.status).toHaveBeenCalledWith(422);
-    const jsonCall = res.json.mock.calls[0][0];
-    expect(jsonCall).toHaveProperty('message', 'Validation failed');
-    expect(jsonCall.errors.some((e: any) => e.path === 'password')).toBe(true);
   });
 
   it('should fail if password and confirmation do not match', async () => {
-    await setupAndRunValidation(
+    await expectValidationError(
       {
         username: 'testuser',
         email: 'test@example.com',
         password: TEST_PASSWORD,
         password_confirmation: 'notmatching',
       },
-      res,
-      next,
+      ['password_confirmation'],
     );
-    expect(res.status).toHaveBeenCalledWith(422);
-    const jsonCall = res.json.mock.calls[0][0];
-    expect(jsonCall).toHaveProperty('message', 'Validation failed');
-    expect(jsonCall.errors.some((e: any) => e.path === 'password_confirmation')).toBe(true);
   });
 
   it('should sanitize and trim input fields', async () => {
