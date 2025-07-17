@@ -2,7 +2,7 @@ name: Build and Push to Development
 
 on:
   push:
-    branches: [ dev ]
+    branches: [dev]
   workflow_dispatch:
 
 jobs:
@@ -10,78 +10,94 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Login to Sentry CLI
-      run: sentry-cli login --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }}
+      - name: Install Sentry CLI
+        run: npm install -g @sentry/cli
 
-    - name: Build and push api image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./
-        file: ./docker/api/Dockerfile
-        push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:dev
-        no-cache: true
-    
-    - name: Create .env file from secrets
-      uses: 0ndt/envfile@v2
-      with:
-        secrets: ${{ toJSON(secrets) }}
-        exclude: DEPLOYMENT_*, PRODUCTION_*, STAGING_*
-    
-    - name: Upload .env to VPS
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.DEPLOYMENT_HOST }}
-        port: ${{ secrets.DEPLOYMENT_PORT }}
-        username: ${{ secrets.DEPLOYMENT_USER }}
-        key: |
-          ${{ secrets.DEPLOYMENT_SSH_KEY }}
-        source: ".env"
-        target: "/opt/${{ secrets.DOCKERHUB_APP_ID }}/dev"
-    
-    - name: Deploy to VPS
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.DEPLOYMENT_HOST }}
-        port: ${{ secrets.DEPLOYMENT_PORT }}
-        username: ${{ secrets.DEPLOYMENT_USER }}
-        key: |
-          ${{ secrets.DEPLOYMENT_SSH_KEY }}
-        script: |
-          cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/dev
-          git fetch origin
-          git reset --hard origin/dev
-          git clean -fd
+      - name: Login to Sentry CLI
+        run: sentry-cli login --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }}
 
-          # Remove prefix
-          sed -i 's/^DEV_//g' .env
+      - name: Build and push api image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./
+          file: ./docker/api/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:dev
+          no-cache: true
 
-          # Re-run container (clean)
-          docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-dev -f docker-compose.yml -f docker-compose.dev.yml up -d --force-recreate --pull always
-          docker system prune -af
+      - name: Use Node.js for Sentry sourcemaps
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
 
-    # Automate database migration
-    - name: Use Node.js for database migrations
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
+      - name: Install dependencies for sourcemaps
+        run: npm ci
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Build TypeScript and upload sourcemaps to Sentry
+        run: npm run build
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
-    - name: Run database migrations
-      run: npx knex migrate:latest --knexfile src/config/knex.ts
-      env:
-        DATABASE_URL: postgresql://${{ secrets.DEV_DATABASE_USER }}:${{ secrets.DEV_DATABASE_PASSWORD }}@${{ secrets.DEPLOYMENT_HOST }}:${{ secrets.DEV_DATABASE_PORT }}/${{ secrets.DEV_DATABASE_NAME }}
+      - name: Create .env file from secrets
+        uses: 0ndt/envfile@v2
+        with:
+          secrets: ${{ toJSON(secrets) }}
+          exclude: DEPLOYMENT_*, PRODUCTION_*, STAGING_*
+
+      - name: Upload .env to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOYMENT_HOST }}
+          port: ${{ secrets.DEPLOYMENT_PORT }}
+          username: ${{ secrets.DEPLOYMENT_USER }}
+          key: |
+            ${{ secrets.DEPLOYMENT_SSH_KEY }}
+          source: '.env'
+          target: '/opt/${{ secrets.DOCKERHUB_APP_ID }}/dev'
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEPLOYMENT_HOST }}
+          port: ${{ secrets.DEPLOYMENT_PORT }}
+          username: ${{ secrets.DEPLOYMENT_USER }}
+          key: |
+            ${{ secrets.DEPLOYMENT_SSH_KEY }}
+          script: |
+            cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/dev
+            git fetch origin
+            git reset --hard origin/dev
+            git clean -fd
+
+            # Remove prefix
+            sed -i 's/^DEV_//g' .env
+
+            # Re-run container (clean)
+            docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-dev -f docker-compose.yml -f docker-compose.dev.yml up -d --force-recreate --pull always
+            docker system prune -af
+
+      # Automate database migration
+      - name: Use Node.js for database migrations
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run database migrations
+        run: npx knex migrate:latest --knexfile src/config/knex.ts
+        env:
+          DATABASE_URL: postgresql://${{ secrets.DEV_DATABASE_USER }}:${{ secrets.DEV_DATABASE_PASSWORD }}@${{ secrets.DEPLOYMENT_HOST }}:${{ secrets.DEV_DATABASE_PORT }}/${{ secrets.DEV_DATABASE_NAME }}
