@@ -16,6 +16,7 @@ import {
 
 const TEST_PASSWORD = process.env.TEST_PASSWORD || 'TestPassword!123';
 const SHORT_PASSWORD = process.env.TEST_SHORT_PASSWORD || '123';
+const WRONG_PASSWORD_CONFIRMATION = process.env.TEST_WRONG_PASSWORD_CONFIRMATION || 'notmatching';
 
 async function setupAndRunValidation(body: Record<string, unknown>, res: any, next: any) {
   const req: any = { body };
@@ -106,7 +107,7 @@ describe('registrationValidator', () => {
         username: 'testuser',
         email: 'test@example.com',
         password: TEST_PASSWORD,
-        password_confirmation: 'notmatching',
+        password_confirmation: WRONG_PASSWORD_CONFIRMATION,
       },
       ['password_confirmation'],
     );
