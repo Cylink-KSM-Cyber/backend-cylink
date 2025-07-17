@@ -18,7 +18,8 @@ const CYLINK_LOGO_URL = 'https://i.postimg.cc/HxW3kpVm/logo-cylink.png';
  * @returns {string} HTML email template
  */
 export function registrationVerificationHtml(username: string, verificationToken: string): string {
-  const redirect = WEB_VERIFICATOR_URL + verificationToken;
+  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+  const redirect = frontendUrl + 'register?verification_token=' + verificationToken;
   return `
   <!DOCTYPE html>
   <html lang="en">
