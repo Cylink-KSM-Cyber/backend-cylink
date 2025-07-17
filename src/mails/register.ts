@@ -8,8 +8,12 @@
  * @module mails/register
  */
 
-const { WEB_VERIFICATOR_URL } = process.env;
 const CYLINK_LOGO_URL = 'https://i.postimg.cc/HxW3kpVm/logo-cylink.png';
+
+function getVerificationUrl(token: string): string {
+  const base = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+  return `${base.replace(/\/?$/, '/')}register?verification_token=${token}`;
+}
 
 /**
  * Generates the HTML email template for registration verification
@@ -18,8 +22,7 @@ const CYLINK_LOGO_URL = 'https://i.postimg.cc/HxW3kpVm/logo-cylink.png';
  * @returns {string} HTML email template
  */
 export function registrationVerificationHtml(username: string, verificationToken: string): string {
-  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
-  const redirect = frontendUrl + 'register?verification_token=' + verificationToken;
+  const redirect = getVerificationUrl(verificationToken);
   return `
   <!DOCTYPE html>
   <html lang="en">
@@ -66,7 +69,7 @@ export function registrationVerificationHtml(username: string, verificationToken
  * @returns {string} Plain text email
  */
 export function registrationVerificationText(username: string, verificationToken: string): string {
-  const redirect = WEB_VERIFICATOR_URL + verificationToken;
+  const redirect = getVerificationUrl(verificationToken);
   return `Hello, ${username}!
 
 Thank you for registering at Cylink.
