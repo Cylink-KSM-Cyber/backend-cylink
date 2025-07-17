@@ -9,6 +9,7 @@ const validate = require('../utils/validator');
 const fields = require('../validators/authValidator');
 const { resetPasswordValidation } = require('../validators/passwordResetValidator');
 const registrationController = require('../controllers/registrationController');
+const verificationController = require('../controllers/verificationController');
 
 /**
  * Rate limiter for forgot password endpoint
@@ -591,5 +592,44 @@ router.post(
   validate({ fields: fields.forgotPassword }),
   authController.forgotPassword,
 );
+
+/**
+ * @swagger
+ * /api/v1/auth/verify:
+ *   get:
+ *     summary: Verify user account
+ *     tags: [Authentication]
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Verification token received in email
+ *     responses:
+ *       200:
+ *         description: Account verified successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Account verified successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Invalid or expired verification token
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/verify', verificationController.verify);
 
 module.exports = router;
