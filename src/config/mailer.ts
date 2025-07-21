@@ -5,6 +5,8 @@
  * @module config/mailer
  */
 
+require('dotenv').config();
+
 import logger from '../utils/logger';
 
 const nodemailer = require('nodemailer');

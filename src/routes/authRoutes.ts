@@ -2,12 +2,14 @@ const router = require('express').Router();
 
 const authController = require('../controllers/authController');
 const passwordResetController = require('../controllers/passwordResetController');
-const { accessToken, refreshToken, verificationToken } = require('../middlewares/authMiddleware');
+const { accessToken, refreshToken } = require('../middlewares/authMiddleware');
 const { passwordResetRateLimit } = require('../middlewares/passwordResetRateLimit');
 const { createRateLimiter } = require('../middlewares/rateLimitMiddleware');
 const validate = require('../utils/validator');
 const fields = require('../validators/authValidator');
 const { resetPasswordValidation } = require('../validators/passwordResetValidator');
+const registrationController = require('../controllers/registrationController');
+const verificationController = require('../controllers/verificationController');
 
 /**
  * Rate limiter for forgot password endpoint
@@ -17,6 +19,17 @@ const forgotPasswordRateLimiter = createRateLimiter({
   windowMs: 60 * 1000, // 1 minute
   max: 50, // 50 requests per minute (increased for testing)
   message: 'Too many password reset requests. Please try again later.',
+});
+
+const registerRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5,
+  message: 'Too many registration attempts. Please try again in a minute.',
+});
+const verifyRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10,
+  message: 'Too many verification attempts. Please try again in a minute.',
 });
 
 /**
@@ -72,10 +85,15 @@ const forgotPasswordRateLimiter = createRateLimiter({
  *           schema:
  *             type: object
  *             required:
+ *               - username
  *               - email
  *               - password
- *               - name
+ *               - password_confirmation
  *             properties:
+ *               username:
+ *                 type: string
+ *                 description: User's username
+ *                 example: johndoe
  *               email:
  *                 type: string
  *                 format: email
@@ -84,13 +102,14 @@ const forgotPasswordRateLimiter = createRateLimiter({
  *               password:
  *                 type: string
  *                 format: password
- *                 minLength: 8
+ *                 minLength: 6
  *                 description: User password
  *                 example: Password123!
- *               name:
+ *               password_confirmation:
  *                 type: string
- *                 description: User's full name
- *                 example: John Doe
+ *                 format: password
+ *                 description: Password confirmation (must match password)
+ *                 example: Password123!
  *     responses:
  *       201:
  *         description: Registration successful, verification email sent
@@ -110,9 +129,6 @@ const forgotPasswordRateLimiter = createRateLimiter({
  *                   properties:
  *                     user:
  *                       $ref: '#/components/schemas/User'
- *                     verification_token:
- *                       type: string
- *                       description: Token for email verification
  *       400:
  *         description: Invalid input
  *       409:
@@ -120,47 +136,13 @@ const forgotPasswordRateLimiter = createRateLimiter({
  *       500:
  *         description: Internal server error
  */
-router.post('/register', validate({ fields: fields.register }), authController.register);
-
-/**
- * @swagger
- * /api/v1/auth/register/verify:
- *   post:
- *     summary: Verify user registration
- *     tags: [Authentication]
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *         description: Verification token received in email
- *         example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
- *     responses:
- *       200:
- *         description: Account verified successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: Account verified successfully
- *                 data:
- *                   type: object
- *                   properties:
- *                     user:
- *                       $ref: '#/components/schemas/User'
- *       401:
- *         description: Invalid or expired verification token
- *       500:
- *         description: Internal server error
- */
-router.post('/register/verify', verificationToken, authController.verifyRegister);
+router.post(
+  '/register',
+  registerRateLimiter,
+  registrationController.registrationValidationRules,
+  registrationController.registrationValidator,
+  registrationController.register,
+);
 
 /**
  * @swagger
@@ -582,5 +564,44 @@ router.post(
   validate({ fields: fields.forgotPassword }),
   authController.forgotPassword,
 );
+
+/**
+ * @swagger
+ * /api/v1/auth/verify:
+ *   get:
+ *     summary: Verify user account
+ *     tags: [Authentication]
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Verification token received in email
+ *     responses:
+ *       200:
+ *         description: Account verified successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Account verified successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Invalid or expired verification token
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/register/verify', verifyRateLimiter, verificationController.verify);
 
 module.exports = router;

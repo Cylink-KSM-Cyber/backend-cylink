@@ -14,7 +14,7 @@ const pool = require('../config/database');
  * @param {string} email - Email address to search for
  * @returns {Promise<User|undefined>} User object or undefined if not found
  */
-exports.getUserByEmail = async (email: string): Promise<User | undefined> => {
+export const getUserByEmail = async (email: string): Promise<User | undefined> => {
   const res = await pool.query('SELECT * FROM users WHERE email = $1 AND deleted_at IS NULL', [
     email,
   ]);
@@ -27,7 +27,7 @@ exports.getUserByEmail = async (email: string): Promise<User | undefined> => {
  * @param {number} id - User ID to search for
  * @returns {Promise<User|undefined>} User object or undefined if not found
  */
-exports.getUserById = async (id: number): Promise<User | undefined> => {
+export const getUserById = async (id: number): Promise<User | undefined> => {
   const res = await pool.query('SELECT * FROM users WHERE id = $1 AND deleted_at IS NULL', [id]);
 
   return res.rows[0];
@@ -38,7 +38,7 @@ exports.getUserById = async (id: number): Promise<User | undefined> => {
  * @param {string} token - Password reset token to search for
  * @returns {Promise<User|undefined>} User object or undefined if not found or token expired
  */
-exports.getUserByPasswordResetToken = async (token: string): Promise<User | undefined> => {
+export const getUserByPasswordResetToken = async (token: string): Promise<User | undefined> => {
   const res = await pool.query(
     `SELECT * FROM users 
      WHERE password_reset_token = $1 
@@ -55,7 +55,7 @@ exports.getUserByPasswordResetToken = async (token: string): Promise<User | unde
  * @param {User} user - User data to create
  * @returns {Promise<User>} Created user
  */
-exports.createUser = async (user: User): Promise<User> => {
+export const createUser = async (user: User): Promise<User> => {
   const query = `
     INSERT INTO users (email, password, username, role, verification_token)
     VALUES ($1, $2, $3, $4, $5)
@@ -79,7 +79,7 @@ exports.createUser = async (user: User): Promise<User> => {
  * @param {number} userId - User ID to update
  * @returns {Promise<User>} Updated user
  */
-exports.updateUser = async (userData: Partial<User>, userId?: number): Promise<User> => {
+export const updateUser = async (userData: Partial<User>, userId?: number): Promise<User> => {
   // Build dynamic update query based on provided fields
   const updateFields: string[] = [];
   const values: unknown[] = [];
@@ -124,7 +124,7 @@ exports.updateUser = async (userData: Partial<User>, userId?: number): Promise<U
  * @param {Date} expiresAt - Token expiration time
  * @returns {Promise<User>} Updated user
  */
-exports.setPasswordResetToken = async (
+export const setPasswordResetToken = async (
   email: string,
   token: string,
   expiresAt: Date,
@@ -148,7 +148,7 @@ exports.setPasswordResetToken = async (
  * @param {string} email - User email
  * @returns {Promise<User>} Updated user
  */
-exports.clearPasswordResetToken = async (email: string): Promise<User> => {
+export const clearPasswordResetToken = async (email: string): Promise<User> => {
   const query = `
     UPDATE users 
     SET password_reset_token = NULL,
@@ -167,7 +167,7 @@ exports.clearPasswordResetToken = async (email: string): Promise<User> => {
  * @param {string} token - Password reset token
  * @returns {Promise<User>} Updated user
  */
-exports.clearPasswordResetTokenByToken = async (token: string): Promise<User> => {
+export const clearPasswordResetTokenByToken = async (token: string): Promise<User> => {
   const query = `
     UPDATE users 
     SET password_reset_token = NULL,
@@ -185,7 +185,7 @@ exports.clearPasswordResetTokenByToken = async (token: string): Promise<User> =>
  * Cleans up expired password reset tokens
  * @returns {Promise<number>} Number of tokens cleaned up
  */
-exports.cleanupExpiredPasswordResetTokens = async (): Promise<number> => {
+export const cleanupExpiredPasswordResetTokens = async (): Promise<number> => {
   const query = `
     UPDATE users 
     SET password_reset_token = NULL,
@@ -206,7 +206,7 @@ exports.cleanupExpiredPasswordResetTokens = async (): Promise<number> => {
  * @param {number} windowMinutes - Rate limit window in minutes (default: 5)
  * @returns {Promise<boolean>} True if within rate limit, false otherwise
  */
-exports.isWithinPasswordResetRateLimit = async (
+export const isWithinPasswordResetRateLimit = async (
   email: string,
   windowMinutes: number = 5,
 ): Promise<boolean> => {
