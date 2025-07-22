@@ -90,12 +90,10 @@ exports.getUrlByShortCode = async (shortCode: string) => {
  * @param {number} userId - The user ID
  * @returns {Promise<any[]>} Array of URL records
  */
-exports.getUrlsByUser = async (userId: number) => {
+exports.getUrlsByUser = async () => {
   const result = await pool.query(
-    'SELECT * FROM urls WHERE user_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC',
-    [userId],
+    'SELECT * FROM urls WHERE deleted_at IS NULL ORDER BY created_at DESC',
   );
-
   return result.rows;
 };
 
@@ -122,7 +120,6 @@ interface UrlHighlights {
  * @returns {Promise<{results: any[], total: number, highlights: UrlHighlights}>} Search results, total count, and highlights
  */
 exports.searchUrls = async (
-  userId: number,
   searchTerm: string,
   page: number = 1,
   limit: number = 10,
@@ -139,12 +136,11 @@ exports.searchUrls = async (
     // Base query for search
     const baseQuery = `
       FROM urls
-      WHERE user_id = $1
-        AND deleted_at IS NULL
+      WHERE deleted_at IS NULL
         AND (
-          LOWER(original_url) LIKE LOWER($2) OR
-          LOWER(short_code) LIKE LOWER($2) OR
-          (title IS NOT NULL AND LOWER(title) LIKE LOWER($2))
+          LOWER(original_url) LIKE LOWER($1) OR
+          LOWER(short_code) LIKE LOWER($1) OR
+          (title IS NOT NULL AND LOWER(title) LIKE LOWER($1))
         )
     `;
 
@@ -186,10 +182,10 @@ exports.searchUrls = async (
     }
 
     // Apply pagination
-    searchQuery += ` LIMIT $3 OFFSET $4`;
+    searchQuery += ` LIMIT $2 OFFSET $3`;
 
     // Execute count query
-    const countResult = await pool.query(countQuery, [userId, likePattern]);
+    const countResult = await pool.query(countQuery, [likePattern]);
     const total = parseInt(countResult.rows[0].count, 10);
 
     // If no results found, return empty array with zero total
@@ -205,7 +201,7 @@ exports.searchUrls = async (
     const offset = (page - 1) * limit;
 
     // Now we only need 4 parameters: userId, likePattern, limit, offset
-    const searchResult = await pool.query(searchQuery, [userId, likePattern, limit, offset]);
+    const searchResult = await pool.query(searchQuery, [likePattern, limit, offset]);
 
     // Generate highlights for matched content
     const highlights: UrlHighlights = {};
@@ -414,7 +410,7 @@ interface UrlFilterOptions {
  * @param {string} [options.sortOrder='desc'] - Sort order (asc or desc)
  * @returns {Promise<{urls: any[], total: number, total_all: number}>} URLs, total matching count, and total overall count
  */
-exports.getUrlsByUserWithFilters = async (userId: number, options: UrlFilterOptions = {}) => {
+exports.getUrlsByUserWithFilters = async (options: UrlFilterOptions = {}) => {
   const {
     status = 'all',
     page = 1,
@@ -427,9 +423,8 @@ exports.getUrlsByUserWithFilters = async (userId: number, options: UrlFilterOpti
   const offset = (page - 1) * limit;
 
   // Base where clause: user_id and not deleted
-  let whereClause = 'user_id = $1 AND deleted_at IS NULL';
-  const params: (number | string)[] = [userId];
-  let paramIndex = 2; // Start from $2 since $1 is userId
+  let whereClause = 'deleted_at IS NULL';
+  let paramIndex = 1; // Start from $1 since $1 is userId
 
   // Add status filtering
   if (status !== 'all') {
@@ -449,13 +444,13 @@ exports.getUrlsByUserWithFilters = async (userId: number, options: UrlFilterOpti
   }
 
   // Get total count of all URLs for the user
-  const totalAllQuery = `SELECT COUNT(*) FROM urls WHERE user_id = $1 AND deleted_at IS NULL`;
-  const totalAllResult = await pool.query(totalAllQuery, [userId]);
+  const totalAllQuery = `SELECT COUNT(*) FROM urls WHERE deleted_at IS NULL`;
+  const totalAllResult = await pool.query(totalAllQuery);
   const totalAll = parseInt(totalAllResult.rows[0].count, 10);
 
   // Get total count of filtered URLs
   const totalQuery = `SELECT COUNT(*) FROM urls WHERE ${whereClause}`;
-  const totalResult = await pool.query(totalQuery, params);
+  const totalResult = await pool.query(totalQuery);
   const total = parseInt(totalResult.rows[0].count, 10);
 
   // Determine sort column and order
@@ -498,9 +493,7 @@ exports.getUrlsByUserWithFilters = async (userId: number, options: UrlFilterOpti
     LIMIT $${paramIndex++} OFFSET $${paramIndex++}
   `;
 
-  params.push(limit, offset);
-
-  const urlsResult = await pool.query(urlsQuery, params);
+  const urlsResult = await pool.query(urlsQuery, [limit, offset]);
 
   return {
     urls: urlsResult.rows,
