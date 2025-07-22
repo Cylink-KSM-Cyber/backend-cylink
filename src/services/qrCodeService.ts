@@ -487,7 +487,6 @@ export const deleteQrCode = async (id: number): Promise<boolean> => {
 /**
  * Gets all QR codes for a user with pagination, sorting, and filtering
  *
- * @param {number} userId - User ID to get QR codes for
  * @param {QrCodeListQueryParams} queryParams - Query parameters for pagination, sorting, and filtering
  * @returns {Promise<QrCodeListResponse>} List of QR codes with pagination information
  */
@@ -495,7 +494,7 @@ export const getAllQrCodes = async (
   queryParams: QrCodeListQueryParams,
 ): Promise<QrCodeListResponse> => {
   try {
-    const { qrCodes, total } = await qrCodeModel.getQrCodesByUser(undefined, queryParams);
+    const { qrCodes, total } = await qrCodeModel.getQrCodesByUser(queryParams);
     const page = queryParams.page || 1;
     const limit = queryParams.limit || 10;
     const totalPages = Math.ceil(total / limit);

@@ -422,9 +422,10 @@ exports.getUrlsByUserWithFilters = async (options: UrlFilterOptions = {}) => {
   // Calculate offset for pagination
   const offset = (page - 1) * limit;
 
-  // Base where clause: user_id and not deleted
+  // Base where clause: not deleted
   let whereClause = 'deleted_at IS NULL';
-  let paramIndex = 1; // Start from $1 since $1 is userId
+  const params: (number | string)[] = [];
+  let paramIndex = 1; // $1 is the first actual parameter
 
   // Add status filtering
   if (status !== 'all') {
@@ -450,7 +451,7 @@ exports.getUrlsByUserWithFilters = async (options: UrlFilterOptions = {}) => {
 
   // Get total count of filtered URLs
   const totalQuery = `SELECT COUNT(*) FROM urls WHERE ${whereClause}`;
-  const totalResult = await pool.query(totalQuery);
+  const totalResult = await pool.query(totalQuery, params);
   const total = parseInt(totalResult.rows[0].count, 10);
 
   // Determine sort column and order
@@ -493,7 +494,7 @@ exports.getUrlsByUserWithFilters = async (options: UrlFilterOptions = {}) => {
     LIMIT $${paramIndex++} OFFSET $${paramIndex++}
   `;
 
-  const urlsResult = await pool.query(urlsQuery, [limit, offset]);
+  const urlsResult = await pool.query(urlsQuery, [...params, limit, offset]);
 
   return {
     urls: urlsResult.rows,
