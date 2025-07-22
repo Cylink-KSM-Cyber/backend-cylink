@@ -135,9 +135,15 @@ exports.login = async (req: Request, res: Response): Promise<Response> => {
       return sendResponse(res, 400, 'User is not activated!');
     }
 
-    const userData = authService.login(user as User);
+    // Get IP and user-agent
+    const ipAddress = req.ip || (req.headers['x-forwarded-for'] as string) || null;
+    const userAgent = req.headers['user-agent'] || null;
+
+    // Await new async login logic
+    const userData = await authService.login(user as User, ipAddress, userAgent);
     logger.info(`Successfully logged in for ${(user as User).email}`);
 
+    // Add first_login to response
     return sendResponse(res, 200, 'Successfully logged in!', userData);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
