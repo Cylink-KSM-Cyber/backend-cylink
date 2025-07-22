@@ -487,45 +487,23 @@ export const deleteQrCode = async (id: number): Promise<boolean> => {
 /**
  * Gets all QR codes for a user with pagination, sorting, and filtering
  *
- * @param {number} userId - User ID to get QR codes for
  * @param {QrCodeListQueryParams} queryParams - Query parameters for pagination, sorting, and filtering
  * @returns {Promise<QrCodeListResponse>} List of QR codes with pagination information
  */
 export const getAllQrCodes = async (
-  userId: number,
   queryParams: QrCodeListQueryParams,
 ): Promise<QrCodeListResponse> => {
   try {
-    // Get QR codes from the database with filtering and pagination
-    const { qrCodes, total } = await qrCodeModel
-      .getQrCodesByUser(userId, queryParams)
-      .catch((dbError: Error) => {
-        if (
-          dbError.message.includes('Invalid sortBy') ||
-          dbError.message.includes('Invalid sortOrder')
-        ) {
-          logger.warn(`Parameter validation error: ${dbError.message}`);
-          throw dbError;
-        }
-        logger.error(`Database error: ${dbError.message}`);
-        throw new Error('Failed to retrieve QR codes from database');
-      });
-
-    // Calculate pagination information
+    const { qrCodes, total } = await qrCodeModel.getQrCodesByUser(queryParams);
     const page = queryParams.page || 1;
     const limit = queryParams.limit || 10;
     const totalPages = Math.ceil(total / limit);
-
-    // Format each QR code with appropriate URLs
     const formattedQrCodes = qrCodes.map((qrCode: any) => {
-      // If the QR code already has short_code from the model query
       if (qrCode.short_code) {
         return formatQrCodeResponse(qrCode, qrCode.short_code);
       }
       return qrCode;
     });
-
-    // Format the response
     return {
       data: formattedQrCodes,
       pagination: {
@@ -536,8 +514,7 @@ export const getAllQrCodes = async (
       },
     };
   } catch (error) {
-    // General error handling
-    logger.error(`Error retrieving QR codes for user ${userId}: ${error}`);
+    logger.error(`Error retrieving QR codes (global): ${error}`);
     throw error;
   }
 };

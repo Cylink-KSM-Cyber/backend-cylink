@@ -156,16 +156,9 @@ const parseBooleanParam = (value?: string, defaultValue?: boolean): boolean | un
  */
 export const getQrCodesByUser = async (req: Request, res: Response): Promise<Response> => {
   try {
-    // Get authenticated user ID from request
-    const userId = req.body.id;
-    if (!userId) {
-      return sendResponse(res, 401, 'Unauthorized - User ID not found in request');
-    }
-
-    // Parse query parameters using helper functions
+    // Parse query parameters
     const { page, limit } = parsePagination(req.query);
     const search = req.query.search as string;
-
     let color: string | undefined;
     try {
       color = validateAndNormalizeColor(req.query.color as string);
@@ -176,7 +169,6 @@ export const getQrCodesByUser = async (req: Request, res: Response): Promise<Res
       }
       throw error;
     }
-
     let sortBy: SortByField;
     try {
       sortBy = normalizeSortBy(req.query.sortBy as string);
@@ -187,7 +179,6 @@ export const getQrCodesByUser = async (req: Request, res: Response): Promise<Res
       }
       throw error;
     }
-
     let sortOrder: SortOrderDirection;
     try {
       sortOrder = normalizeSortOrder(req.query.sortOrder as string);
@@ -198,13 +189,10 @@ export const getQrCodesByUser = async (req: Request, res: Response): Promise<Res
       }
       throw error;
     }
-
-    // Parse boolean parameters
     const includeLogo = parseBooleanParam(req.query.includeLogo as string);
     const includeUrl = parseBooleanParam(req.query.includeUrl as string, true);
-
-    // Get QR codes from service with all parameters
-    const result = await getAllQrCodes(userId, {
+    // Call service without userId
+    const result = await getAllQrCodes({
       page,
       limit,
       sortBy,
@@ -214,13 +202,11 @@ export const getQrCodesByUser = async (req: Request, res: Response): Promise<Res
       includeLogo,
       includeUrl,
     });
-
     // Return empty array with pagination if no results
     if (result.data.length === 0) {
       return sendResponse(res, 200, 'No QR codes found', [], result.pagination as any);
     }
-
-    logger.info(`Successfully retrieved ${result.data.length} QR codes for user ID: ${userId}`);
+    logger.info(`Successfully retrieved ${result.data.length} QR codes (global)`);
     return sendResponse(
       res,
       200,
@@ -229,18 +215,14 @@ export const getQrCodesByUser = async (req: Request, res: Response): Promise<Res
       result.pagination as any,
     );
   } catch (error) {
-    // Handle specific error conditions
     if (error instanceof Error) {
       logger.error(`Error retrieving QR codes: ${error.message}`);
-
-      // Check for validation errors from the model or service
       if (error.message.includes('Invalid sortBy') || error.message.includes('Invalid sortOrder')) {
         return sendResponse(res, 400, error.message);
       }
     } else {
       logger.error('Error retrieving QR codes: Unknown error type', error);
     }
-
     return sendResponse(res, 500, 'Internal Server Error');
   }
 };

@@ -425,7 +425,7 @@ exports.getUrlAnalyticsWithFilters = async (urlId: number, options: AnalyticsOpt
  * @param {UrlFilterOptions} options - Filter and pagination options
  * @returns {Promise<{urls: any[], pagination: any, filter_info: any}>} URLs with pagination and filter info
  */
-exports.getUrlsWithStatusFilter = async (userId: number, options: UrlFilterOptions) => {
+exports.getUrlsWithStatusFilter = async (options: UrlFilterOptions) => {
   const {
     status = 'all',
     page = 1,
@@ -461,10 +461,7 @@ exports.getUrlsWithStatusFilter = async (userId: number, options: UrlFilterOptio
   }
 
   // Get URLs with filter
-  const { urls, total, total_all } = await urlModel.getUrlsByUserWithFilters(
-    userId,
-    modifiedOptions,
-  );
+  const { urls, total, total_all } = await urlModel.getUrlsByUserWithFilters(modifiedOptions);
 
   console.log(
     `getUrlsWithStatusFilter - Retrieved ${urls.length} URLs with status ${status} before processing (total in database: ${total})`,
@@ -610,7 +607,7 @@ exports.getUrlsWithStatusFilter = async (userId: number, options: UrlFilterOptio
  * @param {UrlFilterOptions} options - Filter and pagination options including search
  * @returns {Promise<{urls: any[], pagination: any, filter_info: any, search_info: any}>} URLs with pagination, filter and search info
  */
-exports.getUrlsWithStatusAndSearch = async (userId: number, options: UrlFilterOptions) => {
+exports.getUrlsWithStatusAndSearch = async (options: UrlFilterOptions) => {
   const {
     status = 'all',
     search = '',
@@ -638,7 +635,6 @@ exports.getUrlsWithStatusAndSearch = async (userId: number, options: UrlFilterOp
       total: searchTotal,
       highlights,
     } = await urlModel.searchUrls(
-      userId,
       search,
       1, // Get all results first, then we'll filter and paginate
       1000, // High limit to get more results for filtering
@@ -647,8 +643,8 @@ exports.getUrlsWithStatusAndSearch = async (userId: number, options: UrlFilterOp
     );
 
     // Count all URLs for the user (unfiltered)
-    const totalAllQuery = `SELECT COUNT(*) FROM urls WHERE user_id = $1 AND deleted_at IS NULL`;
-    const totalAllResult = await pool.query(totalAllQuery, [userId]);
+    const totalAllQuery = `SELECT COUNT(*) FROM urls WHERE deleted_at IS NULL`;
+    const totalAllResult = await pool.query(totalAllQuery);
     const totalAll = parseInt(totalAllResult.rows[0].count, 10);
 
     // If no search results, return empty with proper metadata

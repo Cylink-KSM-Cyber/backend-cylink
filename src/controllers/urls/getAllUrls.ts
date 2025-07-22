@@ -349,14 +349,7 @@ const getAllAndSortUrls = async (
  */
 export const getAllUrls = async (req: Request, res: Response): Promise<Response> => {
   try {
-    // Get user ID from authentication token
-    const userId = req.body.id;
-
-    // Guard clause: Check if user is authenticated
-    if (!userId) {
-      return sendResponse(res, 401, 'Unauthorized: No user ID');
-    }
-
+    // Remove userId extraction
     // Parse query parameters for pagination, sorting, and search
     const {
       page,
@@ -385,7 +378,7 @@ export const getAllUrls = async (req: Request, res: Response): Promise<Response>
 
       try {
         const { urlsWithDetails, pagination, searchInfo } = await searchUrls(
-          userId,
+          req.body.id, // Keep userId for search functionality
           search,
           validatedPage,
           validatedLimit,
@@ -435,7 +428,7 @@ export const getAllUrls = async (req: Request, res: Response): Promise<Response>
 
     // If no search term, use the regular getAllUrls functionality
     const { paginatedUrls, pagination } = await getAllAndSortUrls(
-      userId,
+      req.body.id, // Keep userId for getAllAndSortUrls
       validatedPage,
       validatedLimit,
       sortBy || 'created_at',

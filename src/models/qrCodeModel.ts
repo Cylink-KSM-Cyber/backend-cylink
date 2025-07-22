@@ -232,7 +232,7 @@ export const urlHasQrCodes = async (urlId: number, includeDeleted = false): Prom
  * @throws {Error} If invalid parameters are provided
  */
 export const getQrCodesByUser = async (
-  userId: number,
+  _userId: number, // ignore userId
   queryParams: QrCodeListQueryParams,
   includeDeleted = false,
 ): Promise<{ qrCodes: QrCode[]; total: number }> => {
@@ -284,8 +284,7 @@ export const getQrCodesByUser = async (
   let baseQuery = `
     FROM qr_codes qc
     JOIN urls u ON qc.url_id = u.id
-    WHERE u.user_id = $1
-      AND u.deleted_at IS NULL
+    WHERE u.deleted_at IS NULL
   `;
 
   // Add condition to exclude deleted QR codes unless includeDeleted is true
@@ -293,8 +292,8 @@ export const getQrCodesByUser = async (
     baseQuery += ' AND qc.deleted_at IS NULL';
   }
 
-  const queryValues: any[] = [userId];
-  let paramIndex = 2;
+  const queryValues: any[] = [];
+  let paramIndex = 1;
 
   // Add search functionality
   if (search) {
