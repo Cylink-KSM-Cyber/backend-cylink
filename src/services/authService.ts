@@ -147,19 +147,33 @@ exports.authenticate = async (
 };
 
 /**
- * Creates user session
+ * Creates user session and records login event
  * @param {User} userData - User data
- * @returns {LoginResponse} Session data with tokens
+ * @param {string | null} ipAddress - IP address of login
+ * @param {string | null} userAgent - User agent string
+ * @returns {Promise<LoginResponse & { first_login: boolean }>} Session data with tokens and first_login flag
  */
-exports.login = (userData: User): LoginResponse => {
+exports.login = async (
+  userData: User,
+  ipAddress: string | null,
+  userAgent: string | null,
+): Promise<LoginResponse & { first_login: boolean }> => {
+  // Get previous last_login before updating
+  const prevLastLogin = await userModel.getLastLogin(userData.id);
+  // Update last_login to now
+  await userModel.updateUser({ last_login: new Date() }, userData.id);
+  // Insert login record
+  await userModel.insertUserLogin(userData.id, ipAddress, userAgent);
+  // Build response
   return {
-    user: userCollection.single(userData),
+    user: userCollection.single({ ...userData, last_login: new Date() }),
     token: {
       type: 'bearer',
       access: jwt.access.sign(userData),
       refresh: jwt.refresh.sign(userData),
       expiresAt: jwt.access.getExpiration(),
     },
+    first_login: prevLastLogin === null,
   };
 };
 

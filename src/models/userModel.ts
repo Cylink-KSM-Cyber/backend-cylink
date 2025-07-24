@@ -221,3 +221,32 @@ export const isWithinPasswordResetRateLimit = async (
   const res = await pool.query(query, [email]);
   return res.rows.length > 0;
 };
+
+/**
+ * Inserts a login record into user_logins table
+ * @param {number} userId - User ID
+ * @param {string | null} ipAddress - IP address
+ * @param {string | null} userAgent - User agent string
+ * @returns {Promise<void>}
+ */
+export const insertUserLogin = async (
+  userId: number,
+  ipAddress: string | null,
+  userAgent: string | null,
+): Promise<void> => {
+  const query = `
+    INSERT INTO user_logins (user_id, ip_address, user_agent)
+    VALUES ($1, $2, $3)
+  `;
+  await pool.query(query, [userId, ipAddress, userAgent]);
+};
+
+/**
+ * Gets the last_login value for a user
+ * @param {number} userId - User ID
+ * @returns {Promise<Date | null>} last_login value or null
+ */
+export const getLastLogin = async (userId: number): Promise<Date | null> => {
+  const res = await pool.query('SELECT last_login FROM users WHERE id = $1', [userId]);
+  return res.rows[0]?.last_login ?? null;
+};
