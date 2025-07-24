@@ -450,21 +450,71 @@ router.post(
  *                   example: 200
  *                 message:
  *                   type: string
- *                   example: Login successful
+ *                   example: Successfully logged in!
  *                 data:
  *                   type: object
  *                   properties:
  *                     user:
- *                       $ref: '#/components/schemas/User'
- *                     tokens:
  *                       type: object
  *                       properties:
- *                         access_token:
+ *                         id:
+ *                           type: integer
+ *                           example: 11
+ *                         username:
+ *                           type: string
+ *                           example: Nugraha Adhitama Haryono
+ *                         email:
+ *                           type: string
+ *                           example: nugrahaadhitama22@gmail.com
+ *                         created_at:
+ *                           type: string
+ *                           format: date-time
+ *                           example: 2025-07-22T06:01:00.911Z
+ *                         updated_at:
+ *                           type: string
+ *                           format: date-time
+ *                           example: 2025-07-22T06:02:45.684Z
+ *                         last_login:
+ *                           type: string
+ *                           format: date-time
+ *                           nullable: true
+ *                           example: 2025-07-22T07:00:00.000Z
+ *                     token:
+ *                       type: object
+ *                       properties:
+ *                         type:
+ *                           type: string
+ *                           example: bearer
+ *                         access:
  *                           type: string
  *                           description: JWT access token
- *                         refresh_token:
+ *                         refresh:
  *                           type: string
  *                           description: JWT refresh token
+ *                         expiresAt:
+ *                           type: integer
+ *                           description: Expiration timestamp (ms)
+ *                     first_login:
+ *                       type: boolean
+ *                       description: True if this is the user's first login
+ *                       example: false
+ *             example:
+ *               status: 200
+ *               message: Successfully logged in!
+ *               data:
+ *                 user:
+ *                   id: 11
+ *                   username: Nugraha Adhitama Haryono
+ *                   email: nugrahaadhitama22@gmail.com
+ *                   created_at: 2025-07-22T06:01:00.911Z
+ *                   updated_at: 2025-07-22T06:02:45.684Z
+ *                   last_login: 2025-07-22T07:00:00.000Z
+ *                 token:
+ *                   type: bearer
+ *                   access: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                   refresh: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                   expiresAt: 1753198434251
+ *                 first_login: false
  *       400:
  *         description: Invalid credentials
  *       401:
