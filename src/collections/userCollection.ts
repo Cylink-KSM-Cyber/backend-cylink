@@ -25,6 +25,7 @@ interface User {
   created_at?: Date;
   updated_at?: Date;
   deleted_at?: Date | null;
+  last_login?: Date | null;
 }
 
 /**
@@ -41,6 +42,7 @@ const single = (data: User): object | null => {
     email: data.email,
     created_at: data.created_at,
     updated_at: data.updated_at,
+    ...(data.last_login !== undefined ? { last_login: data.last_login } : {}),
   };
 };
 
