@@ -31,7 +31,7 @@ interface CacheStats {
 /**
  * Simple in-memory cache implementation
  */
-class MemoryCache {
+export class MemoryCache {
   private cache: Map<string, CacheEntry<any>>;
   private stats: CacheStats;
   private maxSize: number;
