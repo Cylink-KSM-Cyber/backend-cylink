@@ -7,10 +7,17 @@ COPY package*.json ./
 # Install ALL dependencies (including dev dependencies)
 RUN npm ci
 
+# Copy entrypoint script
+COPY docker/api/entrypoint.dev.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.dev.sh
+
 # Source code will be mounted as volumes
 # No COPY or build steps needed
 
 EXPOSE 5000
+
+# Set entrypoint to run migrations before starting app
+ENTRYPOINT ["entrypoint.dev.sh"]
 
 # Run development server with nodemon
 CMD ["npm", "run", "dev"]

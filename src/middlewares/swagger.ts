@@ -8,6 +8,7 @@
 import { Express } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from '../config/swagger';
+import basicAuth from 'express-basic-auth';
 
 /**
  * Initializes Swagger UI middleware for the API documentation
@@ -16,18 +17,23 @@ import swaggerSpec from '../config/swagger';
  * @returns {void}
  */
 export const setupSwagger = (app: Express): void => {
-  // Serve Swagger documentation UI
+  // Basic auth protection for documentation
+  const docsAuth = basicAuth({
+    users: { 
+      [process.env.DOCS_USERNAME || 'admin']: process.env.DOCS_PASSWORD || 'password' 
+    },
+    challenge: true,
+    realm: 'CyLink API Documentation',
+  });
+
+  // Serve Swagger documentation UI with basic auth
   app.use(
     '/api/docs',
+    docsAuth,
     swaggerUi.serve,
     swaggerUi.setup(swaggerSpec, {
       explorer: true,
       customCss: '.swagger-ui .topbar { display: none }',
-      customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.6.2/swagger-ui.min.css',
-      customJs: [
-        'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.6.2/swagger-ui-bundle.min.js',
-        'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.6.2/swagger-ui-standalone-preset.min.js',
-      ],
       customSiteTitle: 'CyLink API Documentation',
       customfavIcon: '/favicon.ico',
       swaggerOptions: {
@@ -36,8 +42,8 @@ export const setupSwagger = (app: Express): void => {
     }),
   );
 
-  // Serve Swagger JSON
-  app.get('/api/docs.json', (req, res) => {
+  // Serve Swagger JSON with basic auth
+  app.get('/api/docs.json', docsAuth, (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(swaggerSpec);
   });
@@ -46,6 +52,9 @@ export const setupSwagger = (app: Express): void => {
   /* eslint-disable no-console */
   console.log(
     `📚 Swagger documentation available at http://localhost:${process.env.PORT || 3000}/api/docs`,
+  );
+  console.log(
+    `🔐 Authentication required - Username: ${process.env.DOCS_USERNAME || 'admin'}`,
   );
   /* eslint-enable no-console */
 };
