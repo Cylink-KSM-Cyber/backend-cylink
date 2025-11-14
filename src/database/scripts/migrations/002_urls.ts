@@ -107,7 +107,7 @@ export async function up(knex: Knex): Promise<void> {
 
     // prevent duplicate key error - only run if table was just created
     await knex.raw(`
-      SELECT setval('${tableName}_id_seq', COALESCE((SELECT MAX(id) FROM ${tableName}), 0), true);
+      SELECT setval('${tableName}_id_seq', COALESCE((SELECT MAX(id) FROM ${tableName}), 0) + 1, false);
     `);
   }
 

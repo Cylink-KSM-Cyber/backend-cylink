@@ -10,3 +10,7 @@ memory.md
 logs/
 # Sentry Config File
 .sentryclirc
+
+
+#Ignore cursor AI rules
+.cursor/rules/codacy.mdc
