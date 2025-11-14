@@ -1,0 +1,17 @@
+FROM node:18-alpine
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install ALL dependencies (including dev dependencies)
+RUN npm ci
+
+# Source code will be mounted as volumes
+# No COPY or build steps needed
+
+EXPOSE 5000
+
+# Run development server with nodemon
+CMD ["npm", "run", "dev"]
+
