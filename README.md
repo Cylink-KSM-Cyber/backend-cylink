@@ -63,7 +63,138 @@ A coverage report will be generated in the console and a detailed HTML report wi
 
 ## Development
 
-### Getting Started
+### Docker Development Environment (Recommended)
+
+The project includes a complete Docker-based development environment with hot reload, local PostgreSQL database, and MailHog for email testing.
+
+#### Prerequisites
+
+- Docker and Docker Compose installed
+- For WSL2 users: Ensure WSL2 is properly configured
+
+#### Quick Start
+
+1. **Copy environment file:**
+
+   ```bash
+   cp .env.example .env.dev
+   ```
+
+2. **Configure `.env.dev`:**
+   The file is pre-configured with development defaults. Key settings:
+
+   - Database: Local PostgreSQL in Docker (no need for external database)
+   - SMTP: MailHog (catches all emails for testing)
+   - Port: 5000
+
+3. **Start development environment:**
+
+   ```bash
+   docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
+   ```
+
+4. **Access services:**
+   - **API**: http://localhost:5000
+   - **API Documentation (Swagger)**: http://localhost:5000/api/docs
+     - Username: `admin`
+     - Password: `cylink-dev-docs-2024`
+   - **MailHog UI**: http://localhost:8025 (view all sent emails)
+   - **Database**: localhost:5433
+     - User: `cylink_user`
+     - Password: `cylink_password`
+     - Database: `cylink_dev`
+
+#### Development Features
+
+- ✅ **Hot Reload**: Code changes are detected automatically via nodemon
+- ✅ **Auto Migrations**: Database schema is created and migrated automatically on startup
+- ✅ **Email Testing**: All emails are captured by MailHog (no external SMTP needed)
+- ✅ **Local Database**: PostgreSQL runs in Docker (no cloud database required)
+- ✅ **Health Checks**: Database health checks ensure proper startup order
+
+#### Common Commands
+
+```bash
+# Start development environment
+docker compose -f docker-compose.dev.yml --env-file .env.dev up -d
+
+# Stop development environment
+docker compose -f docker-compose.dev.yml --env-file .env.dev down
+
+# View logs (all services)
+docker compose -f docker-compose.dev.yml --env-file .env.dev logs -f
+
+# View logs (specific service)
+docker compose -f docker-compose.dev.yml --env-file .env.dev logs -f api
+
+# Restart a service
+docker compose -f docker-compose.dev.yml --env-file .env.dev restart api
+
+# Rebuild and restart
+docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
+
+# Execute command in container
+docker compose -f docker-compose.dev.yml --env-file .env.dev exec api npm run db:migrate
+
+# Access database shell
+docker compose -f docker-compose.dev.yml --env-file .env.dev exec database psql -U cylink_user -d cylink_dev
+```
+
+#### Troubleshooting
+
+**Port Already in Use:**
+
+```bash
+# Check what's using the port
+sudo lsof -i :5000
+# or
+netstat -tlnp | grep 5000
+
+# Stop all containers and restart
+docker compose -f docker-compose.dev.yml --env-file .env.dev down
+docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
+```
+
+**Database Connection Issues:**
+
+```bash
+# Check database health
+docker compose -f docker-compose.dev.yml --env-file .env.dev ps
+
+# Reset database (WARNING: This will delete all data)
+docker compose -f docker-compose.dev.yml --env-file .env.dev down -v
+docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
+```
+
+**WSL2 Users - Cannot Access from Windows Browser:**
+
+If running on WSL2 and cannot access `http://localhost:5000` from Windows:
+
+1. Get WSL2 IP address:
+
+   ```bash
+   hostname -I
+   ```
+
+2. Access using WSL2 IP (e.g., `http://172.29.207.112:5000`)
+
+For permanent solution, create `.wslconfig` in Windows:
+
+```ini
+# Location: C:\Users\<YourUsername>\.wslconfig
+[wsl2]
+networkingMode=mirrored
+localhostForwarding=true
+```
+
+Then restart WSL2:
+
+```powershell
+# In Windows PowerShell (Administrator)
+wsl --shutdown
+```
+
+### Local Development (Without Docker)
 
 ```bash
 # Install dependencies
@@ -144,7 +275,7 @@ NODE_ENV=development
 >    npm run migration:new
 >    ```
 >
->    • Choose between *create table* or *alter table*.
+>    • Choose between _create table_ or _alter table_.
 >    • The script generates the correctly named file (`NNN_<table>.ts` or `YYYYMMDDHHmmss_<purpose>_table.ts`).
 >
 > 3. If you attempt to create a file manually in that folder while the watcher is running, the terminal will print a red warning:
@@ -154,7 +285,6 @@ NODE_ENV=development
 >    The file will still be created (in case of emergency edits), but you are urged to delete it and rerun the generator.
 >
 > 4. Normal Knex commands (`npm run db:migrate`, etc.) work unchanged.
-
 
 This project uses Knex.js for database migrations. The migration system provides a structured approach to database schema changes.
 
@@ -186,11 +316,12 @@ Migration files are located in `/src/database/scripts/migrations/` and follow a 
 - `008_conversions.ts` - Conversion event tracking
 - `009_add_password_reset_columns.ts` - Password reset functionality
 - `010_add_search_indexes.ts` - Search performance optimization
+
 #### Creating New Migrations
 
 When creating new migrations, follow these best practices:
 
-1. **Use descriptive names**: `npm run db:migrate:make` is retained only for *legacy* or emergency scenarios (e.g., quick hotfixes in CI). Prefer `npm run migration:new` during normal development.
+1. **Use descriptive names**: `npm run db:migrate:make` is retained only for _legacy_ or emergency scenarios (e.g., quick hotfixes in CI). Prefer `npm run migration:new` during normal development.
 2. **Include both up and down functions**: Ensure migrations are reversible
 3. **Test thoroughly**: Run migration and rollback in development
 4. **Document changes**: Add comments explaining complex schema changes
