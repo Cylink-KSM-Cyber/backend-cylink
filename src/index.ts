@@ -18,7 +18,7 @@ import { startScheduler } from './jobs/jobScheduler';
 import cors from 'cors';
 import logger from './utils/logger';
 
-import * as Sentry from '@sentry/node'; 
+import * as Sentry from '@sentry/node';
 const app = express();
 const port = process.env.PORT || 3000;
 const clickTrackerMiddleware = require('./middlewares/clickTracker');
@@ -53,6 +53,8 @@ app.get('/test', (req: any, res: any) => {
   logger.error('test error', 'test error json');
   return res.status(200).json({ message: 'test' });
 });
+
+Sentry.logger.info('User triggered test log', { action: 'test_log' });
 
 // Sentry middleware
 Sentry.setupExpressErrorHandler(app);

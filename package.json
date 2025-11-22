@@ -44,7 +44,7 @@
   "dependencies": {
     "@faker-js/faker": "^9.7.0",
     "@sentry/cli": "^2.47.1",
-    "@sentry/node": "^9.38.0",
+    "@sentry/node": "^9.47.1",
     "@sentry/profiling-node": "^9.38.0",
     "@types/cors": "^2.8.17",
     "@types/winston": "^2.4.4",
