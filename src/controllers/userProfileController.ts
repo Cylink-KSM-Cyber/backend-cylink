@@ -6,7 +6,7 @@
  */
 
 import { Request, Response } from 'express';
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 
 const { sendResponse } = require('../utils/response');
 const userModel = require('../models/userModel');

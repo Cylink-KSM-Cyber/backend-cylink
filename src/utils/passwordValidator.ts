@@ -123,7 +123,7 @@ export const validatePasswordNotSame = async (
   const errors: string[] = [];
 
   try {
-    const { compare } = require('./crypto');
+    const { compare } = require('../libs/bcrypt/bcrypt.service');
     const isSame = await compare(newPassword, currentPasswordHash);
 
     if (isSame) {
@@ -132,7 +132,7 @@ export const validatePasswordNotSame = async (
   } catch (error) {
     // If comparison fails, we'll allow the password change for security reasons
     // but log the error for monitoring
-    const logger = require('./logger').default;
+    const logger = require('../libs/winston/winston.service').default;
     logger.error('Error comparing passwords:', error);
   }
 

@@ -7,7 +7,7 @@
 
 import { User } from '../collections/userCollection';
 import forgotPasswordMail from '../mails/forgot-password';
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 import {
   generatePasswordResetToken,
   generatePasswordResetExpiration,
@@ -18,9 +18,9 @@ const registerMail = require('../mails/register');
 const resendVerificationMail = require('../mails/resend-verification');
 const resetPasswordMail = require('../mails/reset-password');
 const userModel = require('../models/userModel');
-const { hash, compare } = require('../utils/crypto');
-const jwt = require('../utils/jwt');
-const { sendMail } = require('../utils/mailer');
+const { hash, compare } = require('../libs/bcrypt/bcrypt.service');
+const jwt = require('../libs/jwt/jwt.service');
+const { sendMail } = require('../libs/nodemailer/nodemailer.service');
 
 /**
  * User registration data interface

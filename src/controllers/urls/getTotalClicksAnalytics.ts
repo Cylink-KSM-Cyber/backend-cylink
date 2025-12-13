@@ -9,7 +9,7 @@
 
 import { Request, Response } from 'express';
 import { TotalClicksAnalyticsResponse } from '../../interfaces/URL';
-import logger from '../../utils/logger';
+import logger from '../../libs/winston/winston.service';
 import {
   parseAnalyticsDates,
   determineComparisonPeriod,

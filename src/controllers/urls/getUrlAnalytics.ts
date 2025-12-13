@@ -10,7 +10,7 @@
 
 import { Request, Response } from 'express';
 import { AnalyticsOptions, EnhancedAnalyticsOptions } from '../../interfaces/URL';
-import logger from '../../utils/logger';
+import logger from '../../libs/winston/winston.service';
 import { sendResponse } from '../../utils/response';
 import {
   parseAnalyticsDates,

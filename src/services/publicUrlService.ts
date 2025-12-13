@@ -5,7 +5,7 @@
  * @module services/publicUrlService
  */
 
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 import { ClickInfo } from '../interfaces/ClickInfo';
 
 const urlModel = require('../models/urlModel');

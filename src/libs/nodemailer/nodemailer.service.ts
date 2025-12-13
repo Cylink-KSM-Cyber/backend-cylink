@@ -1,19 +1,30 @@
 /**
- * Mailer Utility
+ * Nodemailer Service
  *
- * Provides email sending functionality
- * @module utils/mailer
+ * Provides email sending functionality using nodemailer.
+ *
+ * @module libs/nodemailer/nodemailer.service
+ * @version 1.1.0
+ * @since 2024-01-01
+ * @updated 2025-12-13 - Moved from utils/mailer.ts to libs/nodemailer structure for better modularity
  */
 
-import logger from './logger';
+import logger from '../winston/winston.service';
 
-const mailer = require('../config/mailer');
+const mailer = require('../../config/mailer');
 
 /**
- * Sends user registration verification to email.
+ * Sends an email using the configured mailer.
  *
  * Verification token is used as temporary data between
  * authentication state during multi-factor-authentication.
+ *
+ * @param {string} to - Recipient email address
+ * @param {string} subject - Email subject
+ * @param {string} text - Plain text email body
+ * @param {string} html - HTML email body
+ * @returns {Promise<void>}
+ * @throws {Error} If email sending fails
  */
 exports.sendMail = async (
   to: string,

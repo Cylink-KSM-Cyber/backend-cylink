@@ -6,7 +6,7 @@
  */
 
 const bcrypt = require('bcrypt');
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 import { AnalyticsOptions } from '../interfaces/URL';
 
 const clickModel = require('../models/clickModel');

@@ -1,5 +1,5 @@
 import type { Knex } from 'knex';
-import logger from '../../../utils/logger';
+import logger from '../../../libs/winston/winston.service';
 
 const tableName = 'users';
 

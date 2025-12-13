@@ -6,7 +6,7 @@
  */
 
 import { Pool, PoolClient, QueryResult } from 'pg';
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 require('dotenv').config({
   // Traces back to root directory (absolute path)
   path: `${__dirname}/../../${process.env.NODE_ENV === 'test' ? '.env.test' : '.env'}`,

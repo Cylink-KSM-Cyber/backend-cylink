@@ -21,13 +21,20 @@ src/
 ├── docs/                 # API documentation
 ├── interfaces/           # TypeScript interfaces
 ├── jobs/                 # Background jobs
+├── libs/                 # Third-party library wrappers
+│   ├── bcrypt/          # Password hashing (bcrypt.service.ts)
+│   ├── express-validator/ # Request validation (validator.service.ts)
+│   ├── jwt/             # JWT authentication (jwt.service.ts)
+│   ├── nodemailer/      # Email sending (nodemailer.service.ts)
+│   ├── qrcode/          # QR code generation (qrcode.service.ts)
+│   └── winston/         # Logging (winston.service.ts)
 ├── mails/                # Email templates
 ├── middlewares/          # Express middlewares
 ├── models/               # Database models
 ├── routes/               # API route definitions
 ├── services/             # Business logic
-├── utils/                # Helper utilities
-└── validators/           # Request validation
+├── utils/                # Application-specific utilities
+└── validators/           # Request validation rules
 ```
 
 ## Features
@@ -520,7 +527,7 @@ SENTRY_PROFILE_SAMPLE_RATE=1.0
 SENTRY_SEND_DEFAULT_PII=false
 
 # Release Tracking
-SENTRY_RELEASE=backend-cylink@1.2.0
+SENTRY_RELEASE=backend-cylink@1.3.0
 SENTRY_ENVIRONMENT=development
 ```
 
@@ -662,7 +669,41 @@ wsl --shutdown
 
 ## Changelog
 
-### Version 1.2.0 (Latest) - Enhanced Monitoring & Development Environment
+### Version 1.3.0 (Latest) - Library Restructuring & Improved Modularity
+
+**Release Date:** December 13, 2024
+
+**Major Features:**
+
+- 🆕 **New `libs` Folder Structure**: Separated third-party library wrappers from application utilities
+- 🆕 **Modular Architecture**: Each library wrapper now lives in its own dedicated folder
+- 🆕 **Improved Code Organization**: Better separation of concerns following SOLID principles
+
+**Architecture Changes:**
+
+- ✅ **`src/libs/bcrypt/`**: Password hashing with bcrypt
+- ✅ **`src/libs/jwt/`**: JWT token management with jsonwebtoken
+- ✅ **`src/libs/winston/`**: Logging with winston
+- ✅ **`src/libs/nodemailer/`**: Email sending with nodemailer
+- ✅ **`src/libs/qrcode/`**: QR code generation with qrcode
+- ✅ **`src/libs/express-validator/`**: Request validation with express-validator
+
+**Code Quality:**
+
+- ✅ **Updated JSDoc**: All library files include updated documentation with version 1.1.0
+- ✅ **Clean Utils Folder**: Application-specific utilities remain in `src/utils/`
+- ✅ **Consistent Naming**: Service files follow `library.service.ts` convention
+
+**Benefits:**
+
+- Better maintainability and reusability
+- Clearer dependency boundaries
+- Easier testing and mocking
+- Improved code discoverability
+
+---
+
+### Version 1.2.0 - Enhanced Monitoring & Development Environment
 
 **Release Date:** November 22, 2024
 

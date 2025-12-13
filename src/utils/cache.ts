@@ -5,7 +5,7 @@
  * @module utils/cache
  */
 
-import logger from './logger';
+import logger from '../libs/winston/winston.service';
 
 /**
  * Cache entry interface

@@ -5,7 +5,7 @@ const urlController = require('../controllers/urlController');
 const ctrController = require('../controllers/ctrController');
 const { accessToken } = require('../middlewares/authMiddleware');
 const { urlExpirationMiddleware } = require('../middlewares/urlExpirationMiddleware');
-const validate = require('../utils/validator');
+const validate = require('../libs/express-validator/validator.service');
 const fields = require('../validators/urlValidator');
 
 /**

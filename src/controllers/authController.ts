@@ -8,7 +8,7 @@
 import { Request, Response } from 'express';
 
 import { User } from '../collections/userCollection';
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 
 const authService = require('../services/authService');
 const { sendResponse } = require('../utils/response');

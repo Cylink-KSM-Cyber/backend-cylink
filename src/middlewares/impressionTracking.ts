@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 const impressionModel = require('../models/impressionModel');
 
 /**

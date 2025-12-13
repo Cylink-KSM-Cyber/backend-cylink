@@ -12,7 +12,7 @@ import {
   ConversionGoalCreate,
   UrlGoalAssociation,
 } from '../interfaces/Conversion';
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 
 // Extend Express Request to include user property
 interface Request extends ExpressRequest {

@@ -15,7 +15,7 @@ import {
   registrationValidator,
 } from '../validators/registrationValidator';
 import registrationService from '../services/registrationService';
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 
 /**
  * Registers a new user and sends verification email

@@ -5,7 +5,7 @@
  * @module utils/urlValidator
  */
 
-import logger from './logger';
+import logger from '../libs/winston/winston.service';
 
 /**
  * Validates if a string is a valid URL

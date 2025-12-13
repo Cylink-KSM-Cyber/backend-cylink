@@ -7,7 +7,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 
-const jwt = require('../utils/jwt');
+const jwt = require('../libs/jwt/jwt.service');
 const { sendResponse } = require('../utils/response');
 
 /**

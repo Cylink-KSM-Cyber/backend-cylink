@@ -6,7 +6,7 @@
  * @module jobs/jobScheduler
  */
 
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 
 import { executePasswordResetCleanupJob, getCleanupJobStats } from './passwordResetCleanupJob';
 import { executeUrlExpirationJob, getJobStatistics, JobResult } from './urlExpirationJob';

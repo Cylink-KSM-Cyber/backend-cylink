@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import logger from '../../utils/logger';
+import logger from '../../libs/winston/winston.service';
 import { sendResponse } from '../../utils/response';
 
 /**

@@ -1,12 +1,17 @@
 /**
- * QR Code Generator Utility
+ * QR Code Service
  *
  * Provides functions for generating QR codes in different formats
- * @module utils/qrCodeGenerator
+ * using qrcode library.
+ *
+ * @module libs/qrcode/qrcode.service
+ * @version 1.1.0
+ * @since 2024-01-01
+ * @updated 2025-12-13 - Moved from utils/qrCodeGenerator.ts to libs/qrcode structure for better modularity
  */
 
 import * as QRCode from 'qrcode';
-import { QrCode } from '../interfaces/QrCode';
+import { QrCode } from '../../interfaces/QrCode';
 
 /**
  * Options for QR code generation

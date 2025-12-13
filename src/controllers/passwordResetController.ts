@@ -7,13 +7,13 @@
 
 import { Request, Response } from 'express';
 
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 import { validatePasswordNotSame } from '../utils/passwordValidator';
 
 const mailer = require('../config/mailer');
 const passwordChangeConfirmationMail = require('../mails/password-change-confirmation');
 const userModel = require('../models/userModel');
-const { hash } = require('../utils/crypto');
+const { hash } = require('../libs/bcrypt/bcrypt.service');
 
 /**
  * Password reset request interface

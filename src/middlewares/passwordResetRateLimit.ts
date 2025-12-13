@@ -8,7 +8,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { rateLimit } from 'express-rate-limit';
 
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 
 /**
  * Rate limiter for password reset attempts
