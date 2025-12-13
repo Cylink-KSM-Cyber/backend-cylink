@@ -14,9 +14,9 @@ import { RegistrationRequest } from '../interfaces/RegistrationRequest';
 import { registrationVerificationHtml, registrationVerificationText } from '../mails/register';
 import { getUserByEmail, createUser } from '../models/userModel';
 
-const { hash } = require('../utils/crypto');
-const jwt = require('../utils/jwt');
-const { sendMail } = require('../utils/mailer');
+const { hash } = require('../libs/bcrypt/bcrypt.service');
+const jwt = require('../libs/jwt/jwt.service');
+const { sendMail } = require('../libs/nodemailer/nodemailer.service');
 
 const VERIFICATION_TOKEN_LENGTH = 255;
 const EMAIL_SUBJECT_REGISTRATION = 'User Registration Verification';

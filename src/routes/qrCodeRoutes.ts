@@ -11,7 +11,7 @@ const {
   getQrCodesByUser,
   deleteQrCodeById,
 } = require('../controllers/qrCodeController');
-const validate = require('../utils/validator');
+const validate = require('../libs/express-validator/validator.service');
 const qrCodeValidator = require('../validators/qrCodeValidator');
 const { accessToken } = require('../middlewares/authMiddleware');
 

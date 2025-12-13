@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { getQrCodeResponseByUrlId } from '../../services/qrCodeService';
-import logger from '../../utils/logger';
+import logger from '../../libs/winston/winston.service';
 import { sendResponse } from '../../utils/response';
 
 /**

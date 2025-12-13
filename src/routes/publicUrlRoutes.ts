@@ -1,7 +1,7 @@
 const router = require('express').Router();
 
 const urlController = require('../controllers/urlController');
-const validate = require('../utils/validator');
+const validate = require('../libs/express-validator/validator.service');
 const fields = require('../validators/urlValidator');
 const { publicApiRateLimiter } = require('../middlewares/rateLimitMiddleware');
 const clickTracker = require('../middlewares/clickTracker');

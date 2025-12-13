@@ -5,7 +5,7 @@
  * @module utils/analyticsUtils
  */
 
-import logger from './logger';
+import logger from '../libs/winston/winston.service';
 
 /**
  * Interface for date-related results with possible error

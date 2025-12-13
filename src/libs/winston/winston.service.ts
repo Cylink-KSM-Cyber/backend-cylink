@@ -1,8 +1,13 @@
 /**
- * Logger Utility
+ * Winston Logger Service
  *
  * Provides standardized logging functionality for the application
- * @module utils/logger
+ * using winston library.
+ *
+ * @module libs/winston/winston.service
+ * @version 1.1.0
+ * @since 2024-01-01
+ * @updated 2025-12-13 - Moved from utils/logger.ts to libs/winston structure for better modularity
  */
 
 // Winston logger requires types to be installed
@@ -91,7 +96,13 @@ interface Logger extends winston.Logger {
 
 const customLogger: Logger = logger;
 
-// Add request logging method
+/**
+ * Logs HTTP request information.
+ *
+ * @param {any} req - Express request object
+ * @param {any} res - Express response object
+ * @param {string} message - Log message
+ */
 customLogger.request = (req, res, message) => {
   const { method, url, ip, headers } = req;
   const userAgent = headers['user-agent'];

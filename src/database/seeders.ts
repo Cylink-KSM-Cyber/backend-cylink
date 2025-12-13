@@ -7,7 +7,7 @@
 
 // const pool = require('@/config/database');
 // const { generateQuery } = require('@/utils/query');
-const { hash } = require('../utils/crypto');
+const { hash } = require('../libs/bcrypt/bcrypt.service');
 
 /**
  * Seeder interface for a single table

@@ -1,3 +1,15 @@
+/**
+ * Express Validator Service
+ *
+ * Provides utility function to dynamically build field validation rules
+ * using express-validator library.
+ *
+ * @module libs/express-validator/validator.service
+ * @version 1.1.0
+ * @since 2024-01-01
+ * @updated 2025-12-13 - Moved from utils/validator.ts to libs/express-validator structure for better modularity
+ */
+
 import { Request, Response } from 'express';
 
 const { check, query, validationResult, matchedData } = require('express-validator');

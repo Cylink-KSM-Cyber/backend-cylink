@@ -6,7 +6,7 @@
  * @module jobs/urlExpirationJob
  */
 
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 
 const pool = require('../config/database');
 

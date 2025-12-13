@@ -7,7 +7,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import rateLimit from 'express-rate-limit';
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 
 /**
  * Creates a rate limiter with the specified configuration

@@ -10,7 +10,7 @@
 
 import { Request, Response } from 'express';
 import * as verificationService from '../services/verificationService';
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 
 /**
  * Verifies a user account using a verification token from query parameter
