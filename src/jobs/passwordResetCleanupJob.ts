@@ -6,7 +6,7 @@
  * @module jobs/passwordResetCleanupJob
  */
 
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 
 const authService = require('../services/authService');
 

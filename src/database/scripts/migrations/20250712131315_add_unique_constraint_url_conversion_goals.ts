@@ -1,5 +1,5 @@
 import type { Knex } from 'knex';
-import logger from '../../../utils/logger';
+import logger from '../../../libs/winston/winston.service';
 
 const tableName = 'url_conversion_goals';
 const constraintName = 'unique_url_goal_combination';

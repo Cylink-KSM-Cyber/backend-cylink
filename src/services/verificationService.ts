@@ -9,10 +9,10 @@
  */
 
 import { User } from '../collections/userCollection';
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 
 const userModel = require('../models/userModel');
-const jwt = require('../utils/jwt');
+const jwt = require('../libs/jwt/jwt.service');
 
 export interface VerificationTokenPayload {
   email: string;

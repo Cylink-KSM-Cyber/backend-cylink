@@ -16,7 +16,7 @@ import express, { json, urlencoded, Request, Response } from 'express';
 import { setupSwagger } from './middlewares/swagger';
 import { startScheduler } from './jobs/jobScheduler';
 import cors from 'cors';
-import logger from './utils/logger';
+import logger from './libs/winston/winston.service';
 
 import * as Sentry from '@sentry/node';
 const app = express();

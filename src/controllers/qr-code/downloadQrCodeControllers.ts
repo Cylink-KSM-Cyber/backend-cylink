@@ -4,7 +4,7 @@ import {
   downloadQrCodeByShortCode,
   QrCodeFormat,
 } from '../../services/qrCodeService';
-import logger from '../../utils/logger';
+import logger from '../../libs/winston/winston.service';
 
 /**
  * Interface for download parameters

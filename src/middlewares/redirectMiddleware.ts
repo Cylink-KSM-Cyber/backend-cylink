@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as http from 'http';
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 
 const urlService = require('../services/urlService');
 const conversionGoalModel = require('../models/conversionGoalModel');

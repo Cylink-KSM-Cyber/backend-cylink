@@ -7,7 +7,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 import { timezoneCache, cacheKeys } from '../utils/cache';
 
 /**

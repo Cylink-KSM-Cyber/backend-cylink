@@ -9,7 +9,7 @@
 
 import { Request, Response } from 'express';
 import { UpdateUrlRequest } from '../../interfaces/URL';
-import logger from '../../utils/logger';
+import logger from '../../libs/winston/winston.service';
 import { isValidUrl } from '../../utils/urlValidator';
 import { sendResponse } from '../../utils/response';
 

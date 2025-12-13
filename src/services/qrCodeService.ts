@@ -5,9 +5,9 @@ import {
   QrCodeListQueryParams,
   QrCodeListResponse,
 } from '../interfaces/QrCode';
-import { generateQrCodePng, generateQrCodeSvg, mapQrCodeToOptions } from '../utils/qrCodeGenerator';
+import { generateQrCodePng, generateQrCodeSvg, mapQrCodeToOptions } from '../libs/qrcode/qrcode.service';
 import { getQrCodeColorOptions, QrCodeColorOptions } from '../config/qrCodeColors';
-import logger from '../utils/logger';
+import logger from '../libs/winston/winston.service';
 
 const urlModel = require('../models/urlModel');
 const qrCodeModel = require('../models/qrCodeModel');
