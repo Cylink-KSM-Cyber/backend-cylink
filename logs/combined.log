@@ -5198,3 +5198,20 @@ TSError: ⨯ Unable to compile TypeScript:
 [2025-04-23 19:58:51] INFO: QR code ID 1 soft-deleted by user 1 
 [2025-04-23 19:58:51] INFO: Successfully deleted QR code with ID: 1 
 [2025-05-07 06:43:49] INFO: Successfully deleted URL with ID 54 
+[2025-12-25 20:34:22] INFO: Starting job scheduler with interval: 60 minutes
+[2025-12-25 20:34:22] INFO: Job scheduler started successfully
+[2025-12-25 20:34:24] ERROR: SMTP connection error: Invalid login: 535 5.7.0 Invalid credentials: {"code":"EAUTH","response":"535 5.7.0 Invalid credentials","responseCode":535,"command":"AUTH PLAIN","stack":"Error: Invalid login: 535 5.7.0 Invalid credentials\n    at SMTPConnection._formatError (C:\\Users\\Nugraha Adhitama\\Documents\\project\\cylink\\test-cylink\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:809:19)\n    at SMTPConnection._actionAUTHComplete (C:\\Users\\Nugraha Adhitama\\Documents\\project\\cylink\\test-cylink\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:1595:34)\n    at SMTPConnection.<anonymous> (C:\\Users\\Nugraha Adhitama\\Documents\\project\\cylink\\test-cylink\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:556:26)\n    at SMTPConnection._processResponse (C:\\Users\\Nugraha Adhitama\\Documents\\project\\cylink\\test-cylink\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:993:20)\n    at SMTPConnection._onData (C:\\Users\\Nugraha Adhitama\\Documents\\project\\cylink\\test-cylink\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:774:14)\n    at TLSSocket.SMTPConnection._onSocketData (C:\\Users\\Nugraha Adhitama\\Documents\\project\\cylink\\test-cylink\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:195:44)\n    at TLSSocket.emit (node:events:518:28)\n    at TLSSocket.emit (node:domain:489:12)\n    at addChunk (node:internal/streams/readable:561:12)\n    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)"}
+[2025-12-25 20:34:27] INFO: Performing job scheduler health check
+[2025-12-25 20:34:27] INFO: URL Statistics: {"total_urls":"284","active_urls":"185","inactive_urls":"99","expired_urls":"82","auto_expired_urls":"73","expiring_soon_urls":"0"}
+[2025-12-25 20:34:27] INFO: Password Reset Cleanup Statistics: {"lastRun":null,"totalRuns":0,"totalTokensCleanedUp":0,"lastCleanupCount":0,"errors":0,"lastError":null}
+[2025-12-25 20:34:27] INFO: Scheduler Status: {"isStarted":true,"urlExpirationJob":{"isRunning":false,"lastExecution":null,"lastSuccess":null,"lastFailure":null,"consecutiveFailures":0,"totalExecutions":0,"totalSuccesses":0,"totalFailures":0,"nextExecution":"2025-12-25T14:34:27.859Z"},"configuration":{"enabled":true,"intervalMinutes":60,"passwordResetCleanupIntervalMinutes":60,"maxConcurrentJobs":1,"retryOnFailure":true,"retryDelayMinutes":15,"healthCheckIntervalMinutes":30}}
+[2025-12-25 20:34:32] INFO: Starting scheduled URL expiration job
+[2025-12-25 20:34:32] INFO: Starting URL expiration job
+[2025-12-25 20:34:32] INFO: Processing URL expiration batch: offset 0, limit 1000
+[2025-12-25 20:34:32] INFO: No more expired URLs to process
+[2025-12-25 20:34:32] INFO: URL expiration job completed: 0 URLs expired out of 0 processed in 40ms
+[2025-12-25 20:34:32] INFO: URL expiration job completed successfully: 0 URLs expired in 41ms
+[2025-12-25 20:38:49] INFO: Gracefully shutting down job scheduler
+[2025-12-25 20:38:49] INFO: Stopping job scheduler
+[2025-12-25 20:38:49] INFO: Job scheduler stopped successfully
+[2025-12-25 20:38:49] INFO: Cache cleanup intervals stopped

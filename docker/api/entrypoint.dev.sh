@@ -53,4 +53,3 @@ fi
 
 echo "🚀 Starting application..."
 exec "$@"
-
