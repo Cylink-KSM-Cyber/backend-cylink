@@ -1,6 +1,7 @@
 const router = require('express').Router();
 
 const authController = require('../controllers/authController');
+const oauthController = require('../controllers/oauthController');
 const passwordResetController = require('../controllers/passwordResetController');
 const { accessToken, refreshToken } = require('../middlewares/authMiddleware');
 const { passwordResetRateLimit } = require('../middlewares/passwordResetRateLimit');
@@ -617,7 +618,7 @@ router.post(
 
 /**
  * @swagger
- * /api/v1/auth/verify:
+ * /api/v1/auth/register/verify:
  *   get:
  *     summary: Verify user account
  *     tags: [Authentication]
@@ -653,5 +654,121 @@ router.post(
  *         description: Internal server error
  */
 router.get('/register/verify', verifyRateLimiter, verificationController.verify);
+
+/**
+ * @swagger
+ * /api/v1/auth/oauth/google:
+ *   get:
+ *     summary: Initiate Google OAuth login flow
+ *     tags: [Authentication]
+ *     description: Redirects user to Google OAuth consent page
+ *     responses:
+ *       302:
+ *         description: Redirect to Google OAuth consent page
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/oauth/google', oauthController.initiateGoogleOAuth);
+
+/**
+ * @swagger
+ * /api/v1/auth/oauth/google/register:
+ *   get:
+ *     summary: Initiate Google OAuth registration flow
+ *     tags: [Authentication]
+ *     description: Redirects user to Google OAuth consent page for registration
+ *     responses:
+ *       302:
+ *         description: Redirect to Google OAuth consent page
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/oauth/google/register', oauthController.initiateGoogleOAuthRegister);
+
+/**
+ * @swagger
+ * /api/v1/auth/oauth/google/callback:
+ *   get:
+ *     summary: Handle Google OAuth callback
+ *     tags: [Authentication]
+ *     description: Processes OAuth callback from Google and redirects to frontend
+ *     parameters:
+ *       - in: query
+ *         name: code
+ *         schema:
+ *           type: string
+ *         description: Authorization code from Google
+ *       - in: query
+ *         name: error
+ *         schema:
+ *           type: string
+ *         description: Error from Google OAuth
+ *     responses:
+ *       302:
+ *         description: Redirect to frontend with tokens or error
+ */
+router.get('/oauth/google/callback', oauthController.handleGoogleCallback);
+
+/**
+ * @swagger
+ * /api/v1/auth/oauth/google/complete-registration:
+ *   post:
+ *     summary: Complete Google OAuth registration with username
+ *     tags: [Authentication]
+ *     description: Creates new user account with selected username after OAuth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - username
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Temporary registration token
+ *               username:
+ *                 type: string
+ *                 description: Desired username
+ *     responses:
+ *       201:
+ *         description: Registration successful
+ *       400:
+ *         description: Invalid token or username already taken
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/oauth/google/complete-registration', oauthController.completeGoogleRegistration);
+
+/**
+ * @swagger
+ * /api/v1/auth/oauth/google/api:
+ *   post:
+ *     summary: Google OAuth login (API version)
+ *     tags: [Authentication]
+ *     description: API endpoint for Google OAuth that returns JSON instead of redirect
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: Authorization code from Google
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       404:
+ *         description: Account not registered
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/oauth/google/api', oauthController.handleGoogleCallbackAPI);
 
 module.exports = router;

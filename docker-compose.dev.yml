@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 
 services:
   api:
@@ -35,8 +35,11 @@ services:
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT}
       DOCS_USERNAME: ${DOCS_USERNAME}
       DOCS_PASSWORD: ${DOCS_PASSWORD}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
     ports:
-      - "${PORT}:${PORT}"
+      - '${PORT}:${PORT}'
     volumes:
       - ./src:/app/src
       - ./package.json:/app/package.json
@@ -59,13 +62,13 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
     ports:
-      - "${DATABASE_PORT}:5432"
+      - '${DATABASE_PORT}:5432'
     volumes:
       - dev-db-data:/var/lib/postgresql/data
     networks:
       - app
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
+      test: ['CMD-SHELL', 'pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -77,8 +80,8 @@ services:
     volumes:
       - ./docker/webserver/nginx.conf:/etc/nginx/conf.d/default.conf
     ports:
-      - "${DOCKER_PORT_HTTP}:80"
-      - "${DOCKER_PORT_HTTPS}:443"
+      - '${DOCKER_PORT_HTTP}:80'
+      - '${DOCKER_PORT_HTTPS}:443'
     networks:
       - app
     depends_on:
@@ -89,8 +92,8 @@ services:
     image: mailhog/mailhog:latest
     container_name: ${DOCKERHUB_APP_ID}.mailhog.dev
     ports:
-      - "1025:1025" # SMTP port
-      - "8025:8025" # Web UI port
+      - '1025:1025' # SMTP port
+      - '8025:8025' # Web UI port
     networks:
       - app
     restart: unless-stopped
