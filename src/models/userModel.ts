@@ -34,6 +34,19 @@ export const getUserById = async (id: number): Promise<User | undefined> => {
 };
 
 /**
+ * Retrieves a user by username
+ * @param {string} username - Username to search for
+ * @returns {Promise<User|undefined>} User object or undefined if not found
+ */
+export const getUserByUsername = async (username: string): Promise<User | undefined> => {
+  const res = await pool.query('SELECT * FROM users WHERE username = $1 AND deleted_at IS NULL', [
+    username,
+  ]);
+
+  return res.rows[0];
+};
+
+/**
  * Retrieves a user by password reset token
  * @param {string} token - Password reset token to search for
  * @returns {Promise<User|undefined>} User object or undefined if not found or token expired
@@ -249,4 +262,116 @@ export const insertUserLogin = async (
 export const getLastLogin = async (userId: number): Promise<Date | null> => {
   const res = await pool.query('SELECT last_login FROM users WHERE id = $1', [userId]);
   return res.rows[0]?.last_login ?? null;
+};
+
+/**
+ * Retrieves a user by Google ID
+ * @param {string} googleId - Google user ID
+ * @returns {Promise<User|undefined>} User object or undefined if not found
+ */
+export const getUserByGoogleId = async (googleId: string): Promise<User | undefined> => {
+  const res = await pool.query('SELECT * FROM users WHERE google_id = $1 AND deleted_at IS NULL', [
+    googleId,
+  ]);
+
+  return res.rows[0];
+};
+
+/**
+ * Links a Google account to an existing user
+ * @param {number} userId - User ID
+ * @param {string} googleId - Google user ID
+ * @param {object} tokens - OAuth tokens
+ * @returns {Promise<User>} Updated user
+ */
+export const linkGoogleAccount = async (
+  userId: number,
+  googleId: string,
+  tokens: { access_token: string; refresh_token?: string },
+): Promise<User> => {
+  const query = `
+    UPDATE users 
+    SET google_id = $1,
+        oauth_provider = $2,
+        oauth_access_token = $3,
+        oauth_refresh_token = $4,
+        updated_at = NOW()
+    WHERE id = $5 AND deleted_at IS NULL
+    RETURNING *
+  `;
+
+  const res = await pool.query(query, [
+    googleId,
+    'google',
+    tokens.access_token,
+    tokens.refresh_token || null,
+    userId,
+  ]);
+
+  return res.rows[0];
+};
+
+/**
+ * Updates OAuth tokens for a user
+ * @param {number} userId - User ID
+ * @param {object} tokens - OAuth tokens
+ * @returns {Promise<User>} Updated user
+ */
+export const updateOAuthTokens = async (
+  userId: number,
+  tokens: { access_token: string; refresh_token?: string },
+): Promise<User> => {
+  const query = `
+    UPDATE users 
+    SET oauth_access_token = $1,
+        oauth_refresh_token = $2,
+        updated_at = NOW()
+    WHERE id = $3 AND deleted_at IS NULL
+    RETURNING *
+  `;
+
+  const res = await pool.query(query, [tokens.access_token, tokens.refresh_token || null, userId]);
+
+  return res.rows[0];
+};
+
+/**
+ * Creates a new OAuth user
+ * @param {object} userData - User data from OAuth provider
+ * @returns {Promise<User>} Created user
+ */
+export const createOAuthUser = async (userData: {
+  email: string;
+  username: string;
+  google_id: string;
+  oauth_provider: string;
+  oauth_access_token: string;
+  oauth_refresh_token?: string;
+}): Promise<User> => {
+  const query = `
+    INSERT INTO users (
+      email, 
+      username, 
+      google_id, 
+      oauth_provider, 
+      oauth_access_token, 
+      oauth_refresh_token,
+      email_verified_at,
+      role
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7)
+    RETURNING *
+  `;
+
+  const res = await pool.query(query, [
+    userData.email,
+    userData.username,
+    userData.google_id,
+    userData.oauth_provider,
+    userData.oauth_access_token,
+    userData.oauth_refresh_token || null,
+    'user',
+  ]);
+
+  return res.rows[0];
 };
