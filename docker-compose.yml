@@ -29,6 +29,9 @@ services:
       SENTRY_SEND_DEFAULT_PII: ${SENTRY_SEND_DEFAULT_PII}
       SENTRY_RELEASE: ${SENTRY_RELEASE}
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
     networks:
       - app
     depends_on:
@@ -42,18 +45,18 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
     ports:
-      - "${DATABASE_PORT}:5432"
+      - '${DATABASE_PORT}:5432'
     networks:
       - app
     restart: unless-stopped
 
-  webserver:    
+  webserver:
     image: nginx:latest
     volumes:
       - ./docker/webserver/nginx.conf:/etc/nginx/conf.d/default.conf
     ports:
-      - "${DOCKER_PORT_HTTP}:80"
-      - "${DOCKER_PORT_HTTPS}:443"
+      - '${DOCKER_PORT_HTTP}:80'
+      - '${DOCKER_PORT_HTTPS}:443'
     networks:
       - app
     depends_on:
