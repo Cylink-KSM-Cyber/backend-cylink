@@ -669,7 +669,82 @@ wsl --shutdown
 
 ## Changelog
 
-### Version 1.3.0 (Latest) - Library Restructuring & Improved Modularity
+### Version 1.4.0 (Latest) - Google OAuth Registration
+
+**Release Date:** December 25, 2024
+
+**Major Features:**
+
+- 🆕 **Google OAuth Registration**: Complete OAuth 2.0 registration flow with Google
+- 🆕 **Username Selection Step**: Interactive username selection after OAuth authentication
+- 🆕 **OAuth Service Layer**: Dedicated Google OAuth service with flow state management
+- 🆕 **Dual OAuth Flows**: Support for both login and registration via OAuth
+
+**New API Endpoints:**
+
+- ✅ **`GET /api/v1/auth/oauth/google/register`**: Initiate Google OAuth registration flow
+- ✅ **`POST /api/v1/auth/oauth/google/complete-registration`**: Complete registration with username
+- ✅ **`GET /api/v1/auth/oauth/google`**: Initiate Google OAuth login flow (existing, enhanced)
+- ✅ **`GET /api/v1/auth/oauth/google/callback`**: Handle OAuth callback for both flows
+
+**Backend Enhancements:**
+
+- ✅ **OAuth Controller**: Comprehensive OAuth controller with registration support
+  - Flow state differentiation (login vs register)
+  - Temporary JWT token generation for username selection
+  - Auto-verification for OAuth users
+  - Enhanced error handling with specific error types
+- ✅ **User Model Updates**:
+  - `createOAuthUser()`: Create users from OAuth data
+  - `getUserByUsername()`: Username availability checking
+  - `getUserByGoogleId()`: Lookup users by Google ID
+  - `linkGoogleAccount()`: Link OAuth to existing accounts
+- ✅ **Google OAuth Service**:
+  - Authorization URL generation with flow state
+  - Token exchange and validation
+  - User profile retrieval
+  - Refresh token support
+
+**Security Features:**
+
+- ✅ **Temporary Registration Tokens**: 15-minute expiry for username selection
+- ✅ **Email Auto-Verification**: OAuth users are automatically verified
+- ✅ **Duplicate Prevention**: Check for existing emails during registration
+- ✅ **Account Linking**: Automatic linking for existing users with same email
+
+**Database Changes:**
+
+- ✅ OAuth-related columns already supported in users table:
+  - `google_id`: Store Google user ID
+  - `oauth_provider`: Track OAuth provider
+  - `oauth_access_token`: Store access tokens
+  - `oauth_refresh_token`: Store refresh tokens
+
+**Developer Experience:**
+
+- ✅ **Comprehensive Logging**: Detailed OAuth flow logging
+- ✅ **Error Tracking**: Specific error codes for each failure scenario
+- ✅ **Swagger Documentation**: Updated API docs with OAuth endpoints
+- ✅ **Environment Configuration**: Google OAuth credentials via environment variables
+
+**Configuration:**
+
+New environment variables required:
+
+```env
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REDIRECT_URI=http://localhost:5123/api/v1/auth/oauth/google/callback
+```
+
+**Breaking Changes:**
+
+- OAuth redirect URI must be configured in Google Cloud Console
+- Frontend must handle username selection step for new OAuth users
+
+---
+
+### Version 1.3.0 - Library Restructuring & Improved Modularity
 
 **Release Date:** December 13, 2024
 
