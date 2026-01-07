@@ -31,7 +31,6 @@ module.exports = {
     { name: 'title', type: 'string', required: true, min: 10 },
     { name: 'description', type: 'text', required: true },
     { name: 'type', type: 'string', required: true },
-    { name: 'tags', type: 'string', optional: true },
     { name: 'use_case', type: 'string', optional: true },
     { name: 'reproduction_steps', type: 'string', optional: true },
     { name: 'expected_behavior', type: 'string', optional: true },
