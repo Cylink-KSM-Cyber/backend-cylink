@@ -3,6 +3,7 @@ const router = require('express').Router();
 const authRoutes = require('../routes/authRoutes');
 const conversionRoutes = require('../routes/conversionRoutes');
 const ctrRoutes = require('../routes/ctrRoutes');
+const feedbackRoutes = require('../routes/feedbackRoutes');
 const jobRoutes = require('../routes/jobRoutes');
 const publicUrlRoutes = require('../routes/publicUrlRoutes');
 const qrCodeRoutes = require('../routes/qrCodeRoutes');
@@ -39,5 +40,8 @@ router.use('/jobs', jobRoutes);
 
 // User profile management routes
 router.use('/profile', userProfileRoutes);
+
+// Feedback Board routes
+router.use('/feedback', feedbackRoutes);
 
 module.exports = router;
