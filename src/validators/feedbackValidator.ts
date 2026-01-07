@@ -43,7 +43,6 @@ module.exports = {
   voteFeedback: [
     { name: 'vote_type', type: 'string', required: true },
     { name: 'reason', type: 'string', optional: true },
-    { name: 'comment', type: 'string', optional: true },
   ],
 
   /**

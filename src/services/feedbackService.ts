@@ -261,10 +261,11 @@ const voteFeedback = async (
 
   if (existingVote) {
     // Update existing vote
+    // When changing to upvote, explicitly set reason/comment to null to clear them
     await feedbackVoteModel.updateVote(existingVote.id, {
       vote_type: voteType,
-      reason: voteType === 'downvote' ? reason : undefined,
-      comment: voteType === 'downvote' ? comment : undefined,
+      reason: voteType === 'downvote' ? reason : null,
+      comment: voteType === 'downvote' ? comment : null,
     });
   } else {
     // Create new vote

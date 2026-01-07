@@ -15,7 +15,15 @@ export type VoteType = 'upvote' | 'downvote';
 /**
  * Vote reason enumeration
  */
-export type VoteReason = 'not_useful' | 'duplicate' | 'unclear' | 'out_of_scope' | 'other';
+export type VoteReason =
+  | 'not_useful'
+  | 'duplicate'
+  | 'unclear'
+  | 'out_of_scope'
+  | 'not_reproducible'
+  | 'spam'
+  | 'off_topic'
+  | 'other';
 
 /**
  * Vote data interface
