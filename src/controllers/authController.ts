@@ -160,10 +160,11 @@ exports.login = async (req: Request, res: Response): Promise<Response> => {
  */
 exports.refresh = async (req: Request, res: Response): Promise<Response> => {
   try {
+    logger.info('Token refreshed successfully');
     return sendResponse(res, 200, 'Successfully refresh token!', {});
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('Auth error: Failed to refresh token:', errorMessage);
+    logger.error(`Token refresh error: ${errorMessage}`);
     return sendResponse(res, 500, 'Internal server error');
   }
 };
