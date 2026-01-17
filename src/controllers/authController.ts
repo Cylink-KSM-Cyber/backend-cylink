@@ -348,7 +348,7 @@ exports.resendVerification = async (req: Request, res: Response): Promise<Respon
     return sendResponse(res, 200, 'Verification email has been resent!');
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('Auth error: Failed to resend email verification:', errorMessage);
+    logger.error(`Resend verification error for ${email}: ${errorMessage}`);
     return sendResponse(res, 500, 'Internal server error');
   }
 };
