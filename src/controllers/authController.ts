@@ -203,9 +203,8 @@ exports.sendPasswordResetVerification = async (req: Request, res: Response): Pro
  * @returns {Promise<Response>} Express response
  */
 exports.forgotPassword = async (req: Request, res: Response): Promise<Response> => {
+  const requestData: ForgotPasswordRequest = req.body;
   try {
-    const requestData: ForgotPasswordRequest = req.body;
-
     // Send password reset email (always returns consistent response)
     const emailSent = await authService.sendForgotPasswordEmail(requestData);
 
@@ -225,7 +224,7 @@ exports.forgotPassword = async (req: Request, res: Response): Promise<Response> 
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('Auth error: Failed to process forgot password request:', errorMessage);
+    logger.error(`Forgot password error for ${requestData.email}: ${errorMessage}`);
     return sendResponse(res, 500, 'Internal server error');
   }
 };
