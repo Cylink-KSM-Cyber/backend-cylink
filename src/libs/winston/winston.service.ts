@@ -17,10 +17,6 @@ import * as winston from 'winston';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// ============================================
-// Constants & Configuration
-// ============================================
-
 /**
  * Logger configuration constants.
  * Centralized configuration for easy maintenance.
@@ -55,10 +51,6 @@ const LoggerConfig = {
  * - Everything outside this range is considered non-printable or non-ASCII
  */
 const ASCII_PRINTABLE_REGEX = /[^\x20-\x7E]/g;
-
-// ============================================
-// Message Sanitization Utilities
-// ============================================
 
 /**
  * Type guard to check if a value is a valid string.
@@ -137,10 +129,6 @@ export function processLogMessage(message: string): string {
   const truncatedMessage = truncateMessage(sanitizedMessage);
   return truncatedMessage;
 }
-
-// ============================================
-// Winston Custom Formats
-// ============================================
 
 /**
  * Custom Winston format that sanitizes and truncates log messages.
@@ -231,10 +219,6 @@ const createDefaultFormats = () => [
 const createLogFormat = () =>
   winston.format.combine(createSanitizeFormat()(), ...createDefaultFormats());
 
-// ============================================
-// Transport Configuration
-// ============================================
-
 /** Environment-based log directory */
 const LOG_DIR = process.env.LOG_DIR || LoggerConfig.DEFAULT_LOG_DIR;
 
@@ -272,10 +256,6 @@ const createCombinedFileTransport = () =>
     maxFiles: LoggerConfig.MAX_FILES,
   });
 
-// ============================================
-// Logger Initialization
-// ============================================
-
 /**
  * Ensures the log directory exists.
  * Creates it if it doesn't exist.
@@ -298,10 +278,6 @@ const logger = winston.createLogger({
   transports: [createConsoleTransport(), createErrorFileTransport(), createCombinedFileTransport()],
   exitOnError: false,
 });
-
-// ============================================
-// Custom Logger Extension
-// ============================================
 
 /**
  * Extended Logger interface with custom request logging method.
@@ -344,9 +320,5 @@ customLogger.request = (req: any, res: any, message: string): void => {
 
   logger.info(logMessage);
 };
-
-// ============================================
-// Exports
-// ============================================
 
 export default customLogger;
