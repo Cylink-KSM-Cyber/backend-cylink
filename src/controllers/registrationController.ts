@@ -25,8 +25,8 @@ import logger from '../libs/winston/winston.service';
  * @returns {Promise<Response>} Express response
  */
 export const register = async (req: Request, res: Response): Promise<Response> => {
+  const userData: RegistrationRequest = req.body;
   try {
-    const userData: RegistrationRequest = req.body;
     const result = await registrationService.registerUser(userData);
     logger.info(`User registration successful for email: ${userData.email}`);
     return res.status(201).json({
@@ -35,7 +35,8 @@ export const register = async (req: Request, res: Response): Promise<Response> =
       data: result,
     });
   } catch (error) {
-    logger.error('Registration error:', error instanceof Error ? error.message : String(error));
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Registration failed for ${userData.email}: ${errorMessage}`);
     if (error instanceof Error && error.message === 'Email already taken') {
       return res.status(409).json({
         status: 409,
