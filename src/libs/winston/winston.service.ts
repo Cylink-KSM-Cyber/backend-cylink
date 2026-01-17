@@ -14,8 +14,8 @@
  */
 
 import * as winston from 'winston';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 /**
  * Logger configuration constants.
@@ -154,9 +154,10 @@ const createSanitizeFormat = () =>
  * @returns True if args represent a split string
  */
 function isStringCharacterSplit(keys: string[], args: Record<string, unknown>): boolean {
-  return keys.every(
-    key => /^\d+$/.test(key) && typeof args[key] === 'string' && (args[key] as string).length === 1,
-  );
+  return keys.every(key => {
+    const value = args[key];
+    return /^\d+$/.test(key) && typeof value === 'string' && value.length === 1;
+  });
 }
 
 /**
