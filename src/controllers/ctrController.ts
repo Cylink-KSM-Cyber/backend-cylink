@@ -230,12 +230,13 @@ export const getOverallCTRStats = async (req: RequestWithUser, res: Response): P
  * @returns {Promise<void>}
  */
 export const getUrlCTRStats = async (req: RequestWithUser, res: Response): Promise<void> => {
+  const urlId = Number.parseInt(req.params.url_id, 10);
   try {
     const userId = req.user.id;
-    const urlId = parseInt(req.params.url_id, 10);
     const params = req.query as unknown as CtrQueryParams;
 
-    if (isNaN(urlId)) {
+    if (Number.isNaN(urlId)) {
+      logger.warn(`GET /urls/${req.params.url_id}/ctr failed: Invalid URL ID`);
       res.status(400).json({
         status: 400,
         message: 'Invalid URL ID',
@@ -336,10 +337,9 @@ export const getUrlCTRStats = async (req: RequestWithUser, res: Response): Promi
       data: response,
     });
 
-    // Log the request
-    logger.info(`User ${userId} retrieved CTR statistics for URL ${urlId}`);
+    logger.info(`GET /urls/${urlId}/ctr success for user ${userId}`);
   } catch (error: any) {
-    logger.error(`Error retrieving URL CTR statistics: ${error.message}`);
+    logger.error(`GET /urls/${urlId}/ctr failed: ${error.message}`);
     res.status(500).json({
       status: 500,
       message: 'Failed to retrieve URL CTR statistics',
