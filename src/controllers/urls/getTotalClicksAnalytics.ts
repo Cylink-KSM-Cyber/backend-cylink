@@ -191,16 +191,13 @@ const formatResponseData = ({
  * @returns {Response} Error response
  */
 const handleError = (error: unknown, res: Response): Response => {
+  const errorMsg = error instanceof Error ? error.message : String(error);
+  logger.error(`GET /urls/total-clicks failed: ${errorMsg}`);
+
   if (error instanceof TypeError) {
-    logger.error('URL error: Type error while retrieving total clicks analytics:', error.message);
     return sendResponse(res, 400, 'Invalid request format');
-  } else if (error instanceof Error) {
-    logger.error('URL error: Failed to retrieve total clicks analytics:', error.message);
-    return sendResponse(res, 500, 'Failed to retrieve total clicks analytics');
-  } else {
-    logger.error('URL error: Unknown error while retrieving total clicks:', String(error));
-    return sendResponse(res, 500, 'Internal server error');
   }
+  return sendResponse(res, 500, 'Internal server error');
 };
 
 /**
@@ -248,7 +245,7 @@ export const getTotalClicksAnalytics = async (req: Request, res: Response): Prom
 
     // Guard clause: Validate startDate and endDate are present
     if (!startDate || !endDate) {
-      logger.error('Unexpected: dateResult has no error but missing date values');
+      logger.error('GET /urls/total-clicks failed: Missing date values');
       return sendResponse(res, 500, 'Internal Server Error');
     }
 
@@ -272,7 +269,7 @@ export const getTotalClicksAnalytics = async (req: Request, res: Response): Prom
 
     // Guard clause: Validate comparison period data
     if (!comparisonPeriodDays || !previousPeriodStartDate || !previousPeriodEndDate) {
-      logger.error('Unexpected: comparisonResult has no error but missing period values');
+      logger.error('GET /urls/total-clicks failed: Missing comparison period values');
       return sendResponse(res, 500, 'Internal Server Error');
     }
 
@@ -318,7 +315,7 @@ export const getTotalClicksAnalytics = async (req: Request, res: Response): Prom
       limit,
     });
 
-    logger.info(`Successfully retrieved total clicks analytics for user ${userId}`);
+    logger.info(`GET /urls/total-clicks success for user ${userId}`);
     return sendResponse(res, 200, 'Successfully retrieved total clicks analytics', responseData);
   } catch (error: unknown) {
     return handleError(error, res);
