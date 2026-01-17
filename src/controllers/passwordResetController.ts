@@ -134,10 +134,7 @@ const sendConfirmationEmail = async (userEmail: string): Promise<void> => {
     logger.info(`Password change confirmation email sent to: ${userEmail}`);
   } catch (emailError) {
     const emailErrorMessage = emailError instanceof Error ? emailError.message : String(emailError);
-    logger.error(
-      `Failed to send password change confirmation email to ${userEmail}:`,
-      emailErrorMessage,
-    );
+    logger.error(`Failed to send password change email to ${userEmail}: ${emailErrorMessage}`);
   }
 };
 
@@ -223,7 +220,7 @@ exports.resetPassword = async (req: Request, res: Response): Promise<Response> =
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('Password reset error:', errorMessage);
+    logger.error(`Password reset error: ${errorMessage}`);
 
     // Check if it's a database-related error
     if (errorMessage.includes('database') || errorMessage.includes('connection')) {
