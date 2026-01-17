@@ -172,10 +172,7 @@ const processUrlsWithSearch = async (
     // Calculate response time
     const responseTime = Date.now() - startTime;
 
-    // Log the completion
-    logger.info(
-      `URLs filtered by status '${status}' and search term '${searchTerm}' for user ${userId} in ${responseTime}ms with ${urls.length} results (sorting by ${sortBy} ${sortOrder})`,
-    );
+    logger.info(`GET /urls success for user ${userId}: ${urls.length} URLs found`);
 
     // If no URLs found, return 200 status with empty array and appropriate message
     if (!urls || urls.length === 0) {
@@ -203,14 +200,11 @@ const processUrlsWithSearch = async (
       filter_info,
     );
   } catch (searchError) {
-    logger.error('Search error:', searchError);
+    const errorMsg = searchError instanceof Error ? searchError.message : String(searchError);
+    logger.error(`GET /urls failed: ${errorMsg}`);
 
     // Check if this is a database-related error
     if (searchError instanceof Error) {
-      // Log the specific error for debugging purposes
-      logger.error(`Database search error: ${searchError.message}`);
-
-      // For expected database issues, provide a cleaner message
       if (searchError.message.includes('relation') || searchError.message.includes('column')) {
         return sendResponse(res, 500, 'Database configuration error. Please contact support.');
       }
@@ -258,10 +252,7 @@ const processUrlsWithStatusFilter = async (
     // Calculate response time
     const responseTime = Date.now() - startTime;
 
-    // Log the filtering completion
-    logger.info(
-      `URLs filtered by status '${status}' for user ${userId} in ${responseTime}ms with ${urls.length} results (sorting by ${sortBy} ${sortOrder})`,
-    );
+    logger.info(`GET /urls success for user ${userId}: ${urls.length} URLs, status=${status}`);
 
     // If no URLs found, return 200 status with empty array and appropriate message
     if (!urls || urls.length === 0) {
@@ -289,7 +280,8 @@ const processUrlsWithStatusFilter = async (
       filter_info,
     );
   } catch (error) {
-    logger.error('Error getting URLs with status filter:', error);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    logger.error(`GET /urls failed: ${errorMsg}`);
     return sendResponse(res, 500, 'An error occurred while filtering URLs');
   }
 };
@@ -310,7 +302,7 @@ const handleError = (error: unknown, res: Response): Response => {
   }
 
   // Log and return unexpected errors
-  logger.error('Error filtering URLs by status:', error);
+  logger.error(`GET /urls error: ${error instanceof Error ? error.message : String(error)}`);
   return sendResponse(res, 500, 'An error occurred while filtering URLs');
 };
 
