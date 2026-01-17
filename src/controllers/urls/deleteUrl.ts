@@ -72,7 +72,8 @@ const checkUrlAuthorization = async (
 
     return { isAuthorized: true, url };
   } catch (error) {
-    logger.error(`Error checking URL authorization: ${error}`);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    logger.error(`DELETE /urls/{id} auth check failed: ${errMsg}`);
     return {
       isAuthorized: false,
       errorCode: 500,
@@ -113,17 +114,13 @@ const formatDeletedUrlResponse = (deletedUrl: any, urlInfo: UrlInfo): object => 
  * @returns {Response} Error response
  */
 const handleError = (error: unknown, res: Response): Response => {
+  const errorMsg = error instanceof Error ? error.message : String(error);
+  logger.error(`DELETE /urls/{id} failed: ${errorMsg}`);
+
   if (error instanceof TypeError) {
-    const errorMsg = error instanceof Error ? error.message : JSON.stringify(error);
-    logger.error(`URL error: Type error while deleting URL: ${errorMsg}`);
     return sendResponse(res, 400, 'Invalid request format');
-  } else if (error instanceof Error) {
-    logger.error(`URL error: Failed to delete URL: ${error.message}`);
-    return sendResponse(res, 500, 'Internal Server Error');
-  } else {
-    logger.error(`URL error: Unknown error while deleting URL: ${JSON.stringify(error)}`);
-    return sendResponse(res, 500, 'Internal server error');
   }
+  return sendResponse(res, 500, 'Internal server error');
 };
 
 /**
@@ -176,11 +173,11 @@ export const deleteUrl = async (req: Request, res: Response): Promise<Response> 
       // Format and return response
       const response = formatDeletedUrlResponse(deletedUrl, urlInfo);
 
-      logger.info(`Successfully deleted URL with ID ${urlId}`);
+      logger.info(`DELETE /urls/${urlId} success`);
       return sendResponse(res, 200, 'Successfully deleted URL', response);
     } catch (retrieveError) {
       // If we can't retrieve the deleted URL, still return success with basic info
-      logger.warn(`Error retrieving deleted URL with ID ${urlId}: ${retrieveError}`);
+      logger.warn(`DELETE /urls/${urlId}: Error retrieving deleted URL`);
       return sendResponse(res, 200, 'Successfully deleted URL', {
         id: urlInfo.id,
         short_code: urlInfo.short_code,

@@ -76,7 +76,8 @@ const checkUrlAuthorization = async (
 
     return { isAuthorized: true, url };
   } catch (error) {
-    logger.error(`Error checking URL authorization: ${error}`);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    logger.error(`GET /urls/{id}/analytics auth check failed: ${errMsg}`);
     return {
       isAuthorized: false,
       errorCode: 500,
@@ -154,21 +155,17 @@ const extractAnalyticsOptions = (req: Request): EnhancedAnalyticsOptions => {
  * @returns {Response} Error response
  */
 const handleError = (error: unknown, res: Response): Response => {
+  const errorMsg = error instanceof Error ? error.message : String(error);
+
   if (error instanceof Error && error.message === 'URL not found') {
     return sendResponse(res, 404, 'URL not found');
   } else if (error instanceof Error && error.message.includes('Invalid parameters')) {
-    logger.error('URL error: Invalid parameters while retrieving analytics:', error.message);
+    logger.warn(`GET /urls/{id}/analytics: ${errorMsg}`);
     return sendResponse(res, 400, error.message);
-  } else if (error instanceof TypeError) {
-    logger.error('URL error: Type error while retrieving analytics:', error.message);
-    return sendResponse(res, 400, 'Invalid request format');
-  } else if (error instanceof Error) {
-    logger.error('URL error: Failed to retrieve URL analytics:', error.message);
-    return sendResponse(res, 500, 'Internal Server Error');
-  } else {
-    logger.error('URL error: Unknown error while retrieving analytics:', String(error));
-    return sendResponse(res, 500, 'Internal server error');
   }
+
+  logger.error(`GET /urls/{id}/analytics failed: ${errorMsg}`);
+  return sendResponse(res, 500, 'Internal server error');
 };
 
 /**
@@ -413,12 +410,11 @@ export const getUrlAnalytics = async (req: Request, res: Response): Promise<Resp
         // Add CTR statistics to the comprehensive analytics
         comprehensiveAnalytics.ctr_statistics = ctrStatistics;
       }
-    } catch (error) {
-      // Log but don't fail if CTR statistics are unavailable
-      logger.warn(`Unable to retrieve CTR statistics for URL ${urlId}: ${error}`);
+    } catch {
+      // CTR statistics unavailable - not critical
     }
 
-    logger.info(`Successfully retrieved comprehensive analytics for URL ID ${urlId}`);
+    logger.info(`GET /urls/${urlId}/analytics success`);
 
     return sendResponse(
       res,

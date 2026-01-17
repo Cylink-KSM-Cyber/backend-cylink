@@ -204,7 +204,7 @@ const formatUrlResponse = (updatedUrl: any, clickCount: number): any => {
  */
 const handleUpdateError = (error: unknown, urlId: number, res: Response): Response => {
   const errorMessage = error instanceof Error ? error.message : String(error);
-  logger.error(`URL update error - URL ID: ${urlId}, Error: ${errorMessage}`);
+  logger.error(`PUT /urls/${urlId} failed: ${errorMessage}`);
   return sendResponse(res, 500, 'Error updating URL');
 };
 
@@ -242,9 +242,6 @@ export const updateUrl = async (req: Request, res: Response): Promise<Response> 
     }
     const urlId = idValidation.urlId as number;
 
-    // Log the request with minimal details
-    logger.info(`URL update request initiated - URL ID: ${urlId}, User ID: ${userId}`);
-
     // Guard clause: Validate URL ownership
     const ownershipResult = await validateUrlOwnership(urlId, userId);
     if (!ownershipResult.isValid) {
@@ -261,15 +258,8 @@ export const updateUrl = async (req: Request, res: Response): Promise<Response> 
     // Guard clause: Validate update data
     const dataValidation = validateUpdateData(cleanUpdateData);
     if (!dataValidation.isValid && dataValidation.errors) {
-      logger.warn(
-        `URL update validation failed - URL ID: ${urlId}, Errors: ${dataValidation.errors.join(', ')}`,
-      );
       return sendResponse(res, 400, 'Validation error', null, null, null, dataValidation.errors);
     }
-
-    // Log fields being updated
-    const fieldsToUpdate = Object.keys(cleanUpdateData).join(', ');
-    logger.info(`URL update fields - URL ID: ${urlId}, Fields: ${fieldsToUpdate}`);
 
     // Update the URL
     try {
@@ -277,7 +267,7 @@ export const updateUrl = async (req: Request, res: Response): Promise<Response> 
 
       // Guard clause: Check if update was successful
       if (!updatedUrl) {
-        logger.error(`URL update failed - URL ID: ${urlId}`);
+        logger.error(`PUT /urls/${urlId} failed: Update returned null`);
         return sendResponse(res, 500, 'Failed to update URL');
       }
 
@@ -287,15 +277,15 @@ export const updateUrl = async (req: Request, res: Response): Promise<Response> 
       // Format the response
       const formattedUrl = formatUrlResponse(updatedUrl, clickCount);
 
-      // Log the successful update
-      logger.info(`URL update successful - URL ID: ${urlId}, Short Code: ${updatedUrl.short_code}`);
+      logger.info(`PUT /urls/${urlId} success`);
 
       return sendResponse(res, 200, 'URL updated successfully', formattedUrl);
     } catch (updateError) {
       return handleUpdateError(updateError, urlId, res);
     }
   } catch (error) {
-    logger.error('Unexpected error in updateUrl controller:', error);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    logger.error(`PUT /urls error: ${errorMsg}`);
     return sendResponse(res, 500, 'Internal server error');
   }
 };

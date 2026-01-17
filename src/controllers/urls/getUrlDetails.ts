@@ -126,16 +126,13 @@ const formatResponse = (
  * @returns {Response} Error response
  */
 const handleError = (error: unknown, res: Response): Response => {
+  const errorMsg = error instanceof Error ? error.message : String(error);
+  logger.error(`GET /urls/{identifier} failed: ${errorMsg}`);
+
   if (error instanceof TypeError) {
-    logger.error('URL error: Type error while retrieving URL details:', error.message);
     return sendResponse(res, 400, 'Invalid request format');
-  } else if (error instanceof Error) {
-    logger.error('URL error: Failed to retrieve URL details:', error.message);
-    return sendResponse(res, 500, 'Internal Server Error');
-  } else {
-    logger.error('URL error: Unknown error while retrieving URL details:', String(error));
-    return sendResponse(res, 500, 'Internal server error');
   }
+  return sendResponse(res, 500, 'Internal server error');
 };
 
 /**
@@ -179,9 +176,7 @@ export const getUrlDetails = async (req: Request, res: Response): Promise<Respon
     // Build the response
     const response = formatResponse(url, clickCount, analytics, formattedRecentClicks, dates);
 
-    logger.info(
-      `Successfully retrieved URL details for ${isId ? 'ID' : 'short code'} ${identifier}`,
-    );
+    logger.info(`GET /urls/${identifier} success`);
 
     // Return successful response
     return sendResponse(res, 200, 'Successfully retrieved URL', response);
