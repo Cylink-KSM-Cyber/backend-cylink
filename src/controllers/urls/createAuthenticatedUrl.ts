@@ -104,17 +104,17 @@ const formatUrlResponse = (newUrl: any, goal_id?: string | number) => {
  * @returns {Response} Error response
  */
 const handleUrlCreationError = (error: unknown, res: Response) => {
+  const errorMsg = error instanceof Error ? error.message : String(error);
+
   // Handle custom code already taken error
   if (error instanceof Error && error.message === 'This custom short code is already taken') {
+    logger.warn(`POST /urls failed: Custom code already in use`);
     return sendResponse(res, 409, 'Custom code already in use');
   } else if (error instanceof TypeError) {
-    logger.error('URL error: Type error while creating authenticated URL:', error.message);
+    logger.error(`POST /urls failed: Invalid data format - ${errorMsg}`);
     return sendResponse(res, 400, 'Invalid data format');
-  } else if (error instanceof Error) {
-    logger.error('URL error: Failed to create authenticated URL:', error.message);
-    return sendResponse(res, 500, 'Internal Server Error');
   } else {
-    logger.error('URL error: Unknown error while creating authenticated URL:', String(error));
+    logger.error(`POST /urls failed: ${errorMsg}`);
     return sendResponse(res, 500, 'Internal server error');
   }
 };
@@ -149,10 +149,7 @@ export const createAuthenticatedUrl = async (req: Request, res: Response): Promi
       // Format the response
       const response = formatUrlResponse(newUrl, requestBody.goal_id);
 
-      // Log success
-      logger.info(
-        `Successfully created authenticated shortened URL: ${response.short_url} for user ${requestBody.id}`,
-      );
+      logger.info(`POST /urls success for user ${requestBody.id}: ${response.short_code}`);
 
       // Return successful response
       return sendResponse(res, 201, 'Successfully created shortened URL', response);
@@ -162,7 +159,7 @@ export const createAuthenticatedUrl = async (req: Request, res: Response): Promi
   } catch (error: unknown) {
     // Handle unexpected errors
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('URL error: Failed to create shortened URL:', errorMessage);
+    logger.error(`POST /urls error: ${errorMessage}`);
     return sendResponse(res, 500, 'Internal Server Error');
   }
 };
