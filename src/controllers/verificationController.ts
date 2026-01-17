@@ -36,7 +36,8 @@ export const verify = async (req: Request, res: Response): Promise<Response> => 
       data: user,
     });
   } catch (err) {
-    logger.error('Account verification error:', err instanceof Error ? err.message : String(err));
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    logger.error(`Account verification failed: ${errorMessage}`);
     return res.status(400).json({
       status: 400,
       message: err instanceof Error ? err.message : 'Invalid or expired verification token',
