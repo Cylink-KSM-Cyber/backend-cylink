@@ -120,18 +120,17 @@ exports.verifyRegister = async (req: Request, res: Response): Promise<Response> 
  * @returns {Promise<Response>} Express response
  */
 exports.login = async (req: Request, res: Response): Promise<Response> => {
+  const credentials: Pick<User, 'email' | 'password'> = req.body;
   try {
-    const credentials: Pick<User, 'email' | 'password'> = req.body;
-
     const user = await authService.authenticate(credentials);
 
     if (!user) {
-      logger.error('Auth error: Failed to login: User not found');
+      logger.warn(`Login failed: Invalid credentials for ${credentials.email}`);
       return sendResponse(res, 400, 'Invalid credentials');
     }
 
     if (typeof user !== 'boolean' && !user.email_verified_at) {
-      logger.error('Auth error: Failed to login: User not activated');
+      logger.warn(`Login failed: Account not activated for ${credentials.email}`);
       return sendResponse(res, 400, 'User is not activated!');
     }
 
@@ -147,7 +146,7 @@ exports.login = async (req: Request, res: Response): Promise<Response> => {
     return sendResponse(res, 200, 'Successfully logged in!', userData);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('Auth error: Failed to login:', errorMessage);
+    logger.error(`Login error for ${credentials.email}: ${errorMessage}`);
     return sendResponse(res, 500, 'Internal server error');
   }
 };
