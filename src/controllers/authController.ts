@@ -177,18 +177,20 @@ exports.refresh = async (req: Request, res: Response): Promise<Response> => {
  * @returns {Promise<Response>} Express response
  */
 exports.sendPasswordResetVerification = async (req: Request, res: Response): Promise<Response> => {
+  const userData: Pick<User, 'email'> = req.body;
   try {
-    const userData: Pick<User, 'email'> = req.body;
     const verified = await authService.sendPasswordResetVerification(userData);
 
     if (!verified) {
+      logger.warn(`Password reset verification failed for ${userData.email}`);
       return sendResponse(res, 400, 'Failed to verify password reset!');
     }
 
+    logger.info(`Password reset verification sent to ${userData.email}`);
     return sendResponse(res, 200, 'Successfully verify password reset!', {});
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('Auth error: Failed to verify password reset:', errorMessage);
+    logger.error(`Password reset verification error for ${userData.email}: ${errorMessage}`);
     return sendResponse(res, 500, 'Internal server error');
   }
 };
